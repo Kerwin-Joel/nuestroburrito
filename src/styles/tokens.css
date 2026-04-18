@@ -1,0 +1,39 @@
+/* ===========================
+   BURRITO — DESIGN TOKENS
+   =========================== */
+:root {
+  --bg:           #080705;
+  --card:         #111009;
+  --card2:        #181510;
+  --orange:       #FF5500;
+  --hot:          #FF8C00;
+  --amber:        #FFAA3B;
+  --yellow:       #FFD166;
+  --white:        #FDFAF4;
+  --gray:         #6b6055;
+  --dim:          #2a2318;
+  --muted:        #8a7e6a;
+  --border:       rgba(255,120,30,0.16);
+  --border-hover: rgba(255,120,30,0.32);
+
+  /* Typography scale */
+  --font-display:  'Syne', sans-serif;
+  --font-body:     'Bricolage Grotesque', sans-serif;
+  --font-mono:     'IBM Plex Mono', monospace;
+
+  /* Spacing */
+  --radius-sm:    8px;
+  --radius-md:    12px;
+  --radius-lg:    16px;
+  --radius-xl:    20px;
+  --radius-full:  100px;
+
+  /* Shadows */
+  --shadow-glow:  0 8px 32px rgba(255,85,0,0.32);
+  --shadow-glow-lg: 0 16px 48px rgba(255,85,0,0.42);
+  --shadow-card:  0 24px 60px rgba(0,0,0,0.5);
+
+  /* Animation */
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth:  cubic-bezier(0.4, 0, 0.2, 1);
+}

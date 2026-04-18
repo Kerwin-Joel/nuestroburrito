@@ -1,0 +1,337 @@
+/* ===========================
+   BURRITO — GLOBAL STYLES
+   =========================== */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Bricolage+Grotesque:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap');
+@import './tokens.css';
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Reset ─── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--white);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Grain Noise Overlay ─── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--dim);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray);
+}
+
+/* ─── Typography ─── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+p {
+  font-family: var(--font-body);
+  line-height: 1.65;
+}
+
+code, kbd, pre, samp {
+  font-family: var(--font-mono);
+}
+
+/* ─── Section Labels ─── */
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--orange);
+  font-family: var(--font-mono);
+}
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 12px 24px;
+  font-size: 15px;
+}
+
+.btn-primary {
+  background: var(--orange);
+  color: var(--white);
+  box-shadow: var(--shadow-glow);
+}
+.btn-primary:hover {
+  background: #ff7730;
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-glow-lg);
+}
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(196,154,90,0.25);
+  color: #C49A5A;
+}
+.btn-ghost:hover {
+  border-color: #C49A5A;
+  background: rgba(196,154,90,0.06);
+}
+
+.btn-danger {
+  background: transparent;
+  border: 1px solid #ff4040;
+  color: #ff4040;
+}
+.btn-danger:hover {
+  background: rgba(255,64,64,0.08);
+}
+
+.btn-green {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: white;
+  box-shadow: 0 8px 24px rgba(37,211,102,0.3);
+}
+.btn-green:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(37,211,102,0.4);
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: 17px;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Cards ─── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.3s var(--ease-smooth);
+  position: relative;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-hover);
+}
+.card-glow {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255,85,0,0.12) 0%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.card:hover .card-glow {
+  opacity: 2;
+}
+
+/* ─── Inputs ─── */
+.input {
+  background: var(--card2);
+  border: 1px solid rgba(255,120,30,0.2);
+  border-radius: var(--radius-sm);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 12px 16px;
+  width: 100%;
+  outline: none;
+  transition: all 0.2s;
+}
+.input::placeholder {
+  color: #3d3628;
+}
+.input:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255,85,0,0.12);
+}
+
+textarea.input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ─── Pills / Chips ─── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card2);
+  border: 1px solid rgba(255,120,30,0.15);
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+  user-select: none;
+  white-space: nowrap;
+  font-family: var(--font-body);
+}
+.chip:hover {
+  border-color: rgba(255,85,0,0.4);
+  color: var(--white);
+}
+.chip.selected {
+  border-color: var(--orange);
+  background: rgba(255,85,0,0.10);
+  color: var(--hot);
+}
+
+/* ─── Badges ─── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid;
+  text-transform: uppercase;
+}
+.badge-orange {
+  background: rgba(255,85,0,0.12);
+  border-color: rgba(255,85,0,0.25);
+  color: var(--hot);
+}
+.badge-green {
+  background: rgba(37,211,102,0.12);
+  border-color: rgba(37,211,102,0.25);
+  color: #25D366;
+}
+.badge-amber {
+  background: rgba(255,170,59,0.12);
+  border-color: rgba(255,170,59,0.25);
+  color: var(--amber);
+}
+.badge-red {
+  background: rgba(255,64,64,0.12);
+  border-color: rgba(255,64,64,0.25);
+  color: #ff4040;
+}
+
+/* ─── Star Rating ─── */
+.stars {
+  color: var(--yellow);
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+/* ─── Skeleton Shimmer ─── */
+.skeleton {
+  background: linear-gradient(90deg, var(--card) 0%, #1a1710 50%, var(--card) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Leaflet overrides ─── */
+.leaflet-container {
+  background: #0a0907 !important;
+  font-family: var(--font-body) !important;
+}
+.leaflet-tile-pane {
+  filter: brightness(0.85) saturate(0.8);
+}
+
+/* ─── Scrollable row ─── */
+.scroll-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scroll-row::-webkit-scrollbar { display: none; }
+.scroll-row > * { scroll-snap-align: start; flex-shrink: 0; }
+
+/* ─── Page padding ─── */
+.page-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 480px) {
+  .page-container { padding: 0 16px; }
+}
