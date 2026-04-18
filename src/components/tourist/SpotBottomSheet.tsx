@@ -44,6 +44,7 @@ export default function SpotBottomSheet() {
       photoUrl: selectedSpot.photoUrl,
       lat: selectedSpot.lat,
       lng: selectedSpot.lng,
+      visited: false,
     }
     addStop(stop)
     addToast({ type: 'success', message: `${selectedSpot.name} añadido a tu día 🌯` })

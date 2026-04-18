@@ -28,6 +28,7 @@ export const MOCK_SPOTS: Spot[] = [
 
     ],
     createdAt: '2024-01-15T10:00:00Z',
+
   },
   {
     id: 'spot-2',
@@ -538,6 +539,7 @@ export const MOCK_ITINERARY: Itinerary = {
   id: 'itinerary-demo',
   userId: 'tourist-demo',
   title: 'Playa + Ceviche',
+  status: 'in_progress',
   preferences: {
     interests: ['playa', 'gastronomia'],
     time: 'full',
@@ -556,6 +558,7 @@ export const MOCK_ITINERARY: Itinerary = {
       photoUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80',
       lat: -5.1945,
       lng: -80.6328,
+      visited: false,
     },
     {
       id: 'stop-2',
@@ -568,6 +571,7 @@ export const MOCK_ITINERARY: Itinerary = {
       photoUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
       lat: -5.0891,
       lng: -81.1023,
+      visited: false,
     },
     {
       id: 'stop-3',
@@ -580,6 +584,7 @@ export const MOCK_ITINERARY: Itinerary = {
       photoUrl: 'https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?w=800&q=80',
       lat: -5.0831,
       lng: -81.1105,
+      visited: false,
     },
     {
       id: 'stop-4',
@@ -592,6 +597,7 @@ export const MOCK_ITINERARY: Itinerary = {
       photoUrl: 'https://images.unsplash.com/photo-1506197061074-a3933a5b60db?w=800&q=80',
       lat: -5.1523,
       lng: -81.2341,
+      visited: false,
     },
   ],
   generatedBy: 'manual',
