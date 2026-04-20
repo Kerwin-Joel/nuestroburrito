@@ -1,34 +1,58 @@
 import { useEffect, useRef } from "react";
 
-const C = {
-  bg:         0x080705,
-  ground:     0x0e0c09,
-  street:     0x161410,
-  streetEdge: 0x1e1b16,
-  bldA:       0x141210,
-  bldB:       0x1a1714,
-  bldC:       0x0f0d0b,
-  roof:       0x1c1915,
-  win:        0xff8c00,
-  winDim:     0x3a2a10,
-  antenna:    0xff5500,
-  routeCore:  0xff5500,
-  routeGlow:  0xff8c00,
-  pinA:       0xff5500,
-  pinB:       0xffd166,
-  donkeyBody: 0xc49a5a,
-  donkeyDark: 0x8a6a3a,
-  donkeyHoof: 0x3a2a10,
-  donkeyEye:  0xfdfaf4,
-  donkeyBag:  0xff5500,
+/* ─── Tipos ─── */
+interface ColorMap {
+  bg: number; ground: number; street: number; streetEdge: number;
+  bldA: number; bldB: number; bldC: number; roof: number;
+  win: number; winDim: number; antenna: number;
+  routeCore: number; routeGlow: number;
+  pinA: number; pinB: number;
+  donkeyBody: number; donkeyDark: number; donkeyHoof: number;
+  donkeyEye: number; donkeyBag: number;
+}
+
+interface AntennaTip {
+  mesh: { material: { opacity: number } };
+  phase: number;
+}
+
+interface SegMesh {
+  core: any;
+  glow: any;
+  len: number;
+  cornerDot?: any;
+}
+
+interface LegGroup {
+  upper: any;
+  lower: any;
+  phase: number;
+}
+
+interface MapHeroProps {
+  marginTop?: string;
+  transformValue?: string;
+  sizeLoaded?: boolean;
+}
+
+/* ─── Constantes ─── */
+const C: ColorMap = {
+  bg: 0x080705, ground: 0x0e0c09, street: 0x161410, streetEdge: 0x1e1b16,
+  bldA: 0x141210, bldB: 0x1a1714, bldC: 0x0f0d0b, roof: 0x1c1915,
+  win: 0xff8c00, winDim: 0x3a2a10, antenna: 0xff5500,
+  routeCore: 0xff5500, routeGlow: 0xff8c00,
+  pinA: 0xff5500, pinB: 0xffd166,
+  donkeyBody: 0xc49a5a, donkeyDark: 0x8a6a3a, donkeyHoof: 0x3a2a10,
+  donkeyEye: 0xfdfaf4, donkeyBag: 0xff5500,
 };
 
-const FLOOR_H  = 0.10;
+const FLOOR_H = 0.10;
 const CAM_SIZE = 25;
-const ROUTE_Y  = 1.75;
-const SPEED    = 0.00095;
+const ROUTE_Y = 1.75;
+const SPEED = 0.00095;
 
-function buildScene(THREE, container,sizeLoaded) {
+/* ─── buildScene ─── */
+function buildScene(THREE: any, container: HTMLDivElement, sizeLoaded: boolean): () => void {
   const W = container.clientWidth, H = container.clientHeight;
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -39,15 +63,10 @@ function buildScene(THREE, container,sizeLoaded) {
 
   const aspect = W / H;
   const cam = new THREE.OrthographicCamera(
-    -CAM_SIZE * aspect,
-    CAM_SIZE * aspect,
-    CAM_SIZE,
-    -CAM_SIZE,
-    0.1, 200
+    -CAM_SIZE * aspect, CAM_SIZE * aspect, CAM_SIZE, -CAM_SIZE, 0.1, 200
   );
   cam.position.set(12, 14, 12);
-  cam.lookAt( 0, 0, 0 );
-  
+  cam.lookAt(0, 0, 0);
 
   const scene = new THREE.Scene();
   scene.add(new THREE.AmbientLight(0xfff0e0, 0.55));
@@ -58,19 +77,18 @@ function buildScene(THREE, container,sizeLoaded) {
   fill.position.set(-6, 4, -8);
   scene.add(fill);
 
-  const M   = (geo, mat) => new THREE.Mesh(geo, mat);
-  const box = (w, h, d)  => new THREE.BoxGeometry(w, h, d);
-  const mat = (col, opts = {}) => new THREE.MeshStandardMaterial({ color: col, ...opts });
-  const flat = (col, opts = {}) => new THREE.MeshBasicMaterial({ color: col, ...opts });
+  const M = (geo: any, mat: any) => new THREE.Mesh(geo, mat);
+  const box = (w: number, h: number, d: number) => new THREE.BoxGeometry(w, h, d);
+  const mat = (col: number, opts: object = {}) => new THREE.MeshStandardMaterial({ color: col, ...opts });
+  const flat = (col: number, opts: object = {}) => new THREE.MeshBasicMaterial({ color: col, ...opts });
+
   scene.position.x = 15;
-  const OFFSET_X = 115;
-  const OFFSET_Y = 131.5;
 
   cam.position.set(12, 22, 12);
-  cam.lookAt(OFFSET_X, OFFSET_Y, 100);
-
+  cam.lookAt(115, 131.5, 100);
   cam.zoom = 0.7;
   cam.updateProjectionMatrix();
+
   /* Ground */
   const ground = M(box(28, 0.12, 24), mat(C.ground));
   ground.position.y = -0.06;
@@ -83,14 +101,14 @@ function buildScene(THREE, container,sizeLoaded) {
 
   /* Streets */
   const streetMat = mat(C.street);
-  const edgeMat   = mat(C.streetEdge);
+  const edgeMat = mat(C.streetEdge);
   [
     { x: 0, z: -6, w: 28, d: 1.4 },
-    { x: 0, z:  0, w: 28, d: 1.4 },
-    { x: 0, z:  6, w: 28, d: 1.4 },
+    { x: 0, z: 0, w: 28, d: 1.4 },
+    { x: 0, z: 6, w: 28, d: 1.4 },
     { x: -8, z: 0, w: 1.4, d: 24 },
-    { x:  0, z: 0, w: 1.4, d: 24 },
-    { x:  8, z: 0, w: 1.4, d: 24 },
+    { x: 0, z: 0, w: 1.4, d: 24 },
+    { x: 8, z: 0, w: 1.4, d: 24 },
   ].forEach(({ x, z, w, d }) => {
     const s = M(box(w, 0.08, d), streetMat);
     s.position.set(x, 0.04, z);
@@ -104,63 +122,79 @@ function buildScene(THREE, container,sizeLoaded) {
   });
 
   /* Buildings */
-  const buildingDefs = [
-    [-10.5,  8.5, 2.2, 2.0, 5, 'A'], [-6.5,  8.5, 1.8, 2.2, 3, 'B'],
-    [ -3.2,  8.5, 2.4, 1.8, 4, 'C'], [-6.0,  2.8, 1.6, 1.6, 2, 'B'],
-    [ -3.5,  3.2, 2.0, 1.8, 5, 'A'], [-3.5, -2.8, 2.2, 2.0, 3, 'C'],
-    [ -6.5, -3.0, 1.8, 1.6, 4, 'A'], [-10.5,-3.0, 2.4, 2.2, 2, 'B'],
-    [-10.5,  2.8, 1.8, 1.8, 3, 'C'], [ 3.5,  8.5, 2.0, 2.0, 4, 'A'],
-    [  6.5,  8.5, 1.8, 1.8, 2, 'B'], [10.5,  8.5, 2.4, 2.2, 5, 'C'],
-    [  3.5,  3.0, 1.6, 2.0, 3, 'B'], [ 6.5,  3.0, 2.2, 1.6, 5, 'A'],
-    [ 10.5,  3.0, 1.8, 2.0, 2, 'C'], [ 3.5, -3.0, 2.0, 1.8, 4, 'B'],
-    [  6.5, -3.0, 1.6, 1.6, 3, 'A'], [10.5, -3.0, 2.4, 2.0, 5, 'C'],
-    [ -6.5, -8.5, 2.0, 2.0, 3, 'B'], [ 6.5, -8.5, 1.8, 2.2, 4, 'A'],
-    [ 10.5, -8.5, 2.0, 1.8, 2, 'C'],
+  const buildingDefs: [number, number, number, number, number, string][] = [
+    [-10.5, 8.5, 2.2, 2.0, 5, 'A'], [-6.5, 8.5, 1.8, 2.2, 3, 'B'],
+    [-3.2, 8.5, 2.4, 1.8, 4, 'C'], [-6.0, 2.8, 1.6, 1.6, 2, 'B'],
+    [-3.5, 3.2, 2.0, 1.8, 5, 'A'], [-3.5, -2.8, 2.2, 2.0, 3, 'C'],
+    [-6.5, -3.0, 1.8, 1.6, 4, 'A'], [-10.5, -3.0, 2.4, 2.2, 2, 'B'],
+    [-10.5, 2.8, 1.8, 1.8, 3, 'C'], [3.5, 8.5, 2.0, 2.0, 4, 'A'],
+    [6.5, 8.5, 1.8, 1.8, 2, 'B'], [10.5, 8.5, 2.4, 2.2, 5, 'C'],
+    [3.5, 3.0, 1.6, 2.0, 3, 'B'], [6.5, 3.0, 2.2, 1.6, 5, 'A'],
+    [10.5, 3.0, 1.8, 2.0, 2, 'C'], [3.5, -3.0, 2.0, 1.8, 4, 'B'],
+    [6.5, -3.0, 1.6, 1.6, 3, 'A'], [10.5, -3.0, 2.4, 2.0, 5, 'C'],
+    [-6.5, -8.5, 2.0, 2.0, 3, 'B'], [6.5, -8.5, 1.8, 2.2, 4, 'A'],
+    [10.5, -8.5, 2.0, 1.8, 2, 'C'],
   ];
-  const bldColors = { A: C.bldA, B: C.bldB, C: C.bldC };
-  const antennaTips = [];
+
+  const bldColors: Record<string, number> = { A: C.bldA, B: C.bldB, C: C.bldC };
+  const antennaTips: AntennaTip[] = [];
 
   buildingDefs.forEach(([bx, bz, bw, bd, floors, ck]) => {
-    const h = floors * FLOOR_H;
-    const body = M(box(bw, h, bd), mat(bldColors[ck]));
+    const h = (floors as number) * FLOOR_H;
+    const body = M(box(bw as number, h, bd as number), mat(bldColors[ck as string]));
     body.position.set(bx, h / 2, bz);
     scene.add(body);
-    const roofCap = M(box(bw + 0.1, 0.08, bd + 0.1), mat(C.roof));
+    const roofCap = M(box((bw as number) + 0.1, 0.08, (bd as number) + 0.1), mat(C.roof));
     roofCap.position.set(bx, h + 0.04, bz);
     scene.add(roofCap);
+
     const winW = 0.22, winH = 0.18;
-    const cols = Math.max(1, Math.floor(bw / 0.55));
+    const cols = Math.max(1, Math.floor((bw as number) / 0.55));
     for (let fi = 0; fi < 2; fi++) {
-      const fz = bz + (fi === 0 ? bd / 2 + 0.01 : -bd / 2 - 0.01);
-      for (let r = 0; r < floors; r++) {
+      const fz = (bz as number) + (fi === 0 ? (bd as number) / 2 + 0.01 : -(bd as number) / 2 - 0.01);
+      for (let r = 0; r < (floors as number); r++) {
         for (let c = 0; c < cols; c++) {
           const lit = Math.random() > 0.38;
           const wm = flat(lit ? C.win : C.winDim, { transparent: true, opacity: lit ? 0.9 : 0.4 });
           const win = M(box(winW, winH, 0.04), wm);
-          win.position.set(bx - bw / 2 + bw / (cols + 1) * (c + 1), FLOOR_H * (r + 0.5) + 0.06, fz);
+          win.position.set(
+            (bx as number) - (bw as number) / 2 + (bw as number) / (cols + 1) * (c + 1),
+            FLOOR_H * (r + 0.5) + 0.06,
+            fz
+          );
           win.renderOrder = 1;
           scene.add(win);
         }
       }
     }
-    const sc = Math.max(1, Math.floor(bd / 0.55));
+
+    const sc = Math.max(1, Math.floor((bd as number) / 0.55));
     for (let fi = 0; fi < 2; fi++) {
-      const fx = bx + (fi === 0 ? bw / 2 + 0.01 : -bw / 2 - 0.01);
-      for (let r = 0; r < floors; r++) {
+      const fx = (bx as number) + (fi === 0 ? (bw as number) / 2 + 0.01 : -(bw as number) / 2 - 0.01);
+      for (let r = 0; r < (floors as number); r++) {
         for (let c = 0; c < sc; c++) {
           const lit = Math.random() > 0.45;
           const wm = flat(lit ? C.win : C.winDim, { transparent: true, opacity: lit ? 0.85 : 0.35 });
           const win = M(box(0.04, winH, winW), wm);
-          win.position.set(fx, FLOOR_H * (r + 0.5) + 0.06, bz - bd / 2 + bd / (sc + 1) * (c + 1));
+          win.position.set(
+            fx,
+            FLOOR_H * (r + 0.5) + 0.06,
+            (bz as number) - (bd as number) / 2 + (bd as number) / (sc + 1) * (c + 1)
+          );
           win.renderOrder = 1;
           scene.add(win);
         }
       }
     }
-    if (floors >= 4) {
+
+    if ((floors as number) >= 4) {
       const antH = 0.5 + Math.random() * 0.4;
       const pole = M(box(0.04, antH, 0.04), mat(0x2a2318));
-      pole.position.set(bx + (Math.random() - 0.5) * 0.5, h + antH / 2 + 0.08, bz + (Math.random() - 0.5) * 0.4);
+      pole.position.set(
+        (bx as number) + (Math.random() - 0.5) * 0.5,
+        h + antH / 2 + 0.08,
+        (bz as number) + (Math.random() - 0.5) * 0.4
+      );
       scene.add(pole);
       const tip = M(new THREE.SphereGeometry(0.06, 6, 6), flat(C.antenna, { transparent: true }));
       tip.position.set(pole.position.x, pole.position.y + antH / 2 + 0.06, pole.position.z);
@@ -170,19 +204,19 @@ function buildScene(THREE, container,sizeLoaded) {
   });
 
   /* Route */
-  const waypoints = [
-    new THREE.Vector3(-10.5, ROUTE_Y,  8.5),
-    new THREE.Vector3(-10.5, ROUTE_Y,  6.0),
-    new THREE.Vector3( -8.0, ROUTE_Y,  6.0),
-    new THREE.Vector3( -8.0, ROUTE_Y,  0.0),
-    new THREE.Vector3( -0.7, ROUTE_Y,  0.0),
-    new THREE.Vector3( -0.7, ROUTE_Y, -6.0),
-    new THREE.Vector3(  8.0, ROUTE_Y, -6.0),
-    new THREE.Vector3(  8.0, ROUTE_Y, -3.0),
-    new THREE.Vector3( 10.5, ROUTE_Y, -3.0),
+  const waypoints: any[] = [
+    new THREE.Vector3(-10.5, ROUTE_Y, 8.5),
+    new THREE.Vector3(-10.5, ROUTE_Y, 6.0),
+    new THREE.Vector3(-8.0, ROUTE_Y, 6.0),
+    new THREE.Vector3(-8.0, ROUTE_Y, 0.0),
+    new THREE.Vector3(-0.7, ROUTE_Y, 0.0),
+    new THREE.Vector3(-0.7, ROUTE_Y, -6.0),
+    new THREE.Vector3(8.0, ROUTE_Y, -6.0),
+    new THREE.Vector3(8.0, ROUTE_Y, -3.0),
+    new THREE.Vector3(10.5, ROUTE_Y, -3.0),
   ];
 
-  const segLengths = [];
+  const segLengths: number[] = [];
   let totalLen = 0;
   for (let i = 0; i < waypoints.length - 1; i++) {
     const l = waypoints[i].distanceTo(waypoints[i + 1]);
@@ -192,7 +226,7 @@ function buildScene(THREE, container,sizeLoaded) {
 
   const routeCoreMat = flat(C.routeCore, { depthTest: false, transparent: true, opacity: 0.95 });
   const routeGlowMat = flat(C.routeGlow, { depthTest: false, transparent: true, opacity: 0.18 });
-  const segMeshes = [];
+  const segMeshes: SegMesh[] = [];
 
   for (let i = 0; i < waypoints.length - 1; i++) {
     const a = waypoints[i], b = waypoints[i + 1];
@@ -209,18 +243,19 @@ function buildScene(THREE, container,sizeLoaded) {
     glow.renderOrder = 9;
     glow.visible = false;
     scene.add(glow);
-    segMeshes.push({ core, glow, len });
+    const seg: SegMesh = { core, glow, len };
     if (i < waypoints.length - 2) {
       const dot = M(box(0.20, 0.08, 0.20), flat(C.routeCore, { depthTest: false, transparent: true, opacity: 0.95 }));
       dot.position.set(b.x, ROUTE_Y, b.z);
       dot.renderOrder = 11;
       dot.visible = false;
       scene.add(dot);
-      segMeshes[i].cornerDot = dot;
+      seg.cornerDot = dot;
     }
+    segMeshes.push(seg);
   }
 
-  function getPosOnRoute(p) {
+  function getPosOnRoute(p: number) {
     let dist = p * totalLen;
     for (let i = 0; i < waypoints.length - 1; i++) {
       if (dist <= segLengths[i]) {
@@ -232,7 +267,7 @@ function buildScene(THREE, container,sizeLoaded) {
     return waypoints[waypoints.length - 1].clone();
   }
 
-  function getDirAngle(p) {
+  function getDirAngle(p: number): number {
     const eps = 0.002;
     const a = getPosOnRoute(Math.max(0, p - eps));
     const b = getPosOnRoute(Math.min(1, p + eps));
@@ -240,7 +275,7 @@ function buildScene(THREE, container,sizeLoaded) {
   }
 
   /* Pins */
-  function makePin(x, z, colorHex, label) {
+  function makePin(x: number, z: number, colorHex: number, label: string) {
     const group = new THREE.Group();
     group.position.set(x, 0, z);
     group.add(M(new THREE.CylinderGeometry(0.28, 0.28, 0.04, 16), flat(colorHex, { transparent: true, opacity: 0.22 })));
@@ -256,15 +291,20 @@ function buildScene(THREE, container,sizeLoaded) {
     const inn = M(new THREE.SphereGeometry(0.10, 8, 8), flat(0xfdfaf4, { transparent: true, opacity: 0.7 }));
     inn.position.y = ROUTE_Y + 0.22;
     group.add(inn);
+
     const cv = document.createElement('canvas');
     cv.width = 80; cv.height = 40;
-    const ctx = cv.getContext('2d');
+    const ctx = cv.getContext('2d')!;
     ctx.fillStyle = `#${colorHex.toString(16).padStart(6, '0')}`;
-    ctx.beginPath(); ctx.roundRect(4, 4, 72, 32, 8); ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(4, 4, 72, 32, 8);
+    ctx.fill();
     ctx.fillStyle = '#FDFAF4';
     ctx.font = 'bold 22px sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillText(label, 40, 21);
+
     const tex = new THREE.CanvasTexture(cv);
     const lbl = M(new THREE.PlaneGeometry(0.55, 0.28), flat(0xffffff, { map: tex, transparent: true, depthTest: false }));
     lbl.position.y = ROUTE_Y + 0.60;
@@ -285,31 +325,34 @@ function buildScene(THREE, container,sizeLoaded) {
   /* Donkey */
   function makeDonkey() {
     const root = new THREE.Group();
-    const bodyM   = mat(C.donkeyBody, { roughness: 0.85 });
-    const darkM   = mat(C.donkeyDark, { roughness: 0.9 });
-    const hoofM   = mat(C.donkeyHoof);
-    const orangeM = mat(C.donkeyBag,  { roughness: 0.6 });
+    const bodyM = mat(C.donkeyBody, { roughness: 0.85 });
+    const darkM = mat(C.donkeyDark, { roughness: 0.9 });
+    const hoofM = mat(C.donkeyHoof);
+    const orangeM = mat(C.donkeyBag, { roughness: 0.6 });
 
     const body = M(box(0.52, 0.32, 0.26), bodyM); body.position.set(0, 0.72, 0); root.add(body);
     const belly = M(box(0.54, 0.10, 0.18), mat(0xd4aa6a)); belly.position.set(0, 0.60, 0.01); root.add(belly);
     const neck = M(box(0.14, 0.26, 0.16), bodyM); neck.position.set(0.26, 0.90, 0); neck.rotation.z = -0.28; root.add(neck);
     const head = M(box(0.22, 0.20, 0.18), bodyM); head.position.set(0.40, 1.06, 0); root.add(head);
     const muz = M(box(0.14, 0.12, 0.16), mat(0xb88a50)); muz.position.set(0.50, 1.00, 0); root.add(muz);
-    [-0.04, 0.04].forEach(oz => {
+
+    [-0.04, 0.04].forEach((oz: number) => {
       const n = M(box(0.04, 0.03, 0.03), darkM); n.position.set(0.555, 0.98, oz); root.add(n);
     });
-    [-0.075, 0.075].forEach(oy => {
+    [-0.075, 0.075].forEach((oy: number) => {
       const ey = M(box(0.05, 0.05, 0.04), darkM); ey.position.set(0.43, 1.10, oy); root.add(ey);
-      const hl = M(box(0.02, 0.02, 0.02), flat(0xfdfaf4, { transparent: true, opacity: 0.7 })); hl.position.set(0.455, 1.115, oy); root.add(hl);
+      const hl = M(box(0.02, 0.02, 0.02), flat(0xfdfaf4, { transparent: true, opacity: 0.7 }));
+      hl.position.set(0.455, 1.115, oy); root.add(hl);
     });
-    [-0.07, 0.07].forEach(oz => {
+    [-0.07, 0.07].forEach((oz: number) => {
       const eb = M(box(0.07, 0.28, 0.07), bodyM); eb.position.set(0.32, 1.28, oz); root.add(eb);
       const ei = M(box(0.04, 0.20, 0.04), mat(0xc08060)); ei.position.set(0.32, 1.30, oz); root.add(ei);
       const et = M(box(0.06, 0.06, 0.06), darkM); et.position.set(0.32, 1.44, oz); root.add(et);
     });
-    [[0.26,1.06,0],[0.30,1.10,0],[0.34,1.12,0],[0.38,1.14,0]].forEach(([mx,my,mz]) => {
+    [[0.26, 1.06, 0], [0.30, 1.10, 0], [0.34, 1.12, 0], [0.38, 1.14, 0]].forEach(([mx, my, mz]: number[]) => {
       const mn = M(box(0.06, 0.12, 0.06), darkM); mn.position.set(mx, my, mz); root.add(mn);
     });
+
     const bagL = M(box(0.20, 0.18, 0.12), orangeM); bagL.position.set(-0.05, 0.66, 0.20); root.add(bagL);
     const bagR = M(box(0.20, 0.18, 0.12), orangeM); bagR.position.set(-0.05, 0.66, -0.20); root.add(bagR);
     const strap = M(box(0.52, 0.04, 0.04), darkM); strap.position.set(0, 0.72, 0); root.add(strap);
@@ -321,19 +364,21 @@ function buildScene(THREE, container,sizeLoaded) {
     root.add(tailGroup);
 
     const legDefs = [
-      { lx:  0.18, lz:  0.09, phase: 0 },
-      { lx:  0.18, lz: -0.09, phase: Math.PI },
-      { lx: -0.18, lz:  0.09, phase: Math.PI },
+      { lx: 0.18, lz: 0.09, phase: 0 },
+      { lx: 0.18, lz: -0.09, phase: Math.PI },
+      { lx: -0.18, lz: 0.09, phase: Math.PI },
       { lx: -0.18, lz: -0.09, phase: 0 },
     ];
-    const legs = [];
+    const legs: LegGroup[] = [];
     legDefs.forEach(({ lx, lz, phase }) => {
       const upper = new THREE.Group(); upper.position.set(lx, 0.58, lz);
       const um = M(box(0.09, 0.22, 0.09), bodyM); um.position.y = -0.11; upper.add(um);
       const lower = new THREE.Group(); lower.position.set(0, -0.22, 0);
       const lm = M(box(0.07, 0.20, 0.07), darkM); lm.position.y = -0.10; lower.add(lm);
       const hoof = M(box(0.09, 0.06, 0.09), hoofM); hoof.position.y = -0.23; lower.add(hoof);
-      upper.add(lower); root.add(upper); legs.push({ upper, lower, phase });
+      upper.add(lower);
+      root.add(upper);
+      legs.push({ upper, lower, phase });
     });
     return { root, tailGroup, legs };
   }
@@ -344,7 +389,7 @@ function buildScene(THREE, container,sizeLoaded) {
   scene.add(donkeyRoot);
 
   /* Animation loop */
-  let tick = 0, progress = 0, rafId;
+  let tick = 0, progress = 0, rafId: number;
 
   function animate() {
     rafId = requestAnimationFrame(animate);
@@ -353,7 +398,7 @@ function buildScene(THREE, container,sizeLoaded) {
     const sin = Math.sin(tick * 0.14);
 
     let traveled = progress * totalLen, cumLen = 0;
-    segMeshes.forEach(({ core, glow, cornerDot, len }, i) => {
+    segMeshes.forEach(({ core, glow, cornerDot, len }: SegMesh, i: number) => {
       const segStart = cumLen, segEnd = cumLen + len;
       if (traveled >= segEnd) {
         core.visible = glow.visible = true;
@@ -391,26 +436,26 @@ function buildScene(THREE, container,sizeLoaded) {
     donkeyRoot.position.copy(pos);
     donkeyRoot.rotation.y = getDirAngle(progress);
 
-    legs.forEach(({ upper, lower, phase }) => {
+    legs.forEach(({ upper, lower, phase }: LegGroup) => {
       const s = Math.sin(tick * 0.18 + phase);
       upper.rotation.x = s * 0.30;
       lower.rotation.x = Math.max(0, -s) * 0.38;
     });
     tailGroup.rotation.z = 0.65 + sin * 0.22;
 
-    antennaTips.forEach(({ mesh, phase }) => {
+    antennaTips.forEach(({ mesh, phase }: AntennaTip) => {
       const v = (Math.sin(tick * 0.08 + phase) + 1) / 2;
       mesh.material.opacity = 0.4 + v * 0.6;
     });
 
-    [pinA, pinB].forEach(({ sph, tor }, pi) => {
+    [pinA, pinB].forEach(({ sph, tor }, pi: number) => {
       const ps = Math.sin(tick * 0.05 + pi * Math.PI);
       sph.position.y = ROUTE_Y + 0.22 + ps * 0.08;
       const ts = 0.9 + ((ps + 1) / 2) * 0.5;
       tor.scale.setScalar(ts);
       tor.material.opacity = 0.6 - ((ps + 1) / 2) * 0.45;
     });
-    [pinA.lbl, pinB.lbl].forEach(lbl => { lbl.quaternion.copy(cam.quaternion); });
+    [pinA.lbl, pinB.lbl].forEach((lbl: any) => { lbl.quaternion.copy(cam.quaternion); });
 
     cam.position.x = 10 + Math.sin(tick * 0.006) * 0.55;
     cam.position.z = 20 + Math.cos(tick * 0.004) * 0.30;
@@ -425,8 +470,8 @@ function buildScene(THREE, container,sizeLoaded) {
     const w = container.clientWidth;
     const h = container.clientHeight;
     const a = w / h;
-    cam.left  = -CAM_SIZE * a;
-    cam.right =  sizeLoaded ? CAM_SIZE : CAM_SIZE * a;
+    cam.left = -CAM_SIZE * a;
+    cam.right = sizeLoaded ? CAM_SIZE : CAM_SIZE * a;
     cam.zoom = 0.7;
     cam.updateProjectionMatrix();
     renderer.setSize(w, h);
@@ -441,19 +486,19 @@ function buildScene(THREE, container,sizeLoaded) {
   };
 }
 
-export default function MapHero( { marginTop = '-1080px', transformValue, sizeLoaded } ) {
-  const canvasRef = useRef(null);
+/* ─── Componente ─── */
+export default function MapHero({ marginTop = '-1080px', transformValue, sizeLoaded = false }: MapHeroProps) {
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const THREE = window.THREE;
+    const THREE = (window as any).THREE;
     if (!THREE || !canvasRef.current) return;
-    const cleanup = buildScene(THREE, canvasRef.current,sizeLoaded);
+    const cleanup = buildScene(THREE, canvasRef.current, sizeLoaded);
     return cleanup;
   }, []);
 
   return (
     <div
-      // "translate(-20%, 17px)"
       ref={canvasRef}
       aria-hidden="true"
       style={{
@@ -461,7 +506,7 @@ export default function MapHero( { marginTop = '-1080px', transformValue, sizeLo
         inset: 0,
         zIndex: 1,
         marginTop,
-        transform: transformValue
+        transform: transformValue,
       }}
     />
   );

@@ -1,4 +1,16 @@
-const alianzas = [
+import { useState } from "react";
+
+// ── Tipos ──
+interface Alianza {
+  id: string;
+  emoji: string;
+  tag: string;
+  titulo: string;
+  desc: string;
+  accent: string;
+}
+
+const alianzas: Alianza[] = [
   {
     id: "universidades",
     emoji: "🎓",
@@ -33,7 +45,12 @@ const alianzas = [
   },
 ];
 
-function AlianzaCard({ alianza }) {
+// ── Componente interno ──
+interface AlianzaCardProps {
+  alianza: Alianza;
+}
+
+function AlianzaCard({ alianza }: AlianzaCardProps) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -46,19 +63,18 @@ function AlianzaCard({ alianza }) {
         borderRadius: 16,
         padding: "32px 28px 28px",
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "column" as const,
         gap: 0,
         transition: "transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease",
         transform: hovered ? "translateY(-5px)" : "translateY(0)",
         boxShadow: hovered
           ? "0 20px 56px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,170,59,0.18)"
           : "0 4px 20px rgba(0,0,0,0.3)",
-        position: "relative",
+        position: "relative" as const,
         overflow: "hidden",
         cursor: "default",
       }}
     >
-      {/* glow */}
       <div style={{
         position: "absolute",
         top: -50,
@@ -73,15 +89,13 @@ function AlianzaCard({ alianza }) {
         pointerEvents: "none",
       }} />
 
-      {/* emoji */}
       <div style={{ fontSize: 36, marginBottom: 20, lineHeight: 1 }}>{alianza.emoji}</div>
 
-      {/* tag */}
       <div style={{
         fontSize: 11,
         fontWeight: 700,
         letterSpacing: "2px",
-        textTransform: "uppercase",
+        textTransform: "uppercase" as const,
         color: alianza.accent,
         marginBottom: 10,
         fontFamily: "'Bricolage Grotesque', sans-serif",
@@ -89,7 +103,6 @@ function AlianzaCard({ alianza }) {
         {alianza.tag}
       </div>
 
-      {/* title */}
       <div style={{
         fontSize: 17,
         fontWeight: 700,
@@ -102,7 +115,6 @@ function AlianzaCard({ alianza }) {
         {alianza.titulo}
       </div>
 
-      {/* desc */}
       <div style={{
         fontSize: 14,
         color: "#6b6055",
@@ -115,24 +127,20 @@ function AlianzaCard({ alianza }) {
   );
 }
 
-import { useState } from "react";
-
 export default function AlianzasBurrito() {
   return (
     <section style={{
       padding: "88px 48px",
       background: "#080705",
-      position: "relative",
+      position: "relative" as const,
       zIndex: 5,
     }}>
       <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-
-        {/* header */}
         <div style={{
           fontSize: 11,
           fontWeight: 700,
           letterSpacing: "2.5px",
-          textTransform: "uppercase",
+          textTransform: "uppercase" as const,
           color: "#FF5500",
           marginBottom: 18,
           fontFamily: "'Bricolage Grotesque', sans-serif",
@@ -163,7 +171,6 @@ export default function AlianzasBurrito() {
           Activamos un ecosistema donde los piuranos se benefician de mostrar su propia ciudad.
         </p>
 
-        {/* 2x2 grid */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
@@ -173,7 +180,6 @@ export default function AlianzasBurrito() {
             <AlianzaCard key={a.id} alianza={a} />
           ))}
         </div>
-
       </div>
     </section>
   );

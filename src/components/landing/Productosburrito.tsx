@@ -1,7 +1,32 @@
-import { useState } from "react";
+import { useState, RefObject } from "react";
+import React from "react";
+
+/* ─── Tipos ─── */
+interface Producto {
+  id: string;
+  tag: string;
+  emoji: string;
+  titulo: string;
+  descripcion: string;
+  features: string[];
+  accent: string;
+  accentSoft: string;
+  accentBorder: string;
+}
+
+interface ProductCardProps {
+  producto: Producto;
+  index: number;
+  quizRef: RefObject<HTMLDivElement>;
+}
+
+interface ProductosBurritoProps {
+  onCTAClick: () => void;
+  quizRef: RefObject<HTMLDivElement>;
+}
 
 /* ─── Data ─── */
-const productosBurrito = [
+const productosBurrito: Producto[] = [
   {
     id: "rutas",
     tag: "RUTAS BURRITO",
@@ -59,7 +84,7 @@ const productosBurrito = [
 const S = {
   section: {
     padding: "88px 48px",
-    position: "relative",
+    position: "relative" as const,
     zIndex: 5,
     background: "#080705",
   },
@@ -68,7 +93,7 @@ const S = {
     fontSize: 11,
     fontWeight: 700,
     letterSpacing: "2.5px",
-    textTransform: "uppercase",
+    textTransform: "uppercase" as const,
     color: "#FF5500",
     marginBottom: 14,
     display: "block",
@@ -95,21 +120,21 @@ const S = {
     borderRadius: 16,
     padding: "28px 24px 24px",
     display: "flex",
-    flexDirection: "column",
+    flexDirection: "column" as const,
     gap: 0,
     cursor: "default",
     transition: "transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease",
-    position: "relative",
+    position: "relative" as const,
     overflow: "hidden",
   },
   cardGlow: {
-    position: "absolute",
+    position: "absolute" as const,
     top: -60,
     right: -60,
     width: 200,
     height: 200,
     borderRadius: "50%",
-    pointerEvents: "none",
+    pointerEvents: "none" as const,
     filter: "blur(60px)",
     opacity: 0.18,
   },
@@ -117,7 +142,7 @@ const S = {
     fontSize: 10,
     fontWeight: 700,
     letterSpacing: "2px",
-    textTransform: "uppercase",
+    textTransform: "uppercase" as const,
     marginBottom: 14,
     display: "flex",
     alignItems: "center",
@@ -145,10 +170,14 @@ const S = {
     background: "rgba(255,120,30,0.1)",
     marginBottom: 18,
   },
-  featureList: { display: "flex", flexDirection: "column", gap: 10 },
+  featureList: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 10,
+  },
   featureItem: {
     display: "flex",
-    alignItems: "flex-start",
+    alignItems: "flex-start" as const,
     gap: 10,
     fontSize: 13,
     color: "#8a7e6a",
@@ -164,11 +193,11 @@ const S = {
 };
 
 /* ─── Card Component ─── */
-function ProductCard({ producto, index, quizRef }) {
+function ProductCard({ producto, index, quizRef }: ProductCardProps) {
   const [hovered, setHovered] = useState(false);
   const [btnHovered, setBtnHovered] = useState(false);
 
-  const scrollToQuiz = (e) => {
+  const scrollToQuiz = (e: React.MouseEvent) => {
     e.stopPropagation();
     quizRef?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -186,40 +215,24 @@ function ProductCard({ producto, index, quizRef }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* glow blob */}
-      <div
-        style={{
-          ...S.cardGlow,
-          background: producto.accent,
-          opacity: hovered ? 0.22 : 0.12,
-          transition: "opacity 0.4s ease",
-        }}
-      />
+      <div style={{ ...S.cardGlow, background: producto.accent, opacity: hovered ? 0.22 : 0.12, transition: "opacity 0.4s ease" }} />
 
-      {/* tag */}
       <div style={{ ...S.tag, color: producto.accent }}>
         <span style={S.emoji}>{producto.emoji}</span>
         {producto.tag}
       </div>
 
-      {/* title */}
       <h3 style={S.cardTitle}>{producto.titulo}</h3>
-
-      {/* description */}
       <p style={S.desc}>{producto.descripcion}</p>
 
-      {/* divider */}
-      <div
-        style={{
-          ...S.divider,
-          background: hovered ? producto.accentBorder : "rgba(255,120,30,0.1)",
-          transition: "background 0.3s",
-        }}
-      />
+      <div style={{
+        ...S.divider,
+        background: hovered ? producto.accentBorder : "rgba(255,120,30,0.1)",
+        transition: "background 0.3s",
+      }} />
 
-      {/* features */}
       <ul style={{ ...S.featureList, listStyle: "none", margin: 0, padding: 0 }}>
-        {producto.features.map((f, i) => (
+        {producto.features.map((f: string, i: number) => (
           <li key={i} style={S.featureItem}>
             <span style={{ ...S.checkIcon, color: producto.accent }}>✓</span>
             <span>{f}</span>
@@ -227,7 +240,6 @@ function ProductCard({ producto, index, quizRef }) {
         ))}
       </ul>
 
-      {/* BOTÓN QUIZ — solo card "rutas" */}
       {producto.id === "rutas" && quizRef && (
         <button
           onClick={scrollToQuiz}
@@ -257,32 +269,25 @@ function ProductCard({ producto, index, quizRef }) {
         </button>
       )}
 
-      {/* number badge */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 20,
-          right: 20,
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11,
-          color: hovered ? producto.accent : "#2a2318",
-          fontWeight: 700,
-          letterSpacing: 1,
-          transition: "color 0.3s",
-        }}
-      >
+      <div style={{
+        position: "absolute",
+        bottom: 20,
+        right: 20,
+        fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: 11,
+        color: hovered ? producto.accent : "#2a2318",
+        fontWeight: 700,
+        letterSpacing: 1,
+        transition: "color 0.3s",
+      }}>
         0{index + 1}
       </div>
     </div>
   );
 }
 
-/* ─── Main Section ─────────────────────────────
-   Props:
-   · onCTAClick → abre modal de itinerario
-   · quizRef    → ref del <QuizSection> para scroll
-─────────────────────────────────────────────── */
-export default function ProductosBurrito({ onCTAClick, quizRef }) {
+/* ─── Main Section ─── */
+export default function ProductosBurrito({ onCTAClick, quizRef }: ProductosBurritoProps) {
   return (
     <section style={S.section}>
       <div style={S.inner}>
