@@ -27,7 +27,7 @@ export interface ItineraryPreferences {
   budget: 'low' | 'mid' | 'high'
 }
 
-export type ItineraryStatus = 'in_progress' | 'completed'
+export type ItineraryStatus = 'draft' | 'in_progress' | 'completed'
 
 export interface Itinerary {
   id: string

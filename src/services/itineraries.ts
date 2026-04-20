@@ -81,6 +81,20 @@ export const itinerariesService = {
         if (error) throw error
     },
 
+    async updateStatus(id: string, status: 'draft' | 'in_progress' | 'completed'): Promise<void> {
+        if (!FEATURES.REAL_AUTH) {
+            const idx = mockItineraries.findIndex(i => i.id === id)
+            if (idx !== -1) mockItineraries[idx].status = status
+            return
+        }
+        const { error } = await supabase
+            .from('itineraries')
+            .update({ status })
+            .eq('id', id)
+
+        if (error) throw error
+    },
+
     // Soft delete — para auditoría
     async softDelete(id: string): Promise<void> {
         if (!FEATURES.REAL_AUTH) return
@@ -117,4 +131,5 @@ export const itinerariesService = {
         if (error) throw error
         return mapItinerary(data)
     },
+
 }

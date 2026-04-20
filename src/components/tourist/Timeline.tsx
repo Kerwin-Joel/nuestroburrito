@@ -9,8 +9,13 @@ import type { ItineraryStop, StopReview } from '../../types/itinerary'
 import StopReviewModal from '../../pages/tourist/StopReviewModal'
 import { reviewsService } from '../../services/reviews'
 import { itinerariesService } from '../../services/itineraries'
+import SpotDrawer from './SpotDrawer'
 
-export default function Timeline({ readOnly = false }: { readOnly?: boolean }) {
+export default function Timeline({ readOnly = false,
+  canVisit = false, }: {
+    readOnly?: boolean
+    canVisit?: boolean
+  }) {
   const { current, removeStop, reorderStops, addStop, setCurrent } = useItineraryStore()
   const { user } = useAuthStore()
   const { addToast } = useUIStore()
@@ -18,6 +23,7 @@ export default function Timeline({ readOnly = false }: { readOnly?: boolean }) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newStop, setNewStop] = useState({ time: '', spotName: '', localTip: '' })
   const [reviewStop, setReviewStop] = useState<ItineraryStop | null>(null)
+  const [selectedStop, setSelectedStop] = useState<ItineraryStop | null>(null)
 
   useEffect(() => {
     if (lineRef.current) {
@@ -130,11 +136,16 @@ export default function Timeline({ readOnly = false }: { readOnly?: boolean }) {
           </div>
 
           {/* Stop card */}
-          <div className="card" style={{
-            padding: '16px 18px',
-            borderColor: stop.visited ? 'rgba(34,197,94,0.2)' : undefined,
-            transition: 'border-color 0.3s',
-          }}>
+          <div
+            className="card"
+            onClick={() => setSelectedStop(stop)}
+            style={{
+              padding: '16px 18px',
+              cursor: 'pointer',
+              borderColor: stop.visited ? 'rgba(34,197,94,0.2)' : undefined,
+              transition: 'border-color 0.3s',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
 
               {/* Content */}
@@ -212,9 +223,12 @@ export default function Timeline({ readOnly = false }: { readOnly?: boolean }) {
                   </div>
                 )}
 
-                {!readOnly && !stop.visited && (
+                {(canVisit || !readOnly) && !stop.visited && (
                   <button
-                    onClick={() => handleVisited(stop)}
+                    onClick={(e) => {
+                      e.stopPropagation()  // ← agrega esto
+                      handleVisited(stop)
+                    }}
                     style={{
                       marginTop: '12px',
                       display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -241,7 +255,10 @@ export default function Timeline({ readOnly = false }: { readOnly?: boolean }) {
               {!readOnly && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
                   <button
-                    onClick={() => idx > 0 && reorderStops(idx, idx - 1)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      idx > 0 && reorderStops(idx, idx - 1)
+                    }}
                     disabled={idx === 0}
                     aria-label="Mover arriba"
                     className="btn btn-icon"
@@ -352,7 +369,7 @@ export default function Timeline({ readOnly = false }: { readOnly?: boolean }) {
         </div>
       )}
 
-      {readOnly && (
+      {current.status === 'completed' && (
         <div style={{
           marginTop: '16px',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -360,10 +377,13 @@ export default function Timeline({ readOnly = false }: { readOnly?: boolean }) {
           border: '1px solid rgba(34,197,94,0.2)', borderRadius: '12px',
           color: '#22c55e', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600,
         }}>
-          ✓ Este itinerario está completado
+          🫏 ¡Piura conquistada! Itinerario completado
         </div>
       )}
-
+      <SpotDrawer
+        stop={selectedStop}
+        onClose={() => setSelectedStop(null)}
+      />
       <StopReviewModal
         stop={reviewStop}
         onClose={() => setReviewStop(null)}

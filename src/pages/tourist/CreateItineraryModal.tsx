@@ -64,7 +64,7 @@ export default function CreateItineraryModal({ isOpen, onClose }: Props) {
                 stops: [],
                 generatedBy: 'manual',
                 isSaved: true,
-                status: 'in_progress',
+                status: 'draft', // ← cambia 'in_progress' por 'draft'
             })
             setCurrent(saved)
             onClose()

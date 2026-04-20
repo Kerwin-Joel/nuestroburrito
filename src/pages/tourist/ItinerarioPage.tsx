@@ -39,13 +39,35 @@ export default function ItinerarioPage() {
   const [completing, setCompleting] = useState(false)
   const [showMap, setShowMap] = useState(false)
 
-  const isCompleted = current?.status === 'completed'
+  const isReadOnly = current?.status === 'completed' || current?.status === 'in_progress'
 
   const handleCancel = () => {
     clear()
     sessionStorage.setItem('burrito-discarded', 'true')
     // navigate('/app') // ← faltaba esto
   }
+  // Auto-completar cuando todos los spots están visitados
+  useEffect(() => {
+    if (!current || current.status !== 'in_progress') return
+    if (current.stops.length === 0) return
+
+    const allVisited = current.stops.every(s => s.visited)
+    if (!allVisited) return
+
+    const autoComplete = async () => {
+      try {
+        if (current.id && current.id !== 'itinerary-demo') {
+          await itinerariesService.updateStatus(current.id, 'completed')
+        }
+        setCurrent({ ...current, status: 'completed' })
+        addToast({ type: 'success', message: '🫏 ¡Piura conquistada! Itinerario completado' })
+      } catch (err: any) {
+        addToast({ type: 'error', message: err.message ?? 'Error' })
+      }
+    }
+
+    autoComplete()
+  }, [current?.stops])
 
   useEffect(() => {
     const wasDiscarded = sessionStorage.getItem('burrito-discarded')
@@ -90,16 +112,16 @@ export default function ItinerarioPage() {
       setSaving(false)
     }
   }
+
   const handleComplete = async () => {
     if (!current) return
     setCompleting(true)
     try {
-      // Si tiene id (ya guardado) → actualiza en Supabase
       if (current.id && current.id !== 'itinerary-demo') {
-        await itinerariesService.complete(current.id)
+        await itinerariesService.updateStatus(current.id, 'in_progress')
       }
-      setCurrent({ ...current, status: 'completed' })
-      addToast({ type: 'success', message: '🎉 ¡Itinerario completado!' })
+      setCurrent({ ...current, status: 'in_progress' })
+      addToast({ type: 'success', message: '🫏 ¡A recorrer Piura!' })
     } catch (err: any) {
       addToast({ type: 'error', message: err.message ?? 'Error' })
     } finally {
@@ -192,20 +214,20 @@ export default function ItinerarioPage() {
             ) : (
               <h1
                 onClick={() => {
-                  if (isCompleted) return
+                  if (isReadOnly) return
                   setTitleInput(current.title)
                   setEditingTitle(true)
                 }}
                 title="Click para editar"
                 style={{
-                  cursor: isCompleted ? 'default' : 'pointer',
+                  cursor: isReadOnly ? 'default' : 'pointer',
                   fontFamily: 'var(--font-display)',
                   fontSize: '32px',
                   fontWeight: 800,
                   letterSpacing: '-1.5px',
                   color: 'var(--white)',
                   margin: 0,
-                  borderBottom: isCompleted
+                  borderBottom: isReadOnly
                     ? 'none'
                     : '2px dashed rgba(255,85,0,0.3)',
                   paddingBottom: '2px',
@@ -270,7 +292,7 @@ export default function ItinerarioPage() {
             ) : (
               <div
                 onClick={() => {
-                  if (isCompleted) return
+                  if (isReadOnly) return
                   setEditingMeta(true)
                 }}
                 title="Click para editar"
@@ -278,7 +300,7 @@ export default function ItinerarioPage() {
                   fontFamily: 'var(--font-body)',
                   fontSize: '14px',
                   color: 'var(--muted)',
-                  cursor: isCompleted ? 'default' : 'pointer',
+                  cursor: isReadOnly ? 'default' : 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px',
@@ -294,7 +316,7 @@ export default function ItinerarioPage() {
                 {current.preferences.time === '4h' ? 'Visita rápida' :
                   current.preferences.time === '6h' ? 'Medio día' :
                     current.preferences.time === 'full' ? 'Día completo' : 'Fin de semana'}
-                {!isCompleted && <span style={{ fontSize: '12px' }}>✏️</span>}
+                {!isReadOnly && <span style={{ fontSize: '12px' }}>✏️</span>}
               </div>
             )}
           </div>
@@ -323,27 +345,31 @@ export default function ItinerarioPage() {
               <MessageCircle size={14} /> Compartir
             </button>
 
-            {current.status !== 'completed' ? (
+            {(!current.status || current.status === 'draft') ? (
               <button
                 onClick={handleComplete}
-                disabled={completing}
+                disabled={completing || current.stops.length === 0}
                 className="btn btn-ghost btn-sm"
-                style={{
-                  flex: 1,
-                  borderColor: 'var(--amber)',
-                  color: 'var(--amber)'
-                }}
+                style={{ flex: 1, borderColor: 'var(--orange)', color: 'var(--orange)', fontWeight: 700 }}
               >
-                {completing
-                  ? <Loader2 size={14} className="animate-spin" />
-                  : '✓'
-                }
-                {completing ? '...' : 'Completar'}
+                {completing ? <Loader2 size={14} className="animate-spin" /> : '🫏'}
+                {completing ? 'Iniciando...' : '¡A montar!'}
               </button>
+            ) : current.status === 'in_progress' ? (
+              <div style={{
+                flex: 1, display: 'inline-flex', alignItems: 'center',
+                justifyContent: 'center', gap: '6px',
+                padding: '6px 12px', borderRadius: '8px',
+                background: 'rgba(255,85,0,0.1)',
+                border: '1px solid rgba(255,85,0,0.3)',
+                color: 'var(--orange)',
+                fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600
+              }}>
+                🫏 En marcha
+              </div>
             ) : (
               <div style={{
-                flex: 1,
-                display: 'inline-flex', alignItems: 'center',
+                flex: 1, display: 'inline-flex', alignItems: 'center',
                 justifyContent: 'center', gap: '6px',
                 padding: '6px 12px', borderRadius: '8px',
                 background: 'rgba(34,197,94,0.1)',
@@ -351,17 +377,60 @@ export default function ItinerarioPage() {
                 color: '#22c55e',
                 fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600
               }}>
-                ✓ Listo
+                ✓ Completado
               </div>
             )}
           </div>
 
         </div>
 
+        {/* Barra de progreso */}
+        {isReadOnly && (
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{
+              display: 'flex', justifyContent: 'space-between',
+              alignItems: 'center', marginBottom: '8px'
+            }}>
+              <span style={{
+                fontFamily: 'var(--font-body)', fontSize: '13px',
+                color: 'var(--muted)', fontWeight: 600,
+              }}>
+                Progreso del itinerario
+              </span>
+              <span style={{
+                fontFamily: 'var(--font-display)', fontSize: '18px',
+                fontWeight: 800, color: 'var(--orange)',
+              }}>
+                {Math.round(
+                  (current.stops.filter(s => s.visited).length / current.stops.length) * 100
+                )}%
+              </span>
+            </div>
+            <div style={{
+              height: '6px', background: 'var(--card2)',
+              borderRadius: '99px', overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${(current.stops.filter(s => s.visited).length / current.stops.length) * 100}%`,
+                background: 'var(--orange)',
+                borderRadius: '99px',
+                transition: 'width 0.5s ease',
+              }} />
+            </div>
+            <div style={{
+              fontFamily: 'var(--font-body)', fontSize: '12px',
+              color: 'var(--muted)', marginTop: '6px',
+            }}>
+              {current.stops.filter(s => s.visited).length} de {current.stops.length} spots visitados
+            </div>
+          </div>
+        )}
+
         {/* Reminders */}
         <ReminderPanel />
 
-        {!isCompleted && (
+        {!isReadOnly && (
           <button
             onClick={() => {
               setSelectingSpot(true)
@@ -399,7 +468,10 @@ export default function ItinerarioPage() {
         )}
 
         {/* Timeline */}
-        <Timeline readOnly={isCompleted} />
+        <Timeline
+          readOnly={isReadOnly}        // bloquea edición
+          canVisit={current.status === 'in_progress'}  // permite marcar visitado
+        />
 
       </div>
       {/* Mapa de itinerario */}
@@ -413,7 +485,7 @@ export default function ItinerarioPage() {
         status={autoSaveStatus}
         isNew={isNew}
         onSave={handleSave}
-        disabled={isCompleted}
+        disabled={isReadOnly}
       />
     </div>
 
