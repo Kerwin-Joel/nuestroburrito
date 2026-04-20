@@ -1,0 +1,858 @@
+// @ts-nocheck
+import { useEffect, useRef, useState, useCallback } from 'react';
+import MapHero from './MapHero.tsx';
+import ProductosBurrito from './Productosburrito.tsx';
+import AlianzasBurrito from './Alianzasburrito.tsx';
+import { QuizSection } from './QuizSection.tsx';
+import { supabase } from "../../lib/supabase";
+import WaitlistSuccess from "./WaitlistSuccess";
+
+/* ─── Data ─── */
+const TICKERS = [
+  'Piura te espera', 'Tu itinerario en 60 segundos',
+  'Experiencias locales reales', 'Sin planificación, sin experiencia',
+  'Rutas optimizadas con IA', '100% spots locales',
+];
+
+const ITINERARY = [
+  { time: '7:30', icon: '🌄', place: 'Mirador Canchaque', tip: 'Llega antes de las 8am' },
+  { time: '10:00', icon: '🏖️', place: 'Playa Colán', tip: 'La menos turística del norte' },
+  { time: '13:30', icon: '🍋', place: 'Cebichería Don Miguel', tip: 'Mero fresco — no está en guías' },
+  { time: '17:00', icon: '🌅', place: 'Sunset Lobitos', tip: 'Spot secreto de surfistas locales' },
+];
+
+const PAIN_ITEMS = [
+  ['01', 'Abres 12 tabs. Cierras 12 tabs.', 'Sigues sin saber qué hacer.'],
+  ['02', 'Google Maps te muestra 80 opciones.', 'No te dice cuál elegir.'],
+  ['03', 'Las guías te mandan a los mismos 3 lugares.', 'Los turísticos. Los aburridos.'],
+  ['04', 'Llegas al restaurante y ya cerró.', 'Nadie te avisó.'],
+];
+
+const STEPS = [
+  { n: '01', title: 'Dinos qué te gusta', desc: 'Playa, gastronomía, aventura, cultura. Cuántas horas tienes. 3 preguntas. 20 segundos.' },
+  { n: '02', title: 'Tu ruta aparece', desc: 'IA + conocimiento local. Optimizamos horarios, traslados, clima y contexto real de Piura.' },
+  { n: '03', title: 'Ve y disfruta.', desc: '¿Algo no te convence? Edítalo en un click. El control es tuyo.' },
+];
+
+const DEMO_ROWS = [
+  { time: '7:00', travel: 'Inicio', place: 'Desayuno El Chalán', desc: 'Tamalitos verdes con café de Chulucanas.', tip: 'Pide la «mañanera» — no está en el menú' },
+  { time: '9:30', travel: '40 min', place: 'Playa Yacila', desc: 'La menos concurrida del norte. Agua transparente.', tip: 'Antes de las 10am para elegir mejor lugar' },
+  { time: '13:00', travel: '15 min', place: 'Cebichería El Puerto · Paita', desc: 'Leche de tigre de cangrejo. El mejor del litoral.', tip: 'Pide el cebiche mixto — la joya del lugar' },
+  { time: '17:30', travel: '25 min', place: 'Mirador Sunset · Talara', desc: 'El sol cae directo sobre el Pacífico desde aquí.', tip: 'Domingos hay música en vivo' },
+];
+
+const COMPARE_ROWS = [
+  ['Te muestra opciones. Tú decides todo.', 'Te dice exactamente qué hacer y cuándo.'],
+  ['Sin horarios, sin lógica de ruta.', 'Ruta optimizada, traslados calculados.'],
+  ['Mismos lugares que todos.', 'Spots locales que nadie más conoce.'],
+  ['Tarda horas. O días.', 'Tu itinerario en 60 segundos.'],
+  ['No sabe si llueve el sábado.', 'Adapta el plan al clima y contexto real.'],
+];
+
+const TABLE_ROWS = [
+  ['Itinerario con horarios exactos', '✕ No', '✓ Sí'],
+  ['Ruta optimizada por traslados', '✕ No', '✓ Sí'],
+  ['Personalizado a tus gustos', '✕ No', '✓ Sí'],
+  ['Tips locales reales', '✕ Rara vez', '✓ Siempre'],
+  ['Adaptado al contexto (clima, día)', '✕ No', '✓ Sí'],
+  ['Listo en menos de 1 minuto', '✕ No (horas)', '✓ Sí'],
+];
+
+const TESTIMONIALS = [
+  { i: 'M', name: 'María G.', from: 'Lima · enero 2025', text: 'Llegué a Piura sin ningún plan. En 2 minutos tenía todo el día organizado. Fui a un cebiche que no está en ninguna guía y fue lo mejor del viaje.' },
+  { i: 'C', name: 'Carlos R.', from: 'Chiclayo · semana santa', text: 'Lo usé con mi familia, pusimos \'niños + playa + comida local\' y nos dio un itinerario perfecto. Sin carreras, sin perdernos. Todo a tiempo.' },
+  { i: 'A', name: 'Andrea T.', from: 'Argentina · mochilera en Perú', text: 'Llevaba 2 horas en TripAdvisor sin decidir nada. Probé Burrito y en 1 minuto tenía el día listo. Nunca más sin esto.' },
+];
+
+const PHONE_ITIN = [{ time: "7:30", icon: "🌄", place: "Mirador Canchaque", tip: "Llega antes de las 8am" }, { time: "10:00", icon: "🏖️", place: "Playa Colán", tip: "La menos turística del norte" }, { time: "13:30", icon: "🍋", place: "Cebichería Don Miguel", tip: "Mero fresco — no está en guías" }, { time: "17:00", icon: "🌅", place: "Sunset Lobitos", tip: "Spot secreto de surfistas" }];
+const PAIN = [["01", "Abres 12 tabs. Cierras 12 tabs.", "Sigues sin saber qué hacer."], ["02", "Google Maps te muestra 80 opciones.", "No te dice cuál elegir."], ["03", "Las guías te mandan a los mismos 3 lugares.", "Los turísticos. Los aburridos."], ["04", "Llegas al restaurante y ya cerró.", "Nadie te avisó."]];
+const STEPS_D = [{ n: "01", title: "Dinos qué te gusta", desc: "Playa, gastronomía, aventura o cultura. 3 preguntas. 20 segundos." }, { n: "02", title: "Tu ruta aparece", desc: "IA + conocimiento local de Piura. Horarios y traslados entre distritos." }, { n: "03", title: "Ve y disfruta.", desc: "¿Algo no te convence? Edítalo en un click. El control es tuyo." }];
+const COMPARE = [["Te muestra opciones. Tú decides todo.", "Te dice exactamente qué hacer y cuándo."], ["Sin horarios, sin lógica de ruta.", "Ruta optimizada, traslados calculados."], ["Mismos lugares que todos.", "Spots locales que nadie más conoce."], ["Tarda horas. O días.", "Tu itinerario en 60 segundos."], ["No sabe si llueve el sábado.", "Adapta el plan al clima y contexto real."]];
+const TESTI = [{ i: "M", name: "María G.", from: "Lima · enero 2025", text: "Llegué a Piura sin ningún plan. En 2 minutos tenía todo el día organizado. Fui a un cebiche que no está en ninguna guía y fue lo mejor del viaje." }, { i: "C", name: "Carlos R.", from: "Chiclayo · semana santa", text: "Lo usé con mi familia: 'niños + playa + comida local'. Nos dio el itinerario perfecto. Sin carreras, sin perdernos." }, { i: "A", name: "Andrea T.", from: "Argentina · mochilera en Perú", text: "Llevaba 2 horas en TripAdvisor sin decidir nada. Probé Burrito y en 1 minuto tenía el día listo. Nunca más sin esto." }];
+const WHO_OPT = [{ id: "tourist", icon: "🧳", label: "Turista", sub: "De otra ciudad" }, { id: "local", icon: "🏠", label: "Soy de Piura", sub: "Conozco la región" }, { id: "transit", icon: "✈️", label: "De paso", sub: "Pocas horas" }];
+const GROUP_OPT = [{ id: "solo", icon: "👤", label: "Solo/a" }, { id: "couple", icon: "👫", label: "En pareja" }, { id: "family", icon: "👨‍👩‍👧", label: "Familia" }, { id: "friends", icon: "👯", label: "Amigos" }];
+const TIME_OPT = [{ id: "4h", icon: "⏱️", label: "Menos de 4h", sub: "Visita rápida" }, { id: "6h", icon: "🌅", label: "Medio día", sub: "4–6 horas" }, { id: "full", icon: "☀️", label: "Día completo", sub: "6+ horas" }, { id: "wknd", icon: "📅", label: "Fin de semana", sub: "2 días" }];
+const BUDGET_OPT = [{ id: "low", icon: "💸", label: "Económico", sub: "Hasta S/50" }, { id: "mid", icon: "👌", label: "Moderado", sub: "S/50–S/150" }, { id: "high", icon: "✨", label: "Sin límite", sub: "Lo mejor" }];
+const INTERESTS = [{ id: "beach", icon: "🏖️", label: "Playa y mar" }, { id: "food", icon: "🍽️", label: "Gastronomía" }, { id: "nature", icon: "🏔️", label: "Sierra" }, { id: "culture", icon: "🎨", label: "Arte y cultura" }, { id: "adventure", icon: "🌊", label: "Aventura" }, { id: "markets", icon: "🛍️", label: "Mercados" }, { id: "photo", icon: "📸", label: "Fotografía" }, { id: "relax", icon: "☕", label: "Café y relax" }];
+const GEN_MSGS = ["Consultando con los locales…", "Calculando rutas entre distritos…", "Buscando los mejores horarios…", "Añadiendo tips secretos…", "Armando tu itinerario perfecto…"];
+const STEP_LABELS = ["Tú", "Tiempo", "Intereses", "Generando", "Tu día", "Enviar"];
+
+
+/* ══════════════════════════════════════════════════
+   WEBGL ISOMETRIC CITY — zero external dependencies
+══════════════════════════════════════════════════ */
+function IsoCity({ style = {} }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const canvas = document.createElement("canvas");
+    Object.assign(canvas.style, { position: "absolute", inset: 0, width: "100%", height: "100%" });
+    el.appendChild(canvas);
+
+    const dpr = Math.min(devicePixelRatio, 2);
+    const doResize = () => {
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+    };
+    doResize();
+    window.addEventListener("resize", doResize, { passive: true });
+
+    const gl = canvas.getContext("webgl", { alpha: true, antialias: true });
+    if (!gl) return;
+    gl.getExtension("OES_element_index_uint");
+    gl.clearColor(0, 0, 0, 0);
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    /* shaders */
+    const VS = `
+      attribute vec3 aP,aN,aC;
+      uniform mat4 uMVP,uM;
+      varying vec3 vN,vP,vC;
+      void main(){vN=mat3(uM)*aN;vP=(uM*vec4(aP,1.)).xyz;vC=aC;gl_Position=uMVP*vec4(aP,1.);}`;
+    const FS = `
+      precision mediump float;
+      varying vec3 vN,vP,vC;
+      void main(){
+        vec3 N=normalize(vN);
+        vec3 L1=normalize(vec3(8.,18.,6.)-vP);
+        vec3 L2=normalize(vec3(-6.,4.,-8.)-vP);
+        float d1=max(dot(N,L1),0.),d2=max(dot(N,L2),0.);
+        vec3 c=vC*(0.35+d1*.78+d2*.22);
+        c=pow(c,vec3(1./2.2));
+        gl_FragColor=vec4(c,1.);
+      }`;
+    const mkShader = (t: number, s: string): WebGLShader => {
+      const sh = gl.createShader(t)!;
+      gl.shaderSource(sh, s);
+      gl.compileShader(sh);
+      return sh;
+    };
+    const mkProg = () => {
+      const p = gl.createProgram();
+      gl.attachShader(p, mkShader(gl.VERTEX_SHADER, VS));
+      gl.attachShader(p, mkShader(gl.FRAGMENT_SHADER, FS));
+      gl.linkProgram(p); return p;
+    };
+
+    /* geometry helpers */
+    const makeGeo = () => {
+      const pos = [], nrm = [], col = [], idx = [];
+      let vo = 0;
+      const addBox = (x, y, z, w, h, d, r, g, b) => {
+        const hx = w / 2, hy = h / 2, hz = d / 2;
+        [
+          [[-hx, hy, -hz], [hx, hy, -hz], [hx, hy, hz], [-hx, hy, hz], [0, 1, 0]],
+          [[-hx, -hy, hz], [hx, -hy, hz], [hx, -hy, -hz], [-hx, -hy, -hz], [0, -1, 0]],
+          [[-hx, -hy, hz], [hx, -hy, hz], [hx, hy, hz], [-hx, hy, hz], [0, 0, 1]],
+          [[hx, -hy, -hz], [-hx, -hy, -hz], [-hx, hy, -hz], [hx, hy, -hz], [0, 0, -1]],
+          [[hx, -hy, hz], [hx, -hy, -hz], [hx, hy, -hz], [hx, hy, hz], [1, 0, 0]],
+          [[-hx, -hy, -hz], [-hx, -hy, hz], [-hx, hy, hz], [-hx, hy, -hz], [-1, 0, 0]],
+        ].forEach(([v0, v1, v2, v3, n]) => {
+          [v0, v1, v2, v3].forEach(v => {
+            pos.push(x + v[0], y + v[1], z + v[2]);
+            nrm.push(n[0], n[1], n[2]);
+            col.push(r, g, b);
+          });
+          idx.push(vo, vo + 1, vo + 2, vo, vo + 2, vo + 3); vo += 4;
+        });
+      };
+      return { pos, nrm, col, idx, addBox };
+    };
+
+    /* city geometry */
+    const city = makeGeo();
+    const { addBox: ab } = city;
+
+    // ground + grid lines
+    ab(0, -0.06, 0, 30, 0.12, 26, 0.055, 0.047, 0.035);
+    for (let i = -13; i <= 13; i += 1) { ab(i, 0.02, 0, 0.01, 0.01, 26, 0.12, 0.11, 0.09); ab(0, 0.02, i, 30, 0.01, 0.01, 0.12, 0.11, 0.09); }
+
+    // streets
+    [[0, -6, 30, 1.4], [0, 0, 30, 1.4], [0, 6, 30, 1.4]].forEach(([x, z, w, d]) => ab(x, 0.045, z, w, 0.09, d, 0.086, 0.078, 0.063));
+    [[-9, 0, 1.4, 26], [0, 0, 1.4, 26], [9, 0, 1.4, 26]].forEach(([x, z, w, d]) => ab(x, 0.045, z, w, 0.09, d, 0.086, 0.078, 0.063));
+
+    // buildings
+    const FLOOR = 0.40;
+    const BC = [[0.078, 0.071, 0.063], [0.102, 0.090, 0.078], [0.059, 0.051, 0.043]];
+    [
+      [-11.5, 8.5, 2.1, 1.9, 5], [-7, 8.5, 1.9, 2.1, 3], [-3.5, 8.5, 2.3, 1.8, 4],
+      [-7, 3, 1.7, 1.6, 2], [-3.5, 3.2, 2.1, 1.9, 5], [-3.5, -2.8, 2.2, 2, 3],
+      [-7, -3, 1.8, 1.6, 4], [-11.5, -3, 2.3, 2.1, 2], [-11.5, 3, 1.9, 1.8, 3],
+      [3.5, 8.5, 2, 2, 4], [7, 8.5, 1.8, 1.9, 2], [11.5, 8.5, 2.3, 2.1, 5],
+      [3.5, 3, 1.7, 2, 3], [7, 3, 2.1, 1.7, 5], [11.5, 3, 1.8, 1.9, 2],
+      [3.5, -3, 2, 1.8, 4], [7, -3, 1.7, 1.7, 3], [11.5, -3, 2.3, 2, 5],
+      [-7, -8.5, 2, 2, 3], [7, -8.5, 1.9, 2.1, 4], [11.5, -8.5, 2.1, 1.8, 2],
+    ].forEach(([bx, bz, bw, bd, floors], bi) => {
+      const h = floors * FLOOR, [r, g, b] = BC[bi % 3];
+      ab(bx, h / 2, bz, bw, h, bd, r, g, b);
+      ab(bx, h + 0.045, bz, bw + 0.1, 0.09, bd + 0.1, 0.11, 0.098, 0.082);
+      // windows front/back
+      const cols = Math.max(1, Math.floor(bw / 0.55));
+      for (let fi = 0; fi < 2; fi++) {
+        const fz = bz + (fi === 0 ? bd / 2 + 0.01 : -bd / 2 - 0.01);
+        for (let row = 0; row < floors; row++) for (let c = 0; c < cols; c++) {
+          const lit = Math.random() > .4;
+          ab(bx - bw / 2 + bw / (cols + 1) * (c + 1), FLOOR * (row + .5) + .06, fz,
+            0.22, 0.17, 0.04,
+            lit ? .98 : .22, lit ? .55 : .17, lit ? 0 : .06);
+        }
+      }
+      // antenna
+      if (floors >= 4) {
+        const ah = 0.5 + Math.random() * .4;
+        ab(bx + (Math.random() - .5) * .5, h + ah / 2 + .09, bz + (Math.random() - .5) * .4, 0.04, ah, 0.04, 0.165, 0.137, 0.063);
+        ab(bx + (Math.random() - .5) * .5, h + ah + .1, bz + (Math.random() - .5) * .4, 0.10, 0.10, 0.10, 1.0, .33, 0.0);
+      }
+    });
+
+    // route
+    const RY = 1.82;
+    [[-11.5, 8.5, -11.5, 6.0], [-11.5, 6.0, -9.0, 6.0], [-9.0, 6.0, -9.0, 0.0],
+    [-9.0, 0.0, -0.7, 0.0], [-0.7, 0.0, -0.7, -6.0], [-0.7, -6.0, 9.0, -6.0],
+    [9.0, -6.0, 9.0, -3.0], [9.0, -3.0, 11.5, -3.0]
+    ].forEach(([x1, z1, x2, z2]) => {
+      const cx = (x1 + x2) / 2, cz = (z1 + z2) / 2;
+      const isX = Math.abs(x2 - x1) > Math.abs(z2 - z1);
+      const len = Math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2);
+      if (isX) { ab(cx, RY, cz, len, .09, .14, 1.0, .33, 0); ab(cx, RY - .01, cz, len, .05, .42, 1.0, .55, 0); }
+      else { ab(cx, RY, cz, .14, .09, len, 1.0, .33, 0); ab(cx, RY - .01, cz, .42, .05, len, 1.0, .55, 0); }
+    });
+    [[-11.5, 6.0], [-9.0, 6.0], [-9.0, 0.0], [-0.7, 0.0], [-0.7, -6.0], [9.0, -6.0], [9.0, -3.0]].forEach(([cx, cz]) =>
+      ab(cx, RY, cz, .24, .09, .24, 1.0, .33, 0));
+
+    /* donkey geometry (separate, dynamic position) */
+    const donkey = makeGeo();
+    const { addBox: db } = donkey;
+    db(0, .72, 0, .54, .33, .27, .769, .604, .353); // body
+    db(0, .59, .01, .56, .11, .19, .831, .667, .416); // belly
+    db(.27, .90, 0, .14, .27, .17, .769, .604, .353); // neck
+    db(.41, 1.06, 0, .23, .21, .19, .769, .604, .353); // head
+    db(.51, 1.00, 0, .15, .13, .17, .694, .541, .314); // muzzle
+    [-0.075, 0.075].forEach(oz => {
+      db(.33, 1.28, oz, .075, .30, .075, .769, .604, .353); // ear
+      db(.33, 1.30, oz, .045, .22, .045, .753, .502, .376); // ear inner
+      db(.33, 1.46, oz, .065, .065, .065, .541, .416, .227); // ear tip
+    });
+    [-0.08, 0.08].forEach(oz => {
+      db(.44, 1.10, oz, .05, .05, .04, .165, .137, .063); // eye
+      db(.458, 1.118, oz, .025, .025, .02, .98, .97, .96); // eye highlight
+    });
+    db(.51, .98, 0, .04, .03, .16, .165, .137, .063); // nose
+    [[.27, 1.06], [.31, 1.10], [.35, 1.12], [.38, 1.14]].forEach(([mx, my]) =>
+      db(mx, my, 0, .065, .13, .065, .541, .416, .227)); // mane
+    db(-.05, .66, .22, .22, .19, .13, 1.0, .33, 0); // bag L
+    db(-.05, .66, -.22, .22, .19, .13, 1.0, .33, 0); // bag R
+    db(0, .72, 0, .54, .045, .045, .541, .416, .227); // strap
+    db(-.28, .76, 0, .085, .23, .085, .769, .604, .353); // tail base
+    db(-.36, .62, 0, .10, .15, .10, .541, .416, .227); // tail tuft
+    [[.19, .10], [.19, -.10], [-.19, .10], [-.19, -.10]].forEach(([lx, lz]) => {
+      db(lx, .47, lz, .09, .23, .09, .769, .604, .353); // upper leg
+      db(lx, .24, lz, .07, .21, .07, .541, .416, .227); // lower leg
+      db(lx, .09, lz, .09, .06, .09, .165, .137, .063); // hoof
+    });
+
+    /* GPU upload helper */
+    const upload = (data, type = gl.ARRAY_BUFFER) => {
+      const buf = gl.createBuffer();
+      gl.bindBuffer(type, buf);
+      gl.bufferData(type, data instanceof Float32Array ? data : new Float32Array(data), gl.STATIC_DRAW);
+      return buf;
+    };
+    const uploadIdx = data => {
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(data), gl.STATIC_DRAW);
+      return buf;
+    };
+
+    const cityProg = mkProg();
+    const cPBuf = upload(city.pos), cNBuf = upload(city.nrm), cCBuf = upload(city.col);
+    const cIBuf = uploadIdx(city.idx);
+    const cMVP = gl.getUniformLocation(cityProg, "uMVP"), cM = gl.getUniformLocation(cityProg, "uM");
+
+    const dProg = mkProg();
+    const dPBuf = upload(donkey.pos), dNBuf = upload(donkey.nrm), dCBuf = upload(donkey.col);
+    const dIBuf = uploadIdx(donkey.idx);
+    const dMVP = gl.getUniformLocation(dProg, "uMVP"), dM2 = gl.getUniformLocation(dProg, "uM");
+
+    /* bind attribs for a program */
+    const bindAttribs = (prog, pBuf, nBuf, cBuf) => {
+      gl.useProgram(prog);
+      const setA = (buf, name, n) => {
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        const loc = gl.getAttribLocation(prog, name);
+        if (loc < 0) return;
+        gl.enableVertexAttribArray(loc);
+        gl.vertexAttribPointer(loc, n, gl.FLOAT, false, 0, 0);
+      };
+      setA(pBuf, "aP", 3); setA(nBuf, "aN", 3); setA(cBuf, "aC", 3);
+    };
+
+    /* math */
+    const mul = (a, b) => { const r = new Float32Array(16); for (let i = 0; i < 4; i++)for (let j = 0; j < 4; j++)for (let k = 0; k < 4; k++)r[i * 4 + j] += a[i * 4 + k] * b[k * 4 + j]; return r; };
+    const id = () => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+    const tr = (x, y, z) => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]);
+    const ortho = (l, r, t, b, n, f) => new Float32Array([2 / (r - l), 0, 0, 0, 0, 2 / (t - b), 0, 0, 0, 0, -2 / (f - n), 0, -(r + l) / (r - l), -(t + b) / (t - b), -(f + n) / (f - n), 1]);
+    const lookAt = (ex, ey, ez) => {
+      let fx = -ex, fy = -ey, fz = -ez;
+      const fl = Math.hypot(fx, fy, fz); fx /= fl; fy /= fl; fz /= fl;
+      let rx = fy * 0 - fz * 1, ry = fz * 0 - fx * 0, rz = fx * 1 - fy * 0;
+      const rl = Math.hypot(rx, ry, rz); rx /= rl; ry /= rl; rz /= rl;
+      const ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx;
+      return new Float32Array([rx, ux, -fx, 0, ry, uy, -fy, 0, rz, uz, -fz, 0, -(rx * ex + ry * ey + rz * ez), -(ux * ex + uy * ey + uz * ez), fx * ex + fy * ey + fz * ez, 1]);
+    };
+
+    /* route */
+    const WP = [[-11.5, RY, 8.5], [-11.5, RY, 6.0], [-9.0, RY, 6.0], [-9.0, RY, 0.0], [-0.7, RY, 0.0], [-0.7, RY, -6.0], [9.0, RY, -6.0], [9.0, RY, -3.0], [11.5, RY, -3.0]];
+    const SL = []; let TL = 0;
+    for (let i = 0; i < WP.length - 1; i++) { const l = Math.hypot(WP[i + 1][0] - WP[i][0], WP[i + 1][2] - WP[i][2]); SL.push(l); TL += l; }
+    const getP = p => { let d = p * TL; for (let i = 0; i < WP.length - 1; i++) { if (d <= SL[i]) { const t = d / SL[i]; return [WP[i][0] + (WP[i + 1][0] - WP[i][0]) * t, RY, WP[i][2] + (WP[i + 1][2] - WP[i][2]) * t]; } d -= SL[i]; } return [...WP[WP.length - 1]]; };
+    const getD = p => { const a = getP(Math.max(0, p - .002)), b = getP(Math.min(1, p + .002)); return Math.atan2(b[0] - a[0], b[2] - a[2]); };
+
+    /* render loop */
+    let tick = 0, prog = 0, raf;
+    const CAM = 9;
+
+    const draw = () => {
+      raf = requestAnimationFrame(draw); tick++; prog = (prog + .00095) % 1;
+      const w = canvas.clientWidth * dpr, h = canvas.clientHeight * dpr;
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      gl.viewport(0, 0, w, h);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      const asp = w / h;
+      const cx = 12 + Math.sin(tick * .006) * .55, cz = 12 + Math.cos(tick * .004) * .30;
+      const view = lookAt(cx, 14, cz);
+      const proj = ortho(-CAM * asp, CAM * asp, CAM, -CAM, .1, 200);
+      const vpMat = mul(proj, view);
+      const mvpCity = mul(vpMat, id());
+
+      // city
+      bindAttribs(cityProg, cPBuf, cNBuf, cCBuf);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cIBuf);
+      gl.uniformMatrix4fv(cMVP, false, mvpCity);
+      gl.uniformMatrix4fv(cM, false, id());
+      gl.drawElements(gl.TRIANGLES, city.idx.length, gl.UNSIGNED_INT, 0);
+
+      // donkey
+      const dp = getP(prog), ang = getD(prog), bob = Math.sin(tick * .14) * .042;
+      const ca = Math.cos(ang), sa = Math.sin(ang);
+      const rot = new Float32Array([ca, 0, sa, 0, 0, 1, 0, 0, -sa, 0, ca, 0, 0, 0, 0, 1]);
+      const dModel = mul(tr(dp[0], dp[1] + bob, dp[2]), rot);
+      const dMVPmat = mul(vpMat, dModel);
+      bindAttribs(dProg, dPBuf, dNBuf, dCBuf);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, dIBuf);
+      gl.uniformMatrix4fv(dMVP, false, dMVPmat);
+      gl.uniformMatrix4fv(dM2, false, dModel);
+      gl.drawElements(gl.TRIANGLES, donkey.idx.length, gl.UNSIGNED_INT, 0);
+    };
+    draw();
+
+    document.addEventListener("visibilitychange", () => { if (document.hidden) cancelAnimationFrame(raf); else draw(); });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", doResize);
+      if (el.contains(canvas)) el.removeChild(canvas);
+    };
+  }, []);
+
+  return <div ref={ref} style={{ position: "absolute", inset: 0, pointerEvents: "none", ...style }} />;
+}
+
+
+function generateItinerary(prefs) {
+  const isFamily = prefs.group === "family", short = prefs.time === "4h" || prefs.time === "6h";
+  const ix = prefs.interests || [];
+  const hasBeach = ix.includes("beach"), hasFood = ix.includes("food") || !ix.length;
+  const hasNature = ix.includes("nature"), hasCulture = ix.includes("culture");
+  const all = [
+    { time: "7:00", place: "Desayuno en El Chalán", desc: "Tamalitos verdes con café de Chulucanas.", tip: "Pide la «mañanera» — no está en el menú", type: "food" },
+    { time: "9:30", place: isFamily ? "Playa Colán" : "Playa Yacila", desc: isFamily ? "Agua calmada, perfecta para niños." : "La menos concurrida. Agua transparente.", tip: isFamily ? "Llega antes de las 10am" : "Menos turistas entre semana", type: "beach" },
+    { time: "13:00", place: "Cebichería El Puerto · Paita", desc: "Leche de tigre de cangrejo.", tip: "Pide el cebiche mixto — la joya del lugar", type: "food" },
+    { time: "10:00", place: "Mercado Artesanal de Catacaos", desc: "Filigrana de oro y chicha de jora.", tip: "Los mejores precios antes del mediodía", type: "culture" },
+    { time: "11:30", place: "Mirador de Canchaque", desc: "Vista panorámica de la sierra piurana.", tip: "Hermoso antes del mediodía", type: "nature" },
+    { time: "17:30", place: "Mirador Sunset · Talara", desc: "El sol cae sobre el Pacífico.", tip: "Domingos hay música en vivo", type: "beach" },
+  ];
+  let sel = [];
+  if (hasFood) sel.push(all[0]);
+  if (hasBeach) sel.push(all[1]);
+  if (hasFood) sel.push(all[2]);
+  if (hasNature && !short) sel.push(all[4]);
+  if (hasCulture && !short) sel.push(all[3]);
+  if (hasBeach && !short) sel.push(all[5]);
+  if (!sel.length) sel = all.slice(0, short ? 3 : 5);
+  if (short) sel = sel.slice(0, 3);
+  return sel.map((s, i) => ({ ...s, id: Date.now() + i }));
+}
+
+
+
+/* ─── Scroll reveal hook ─── */
+function useReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll('[data-rv]');
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.setAttribute('data-vis', '1'); io.unobserve(e.target); }
+      }),
+      { threshold: 0.1 }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+}
+
+
+/* ══════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════ */
+
+function Modal({ isOpen, onClose }) {
+  const [step, setStep] = useState(0);
+  const [prefs, setPrefs] = useState({ who: "", group: "", time: "", budget: "", interests: [] });
+  const [items, setItems] = useState([]);
+  const [adding, setAdding] = useState(false);
+  const [newStop, setNewStop] = useState({ time: "", place: "", tip: "" });
+  const [user, setUser] = useState({ name: "", phone: "", email: "" });
+  const [sent, setSent] = useState(false);
+  const [genPct, setGenPct] = useState(0);
+  const [genMsg, setGenMsg] = useState(0);
+
+  useEffect(() => { if (isOpen) { setStep(0); setPrefs({ who: "", group: "", time: "", budget: "", interests: [] }); setSent(false); setGenPct(0); } }, [isOpen]);
+  useEffect(() => { const fn = e => { if (e.key === "Escape") onClose(); }; window.addEventListener("keydown", fn); return () => window.removeEventListener("keydown", fn); }, [onClose]);
+
+  useEffect(() => {
+    if (step !== 3) return;
+    setGenPct(0);
+    const iv = setInterval(() => setGenPct(p => { if (p >= 100) { clearInterval(iv); return 100; } return p + 2.4; }), 65);
+    const mv = setInterval(() => setGenMsg(i => (i + 1) % GEN_MSGS.length), 1100);
+    return () => { clearInterval(iv); clearInterval(mv); };
+  }, [step]);
+  useEffect(() => {
+    if (step === 3 && genPct >= 100) { const t = setTimeout(() => { setItems(generateItinerary(prefs)); setStep(4); }, 400); return () => clearTimeout(t); }
+  }, [genPct, step]);
+
+  const canNext = () => { if (step === 0) return prefs.who && prefs.group; if (step === 1) return prefs.time && prefs.budget; return true; };
+  const next = () => { if (step < 5) setStep(s => s + 1); };
+  const back = () => { if (step > 0 && step !== 3) setStep(s => s - 1); };
+  const toggle = id => setPrefs(p => ({ ...p, interests: p.interests.includes(id) ? p.interests.filter(i => i !== id) : [...p.interests, id] }));
+  const removeItem = id => setItems(p => p.filter(i => i.id !== id));
+  const moveUp = idx => setItems(p => { if (!idx) return p; const a = [...p];[a[idx - 1], a[idx]] = [a[idx], a[idx - 1]]; return a; });
+  const moveDown = idx => setItems(p => { if (idx === p.length - 1) return p; const a = [...p];[a[idx], a[idx + 1]] = [a[idx + 1], a[idx]]; return a; });
+  const addStop = () => { if (!newStop.place) return; setItems(p => [...p, { ...newStop, id: Date.now(), desc: "" }]); setNewStop({ time: "", place: "", tip: "" }); setAdding(false); };
+  const fmtItin = () => items.map(i => `${i.time} — ${i.place}${i.tip ? `\n   💡 ${i.tip}` : ""}`).join("\n");
+  const sendWA = () => { if (!user.phone) return; const text = encodeURIComponent(`🌯 *Tu itinerario Burrito — Piura*\n\n${fmtItin()}\n\n_burrito.pe_`); const ph = user.phone.replace(/\D/g, ""); window.open(`https://wa.me/${ph.startsWith("51") ? ph : "51" + ph}?text=${text}`, "_blank"); setSent(true); };
+  const sendEmail = () => { if (!user.email) return; const sub = encodeURIComponent("Tu itinerario en Piura — Burrito 🌯"); const body = encodeURIComponent(`Hola${user.name ? " " + user.name : ""}!\n\n${fmtItin()}\n\nDisfruta Piura 🌊\n— Burrito`); window.location.href = `mailto:${user.email}?subject=${sub}&body=${body}`; setSent(true); };
+
+  if (!isOpen) return null;
+  const pct = (step / (STEP_LABELS.length - 1)) * 100;
+
+  return (
+    <div className="m-back" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="m-panel" role="dialog" aria-modal="true">
+        <div className="m-hdr">
+          <div className="m-logo">burri<span>to</span></div>
+          <button className="m-x" onClick={onClose}>✕</button>
+        </div>
+        {step !== 3 && (
+          <div className="m-prog">
+            <div className="m-pt"><div className="m-pf" style={{ width: `${pct}%` }} /></div>
+            <div className="m-slbls">{STEP_LABELS.map((l, i) => <span key={l} className={`m-slbl${i === step ? " act" : i < step ? " dn" : ""}`}>{l}</span>)}</div>
+          </div>
+        )}
+        <div className="m-body">
+
+          {/* STEP 0 */}
+          {step === 0 && <div className="m-step">
+            <div className="m-step-title">¿Cómo llegas a Piura?</div>
+            <div className="m-step-sub">Para personalizar mejor tu experiencia</div>
+            <div className="m-choices">
+              {WHO_OPT.map(o => <button key={o.id} className={`m-choice${prefs.who === o.id ? " sel" : ""}`} onClick={() => setPrefs(p => ({ ...p, who: o.id }))}><span className="m-cico">{o.icon}</span><div><div className="m-clbl">{o.label}</div><div className="m-csub">{o.sub}</div></div></button>)}
+            </div>
+            <div className="m-step-sub" style={{ marginTop: 8 }}>¿Viajes solo o acompañado?</div>
+            <div className="m-choices" style={{ gridTemplateColumns: "repeat(4,1fr)" }}>
+              {GROUP_OPT.map(o => <button key={o.id} className={`m-choice${prefs.group === o.id ? " sel" : ""}`} onClick={() => setPrefs(p => ({ ...p, group: o.id }))}><span className="m-cico">{o.icon}</span><div className="m-clbl" style={{ fontSize: 12 }}>{o.label}</div></button>)}
+            </div>
+          </div>}
+
+          {/* STEP 1 */}
+          {step === 1 && <div className="m-step">
+            <div className="m-step-title">Tiempo y presupuesto</div>
+            <div className="m-step-sub">Para que el plan sea realista</div>
+            <div className="m-step-sub" style={{ marginBottom: 10 }}>¿Cuánto tiempo tienes?</div>
+            <div className="m-choices">
+              {TIME_OPT.map(o => <button key={o.id} className={`m-choice${prefs.time === o.id ? " sel" : ""}`} onClick={() => setPrefs(p => ({ ...p, time: o.id }))}><span className="m-cico">{o.icon}</span><div><div className="m-clbl">{o.label}</div><div className="m-csub">{o.sub}</div></div></button>)}
+            </div>
+            <div className="m-step-sub" style={{ marginTop: 14, marginBottom: 10 }}>¿Tu presupuesto?</div>
+            <div className="m-choices m-c3">
+              {BUDGET_OPT.map(o => <button key={o.id} className={`m-choice${prefs.budget === o.id ? " sel" : ""}`} onClick={() => setPrefs(p => ({ ...p, budget: o.id }))}><span className="m-cico">{o.icon}</span><div><div className="m-clbl">{o.label}</div><div className="m-csub">{o.sub}</div></div></button>)}
+            </div>
+          </div>}
+
+          {/* STEP 2 */}
+          {step === 2 && <div className="m-step">
+            <div className="m-step-title">¿Qué quieres vivir?</div>
+            <div className="m-step-sub">Puedes elegir varios o ninguno</div>
+            <div className="m-chips">
+              {INTERESTS.map(c => <button key={c.id} className={`m-chip${prefs.interests.includes(c.id) ? " sel" : ""}`} onClick={() => toggle(c.id)}><span style={{ fontSize: 16 }}>{c.icon}</span>{c.label}</button>)}
+            </div>
+            <button className="m-choice" style={{ width: "100%", justifyContent: "center", opacity: .65 }} onClick={() => setPrefs(p => ({ ...p, interests: [] }))}>
+              <span className="m-cico">🎲</span><div className="m-clbl">Sorpréndeme — elige por mí</div>
+            </button>
+          </div>}
+
+          {/* STEP 3 — 3D city animation */}
+          {step === 3 &&
+            <div className="m-step">
+              <div className="m-gen">
+                <MapHero marginTop="-200px" transformValue="translate(-20%, 17px)" sizeLoaded={true} />
+                <div className="m-gen-ov">
+                  <div className="m-gen-msg">{GEN_MSGS[genMsg]}</div>
+                  <div className="m-gen-bw"><div className="m-gen-bf" style={{ width: `${genPct}%` }} /></div>
+                  <div className="m-gen-pct">{Math.min(100, Math.round(genPct))}%</div>
+                </div>
+              </div>
+            </div>}
+
+          {/* STEP 4 — edit itinerary */}
+          {step === 4 && <div className="m-step">
+            <div className="m-itin-hd">
+              <div className="m-itin-t">Tu itinerario 🌯</div>
+              <span className="m-itin-b">{items.length} paradas</span>
+            </div>
+            {items.map((item, idx) => (
+              <div key={item.id} className="m-item">
+                <div className="m-itime">{item.time}</div>
+                <div className="m-idot" />
+                <div className="m-icont">
+                  <div className="m-iplace">{item.place}</div>
+                  {item.desc && <div className="m-idesc">{item.desc}</div>}
+                  {item.tip && <div className="m-itip">💡 {item.tip}</div>}
+                </div>
+                <div className="m-iacts">
+                  <button className="m-ibtn" onClick={() => moveUp(idx)}>↑</button>
+                  <button className="m-ibtn" onClick={() => moveDown(idx)}>↓</button>
+                  <button className="m-ibtn del" onClick={() => removeItem(item.id)}>✕</button>
+                </div>
+              </div>
+            ))}
+            {!adding
+              ? <button className="m-add-btn" onClick={() => setAdding(true)}>＋ Añadir parada</button>
+              : <div className="m-add-form">
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--hot)", marginBottom: 4 }}>Nueva parada</div>
+                <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 10 }}>
+                  <div><label className="m-ilbl">Hora</label><input className="m-inp" placeholder="14:00" value={newStop.time} onChange={e => setNewStop(p => ({ ...p, time: e.target.value }))} /></div>
+                  <div><label className="m-ilbl">Lugar</label><input className="m-inp" placeholder="Mirador de Canchaque" value={newStop.place} onChange={e => setNewStop(p => ({ ...p, place: e.target.value }))} /></div>
+                </div>
+                <div><label className="m-ilbl">Tip (opcional)</label><input className="m-inp" placeholder="Algo que deberías saber..." value={newStop.tip} onChange={e => setNewStop(p => ({ ...p, tip: e.target.value }))} /></div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button className="m-back-btn" onClick={() => setAdding(false)}>Cancelar</button>
+                  <button className="m-next-btn" onClick={addStop}>Añadir</button>
+                </div>
+              </div>
+            }
+          </div>}
+
+          {/* STEP 5 — confirm */}
+          {step === 5 && !sent && <div className="m-step">
+            <div className="m-step-title">¡Listo! Envíate el itinerario 🎉</div>
+            <div className="m-step-sub">Déjanos tus datos para enviártelo</div>
+            <div className="m-prev">
+              {items.map(item => <div key={item.id} className="m-prev-item"><span className="m-prev-time">{item.time}</span><span className="m-prev-place">{item.place}</span></div>)}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 11, marginBottom: 18 }}>
+              <div><label className="m-ilbl">Tu nombre (opcional)</label><input className="m-inp" placeholder="¿Cómo te llamamos?" value={user.name} onChange={e => setUser(p => ({ ...p, name: e.target.value }))} /></div>
+              <div><label className="m-ilbl">📱 WhatsApp</label><input className="m-inp" type="tel" placeholder="+51 999 999 999" value={user.phone} onChange={e => setUser(p => ({ ...p, phone: e.target.value }))} /></div>
+              <div><label className="m-ilbl">📧 Email</label><input className="m-inp" type="email" placeholder="tu@email.com" value={user.email} onChange={e => setUser(p => ({ ...p, email: e.target.value }))} /></div>
+            </div>
+            <button className="m-wa" onClick={sendWA} disabled={!user.phone}>📱 Enviar a WhatsApp</button>
+            <button className="m-em" onClick={sendEmail} disabled={!user.email}>📧 Enviar al correo</button>
+            <div className="m-or"><span>o</span></div>
+            <button className="m-goapp" onClick={() => window.open("https://burrito.pe", "_blank")}>🚀 Ir a la app completa →</button>
+            <p style={{ fontSize: 11, color: "#3d3628", textAlign: "center", marginTop: 12 }}>Tu información no se comparte con terceros</p>
+          </div>}
+
+          {/* SUCCESS */}
+          {step === 5 && sent && <div className="m-success">
+            <div className="m-sico">🌯</div>
+            <div className="m-stitle">¡Listo para el viaje!</div>
+            <div className="m-ssub">Tu itinerario fue enviado. Que disfrutes Piura como se merece.</div>
+            <button className="m-goapp" onClick={() => window.open("https://burrito.pe", "_blank")}>🚀 Abrir la app completa →</button>
+          </div>}
+
+        </div>
+
+        {/* footer nav */}
+        {step !== 3 && step !== 5 && (
+          <div className="m-foot">
+            {step > 0 && <button className="m-back-btn" onClick={back}>← Atrás</button>}
+            {step === 2 && <button className="m-skip" onClick={() => setPrefs(p => ({ ...p, interests: [] }))}>Sorpréndeme 🎲</button>}
+            {step < 3 && <button className="m-next-btn" onClick={next} disabled={!canNext()}>{step === 2 ? "Generar itinerario 🌯" : "Continuar →"}</button>}
+            {step === 4 && <button className="m-next-btn" onClick={() => setStep(5)}>Confirmar y enviar →</button>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function BurritoLanding() {
+  const [scrolled, setScrolled] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const quizRef = useRef(null);
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [wsp, setWsp] = useState("");
+  const [ok, setOk] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // inject CSS + SEO
+  useEffect(() => {
+    if (!document.getElementById("b-css")) { const s = document.createElement("style"); s.id = "b-css"; s.textContent = CSS; document.head.appendChild(s); }
+    document.title = "Burrito — Tu itinerario en Piura en 60 segundos";
+    const sm = (n, c, p = false) => { let el = document.querySelector(p ? `meta[property="${n}"]` : `meta[name="${n}"]`); if (!el) { el = document.createElement("meta"); p ? el.setAttribute("property", n) : el.setAttribute("name", n); document.head.appendChild(el); } el.setAttribute("content", c); };
+    sm("description", "Burrito crea tu itinerario personalizado en Piura en menos de 60 segundos. Rutas optimizadas con experiencias locales auténticas.");
+    sm("keywords", "itinerario Piura, qué hacer en Piura, turismo Piura Peru, playas Piura, cebiche Piura, Catacaos, Canchaque");
+    sm("og:title", "Burrito — Tu itinerario en Piura en 60 segundos", true);
+    sm("og:description", "El guía local inteligente de Piura. No una lista — un plan que funciona.", true);
+    sm("geo.region", "PE-PIU"); sm("geo.placename", "Piura, Perú");
+    // JSON-LD
+    if (!document.getElementById("b-ld")) { const s = document.createElement("script"); s.id = "b-ld"; s.type = "application/ld+json"; s.textContent = JSON.stringify({ "@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Burrito", "applicationCategory": "TravelApplication", "operatingSystem": "Web", "description": "Itinerarios personalizados en Piura, Perú en menos de 60 segundos.", "offers": { "@type": "Offer", "price": "0", "priceCurrency": "PEN" }, "areaServed": { "@type": "City", "name": "Piura", "addressCountry": "PE" }, "aggregateRating": { "@type": "AggregateRating", "ratingValue": "5", "reviewCount": "128" } }); document.head.appendChild(s); }
+  }, []);
+
+  useEffect(() => { const fn = () => setScrolled(window.scrollY > 30); window.addEventListener("scroll", fn, { passive: true }); return () => window.removeEventListener("scroll", fn); }, []);
+  useEffect(() => { const els = document.querySelectorAll("[data-rv]"); const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .1 }); els.forEach(el => io.observe(el)); return () => io.disconnect(); }, []);
+  useEffect(() => { const fn = e => { if (e.clientY <= 0 && !modalOpen && !sessionStorage.getItem("bExit")) { setModalOpen(true); sessionStorage.setItem("bExit", "1"); } }; document.addEventListener("mouseleave", fn); return () => document.removeEventListener("mouseleave", fn); }, [modalOpen]);
+
+  const open = useCallback(() => setModalOpen(true), []);
+  const close = useCallback(() => setModalOpen(false), []);
+  // función submit — reemplaza la que ya tienes
+  const submit = useCallback(async () => {
+    if (!nombre.trim() || !email.includes("@") || wsp.length < 7) {
+      setError("Completa todos los campos correctamente.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    const { error: sbError } = await supabase
+      .from("waitlist")
+      .insert({ nombre: nombre.trim(), email: email.trim(), whatsapp: wsp.trim() });
+
+    if (sbError) {
+      if (sbError.code === "23505") {
+        setError("Este email ya está registrado 👋");
+      } else {
+        setError("Algo salió mal, intenta de nuevo.");
+      }
+    } else {
+      setOk(true);
+    }
+    setLoading(false);
+  }, [nombre, email, wsp]);
+
+  return (
+    <div style={{ background: "#080705", minHeight: "100vh", color: "#FDFAF4", fontFamily: "'Bricolage Grotesque',sans-serif" }}>
+
+      {/* ticker */}
+      <div className="b-ticker"><div className="b-tki">{[...TICKERS, ...TICKERS].map((t, i) => <span className="b-ti" key={i}>{t}</span>)}</div></div>
+
+      {/* nav */}
+      <nav className={`b-nav${scrolled ? " sc" : ""}`}>
+        <div className="b-logo" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>burri<span>to</span></div>
+        <button className="b-btn-nav" onClick={open}>Probar GRATIS →</button>
+      </nav>
+
+      {/* hero */}
+      <section className="b-hero">
+        <MapHero />
+        {/* <IsoCity style={{opacity:.7,WebkitMaskImage:"linear-gradient(to right,transparent 36%,black 62%)",maskImage:"linear-gradient(to right,transparent 36%,black 62%)"}}/> */}
+        <div className="b-hero-ov" />
+        <div className="b-hcopy">
+          <div className="b-kicker"><div className="b-kdot" /><span className="b-ktxt">BETA ABIERTA · PIURA, PERÚ</span></div>
+          <h1 className="b-h1">Para de<br /><span className="b-strike">perderte</span><br />Piura de<br /><span className="b-hot">verdad.</span></h1>
+          <p className="b-sub">Google Maps te muestra dónde está. <strong>Burrito</strong> te dice <strong>qué hacer, cuándo y en qué orden</strong> para no desperdiciar ni una hora.</p>
+          <div className="b-actions">
+            <button className="b-btn-fire" onClick={open}>Arma mi experiencia →</button>
+            <a href="#demo" className="b-btn-ghost">▶ ¿Qué tipo de viajero soy?</a>
+          </div>
+          <div className="b-stats">
+            <div><div className="b-snum">60s</div><div className="b-slbl">para tu itinerario</div></div>
+            <div><div className="b-snum">100%</div><div className="b-slbl">experiencias locales</div></div>
+            <div><div className="b-snum">0</div><div className="b-slbl">guías genéricas</div></div>
+          </div>
+          <div className="b-urg"><div className="b-kdot" /><span>Solo <strong>200 cupos</strong> de acceso anticipado gratuito</span></div>
+        </div>
+        <div className="b-phone-col">
+          <div className="b-phone">
+            <div className="b-pst"><span>9:41</span><span>🔋 98%</span></div>
+            <div className="b-pan">🌯 Burrito · Piura</div>
+            <div className="b-itin">
+              <div className="b-ith"><span className="b-ititle">Tu día · playa + ceviche</span><span className="b-ibadge">LISTO</span></div>
+              {PHONE_ITIN.map((it, i) => <div className="b-irow" key={i}><div className="b-itime">{it.time}</div><div className="b-idot" /><div><div className="b-iplace">{it.icon} {it.place}</div><div className="b-itip"><em>{it.tip}</em></div></div></div>)}
+            </div>
+            <div className="b-pgen"><div className="b-gdot" /> Generado en 48 segundos</div>
+          </div>
+        </div>
+      </section>
+
+      {/* districts */}
+      {/* <div style={{padding:"22px 48px",background:"#0d0b09",borderTop:"1px solid rgba(255,120,30,.1)",borderBottom:"1px solid rgba(255,120,30,.1)"}}>
+        <div style={{maxWidth:1080,margin:"0 auto",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+          <span style={{fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"#FF5500",flexShrink:0}}>Cubre:</span>
+          {["Piura","Catacaos","Paita","Colán","Yacila","Talara","Lobitos","Canchaque","Chulucanas","Huancabamba","Sechura","Sullana"].map(d=><span key={d} style={{fontSize:12,color:"#6b6055",padding:"4px 12px",border:"1px solid rgba(255,120,30,.12)",borderRadius:100,fontWeight:500}}>{d}</span>)}
+        </div>
+      </div> */}
+
+      {/* pain */}
+      <section className="b-sec b-card">
+        <div className="b-si">
+          <div className="b-slbl">El problema real</div>
+          <h2 className="b-stitle">Cada hora planeando<br />es una hora que no<br />estás en Piura.</h2>
+          <p className="b-ssub">Tabs abiertos, reseñas contradictorias, restaurantes cerrados. El ciclo de siempre.</p>
+          <div className="b-plist" data-rv>
+            {PAIN.map(([n, m, s], i) => <div className="b-pitem" key={i}><span className="b-pnum">{n}</span><span className="b-ptxt">{m} <span>{s}</span></span></div>)}
+          </div>
+        </div>
+      </section>
+
+      {/* solution */}
+      <section className="b-sec">
+        <div className="b-si">
+          <div className="b-slbl">La solución</div>
+          <h2 className="b-stitle">Burrito organiza<br /><span className="b-hot">por ti.</span></h2>
+          <div className="b-div" />
+          <p className="b-ssub">No una lista de ideas. Un plan con horarios exactos, tiempos de traslado entre distritos y tips locales. En menos de 1 minuto.</p>
+          <div className="b-steps" data-rv>
+            {STEPS_D.map((s, i) => <div className="b-step" key={i}><div className="b-stepn">{s.n}</div><h3>{s.title}</h3><p>{s.desc}</p></div>)}
+          </div>
+          <div style={{ textAlign: "center", marginTop: 32 }}><button className="b-btn-fire" onClick={open}>Pruébalo ahora — es gratis →</button></div>
+        </div>
+      </section>
+
+      {/* products */}
+      <ProductosBurrito onCTAClick={open} quizRef={quizRef} />
+      <div id="demo">
+        <QuizSection quizRef={quizRef} />
+
+      </div>
+      {/* demo */}
+      <section className="b-sec b-card">
+        <div className="b-si">
+          <div className="b-slbl">Ejemplo real</div>
+          <h2 className="b-stitle">Esto es lo que recibes.<br /><span className="b-hot">No una lista.</span> Un día.</h2>
+          <div className="b-demo" data-rv>
+            <div className="b-dtop"><span className="b-dtitle">🌊 Piura · sábado · playa + ceviche</span><span className="b-dbadge">8 HRS · 4 PARADAS</span></div>
+            <div className="b-dbody">
+              {DEMO_ROWS.map((r, i) => <div className="b-drow" key={i}><div><div className="b-dtime">{r.time}</div><div className="b-dtravel">{r.travel}</div></div><div className="b-dbar" /><div><div className="b-dplace">{r.place}</div><div className="b-ddesc">{r.desc}</div><div className="b-dtip">💡 {r.tip}</div></div></div>)}
+            </div>
+          </div>
+          <div style={{ textAlign: "center", marginTop: 24 }}><button className="b-btn-fire" onClick={open}>Generar el mío →</button></div>
+        </div>
+      </section>
+
+      {/* alliance */}
+      <AlianzasBurrito />
+
+      {/* compare */}
+      <section className="b-sec">
+        <div className="b-si">
+          <div className="b-slbl">La diferencia</div>
+          <h2 className="b-stitle">Google Maps muestra.<br />Burrito <span className="b-hot">decide.</span></h2>
+          <p className="b-ssub">Google Maps es increíble para encontrar lugares. Burrito te dice qué hacer con ellos.</p>
+          <div className="b-cmp" data-rv>
+            <div className="b-ccol"><div className="b-chd b-chd-t">Google Maps / Blogs / TripAdvisor</div>{COMPARE.map(([t], i) => <div className="b-crow b-crow-t" key={i}>{t}</div>)}</div>
+            <div className="b-ccol"><div className="b-chd b-chd-u">🌯 Burrito</div>{COMPARE.map(([, u], i) => <div className="b-crow b-crow-u" key={i}>{u}</div>)}</div>
+          </div>
+        </div>
+      </section>
+
+      {/* testimonials */}
+      <section className="b-sec b-card">
+        <div className="b-si">
+          <div className="b-slbl">Lo que dicen</div>
+          <h2 className="b-stitle">Ya lo probaron.<br />Ya no vuelven atrás.</h2>
+          <div className="b-tgrid" data-rv>
+            {TESTI.map((t, i) => <article className="b-tc" key={i}><div className="b-tstars">★★★★★</div><p className="b-ttxt">"{t.text}"</p><div className="b-tfoot"><div className="b-tav">{t.i}</div><div><div className="b-tname">{t.name}</div><div className="b-twhere">{t.from}</div></div></div></article>)}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section id="cta" className="b-sec b-cta-s">
+        <div className="b-si b-cta-i">
+          <div className="b-slbl" style={{ display: "flex", justifyContent: "center" }}>200 cupos · Gratis · Ya</div>
+          <h2 className="b-cta-t">Tu día en Piura<br />empieza <span className="b-hot">aquí.</span></h2>
+          <p className="b-cta-sub">Arma tu itinerario ahora o déjanos tu email.</p>
+          <div style={{ marginBottom: 24, textAlign: "center" }}>
+            <button className="b-btn-fire" onClick={open} style={{ fontSize: 16, padding: "17px 38px" }}>🌯 Armar mi itinerario ahora</button>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, maxWidth: 440, margin: "0 auto 22px", color: "#2a2318", fontSize: 12 }}>
+            <div style={{ flex: 1, height: 1, background: "rgba(255,120,30,.12)" }} /><span>o déjanos tu email</span><div style={{ flex: 1, height: 1, background: "rgba(255,120,30,.12)" }} />
+          </div>
+          {!ok ? (
+            <>
+              <div className="b-erow" style={{ flexDirection: "column", gap: 12 }}>
+                <input
+                  type="text"
+                  className="b-einput"
+                  placeholder="Tu nombre"
+                  value={nombre}
+                  onChange={e => setNombre(e.target.value)}
+                />
+                <input
+                  type="email"
+                  className="b-einput"
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
+                <input
+                  type="tel"
+                  className="b-einput"
+                  placeholder="WhatsApp (ej: 51987654321)"
+                  value={wsp}
+                  onChange={e => setWsp(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && submit()}
+                />
+                {error && (
+                  <p style={{ color: "#FF5500", fontSize: 13, margin: 0, textAlign: "center" }}>
+                    {error}
+                  </p>
+                )}
+                <button
+                  className="b-bsend"
+                  onClick={submit}
+                  disabled={loading}
+                  style={{ opacity: loading ? 0.6 : 1 }}
+                >
+                  {loading ? "Guardando..." : "Quiero mi acceso →"}
+                </button>
+              </div>
+              <p className="b-cproof">
+                Ya hay <strong>128 personas</strong> en lista de espera · Quedan 72 cupos
+              </p>
+            </>
+          ) : (
+            <WaitlistSuccess nombre={nombre} />
+          )}
+        </div>
+      </section>
+
+      {/* footer */}
+      <footer className="b-foot">
+        <div className="b-flogo">burri<span>to</span></div>
+        <p>© 2025 Burrito · Piura, Perú 🌊</p>
+        <nav className="b-flinks"><a href="#">Privacidad</a><a href="#">Instagram</a><a href="#">Contacto</a></nav>
+      </footer>
+
+      <Modal isOpen={modalOpen} onClose={close} />
+    </div>
+  );
+}

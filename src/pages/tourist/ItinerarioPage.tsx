@@ -20,6 +20,7 @@ export default function ItinerarioPage() {
   const { status: autoSaveStatus } = useAutoSave()
   const { setSelectingSpot } = useItineraryStore()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [discarded, setDiscarded] = useState(false)
   const { user } = useAuthStore()
 
   const isNew = !current?.id || current.id === 'itinerary-demo'
@@ -42,21 +43,19 @@ export default function ItinerarioPage() {
 
   const handleCancel = () => {
     clear()
-    navigate('/app')
+    sessionStorage.setItem('burrito-discarded', 'true')
+    // navigate('/app') // ← faltaba esto
   }
 
   useEffect(() => {
-    if (current?.title) setTitleInput(current.title)
-  }, [current?.title])
-  // Al montar, carga el itinerario en progreso si no hay current
-  useEffect(() => {
-    if (!current && user?.id) {
+    const wasDiscarded = sessionStorage.getItem('burrito-discarded')
+    if (!current && user?.id && !wasDiscarded) {
       itinerariesService.getByUser(user.id).then(itineraries => {
         const inProgress = itineraries.find(i => i.status === 'in_progress')
         if (inProgress) setCurrent(inProgress)
       })
     }
-  }, [])
+  }, []) // ← solo al montar, sin dependencias
 
   const handleTitleSave = () => {
     if (!current || !titleInput.trim()) return

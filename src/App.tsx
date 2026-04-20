@@ -40,6 +40,9 @@ const AdminCategoriasPage = lazy(() => import('./pages/admin/AdminCategoriasPage
 const AdminConfigPage = lazy(() => import('./pages/admin/AdminConfigPage'))
 const AuthCallbackPage = lazy(() => import('./pages/auth/AuthCallbackPage'))
 
+// Landing page
+const LandingPage = lazy(() => import('./pages/LandingPage'))
+
 
 function PageLoader() {
   return (
@@ -72,6 +75,7 @@ export default function App() {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Auth Routes */}
+          <Route path="/landing" element={<LandingPage />} />
           <Route
             path="/auth/callback"
             element={<AuthCallbackPage />}

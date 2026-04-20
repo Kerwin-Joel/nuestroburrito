@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Share2, Eye, Trash2, BookOpen, Bell, X, Loader2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
+import { useProfileStore } from '../../stores/useProfileStore'
 import { useReminders } from '../../hooks/useReminders'
 import { itinerariesService } from '../../services/itineraries'
 import { useUIStore } from '../../stores/useUIStore'
@@ -16,28 +17,41 @@ export default function PerfilTouristPage() {
   const { setCurrent } = useItineraryStore()
   const navigate = useNavigate()
 
-  const [itineraries, setItineraries] = useState<Itinerary[]>([])
-  const [loading, setLoading] = useState(true)
+  const { itineraries, lastFetchAt, setItineraries, removeItinerary } = useProfileStore()
+  const [loading, setLoading] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput] = useState(user?.profile?.name || '')
   const [refreshKey, setRefreshKey] = useState(0)
+  const CACHE_TTL = 5 * 1000 // 5 segundos
   const { reminders, load: loadReminders, cancel } = useReminders(
     user?.id || 'tourist-demo'
   )
 
   // Carga itinerarios desde Supabase
-  const loadItineraries = useCallback(async () => {
+  const loadItineraries = useCallback(async (force = false) => {
     if (!user?.id) return
+
+    const isStale = !lastFetchAt || (Date.now() - lastFetchAt) > CACHE_TTL
+
+    // Si hay datos frescos y no se fuerza → no fetch
+    if (!force && !isStale && itineraries.length > 0) return
+
+    // Solo muestra spinner si no hay datos previos
+    if (itineraries.length === 0) setLoading(true)
+
     try {
-      setLoading(true)
       const data = await itinerariesService.getByUser(user.id)
       setItineraries(data)
-    } catch (err) {
+    } catch {
       addToast({ type: 'error', message: 'Error cargando itinerarios' })
     } finally {
       setLoading(false)
     }
-  }, [user?.id])
+  }, [user?.id, lastFetchAt, itineraries.length])
+
+  useEffect(() => {
+    loadItineraries()
+  }, [])
 
   useEffect(() => {
     loadItineraries()
@@ -54,7 +68,7 @@ export default function PerfilTouristPage() {
   const handleDelete = async (id: string) => {
     try {
       await itinerariesService.softDelete(id)
-      setItineraries(prev => prev.filter(i => i.id !== id))
+      removeItinerary(id) // ← actualiza el store directamente
       addToast({ type: 'success', message: 'Itinerario eliminado' })
     } catch (err: any) {
       addToast({ type: 'error', message: err.message ?? 'Error' })

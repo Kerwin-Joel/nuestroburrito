@@ -11,7 +11,7 @@ function Particles() {
     const positions = new Float32Array(PARTICLE_COUNT * 3)
     const velocities: Array<[number, number, number]> = []
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      positions[i * 3]     = (Math.random() - 0.5) * 12
+      positions[i * 3] = (Math.random() - 0.5) * 12
       positions[i * 3 + 1] = (Math.random() - 0.5) * 7
       positions[i * 3 + 2] = (Math.random() - 0.5) * 3
       velocities.push([
@@ -27,12 +27,12 @@ function Particles() {
     if (!meshRef.current) return
     const pos = meshRef.current.geometry.attributes.position.array as Float32Array
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      pos[i * 3]     += velocities[i][0]
+      pos[i * 3] += velocities[i][0]
       pos[i * 3 + 1] += velocities[i][1]
       // wrap around
-      if (pos[i * 3] > 6)  pos[i * 3] = -6
+      if (pos[i * 3] > 6) pos[i * 3] = -6
       if (pos[i * 3] < -6) pos[i * 3] = 6
-      if (pos[i * 3 + 1] > 4)  pos[i * 3 + 1] = -4
+      if (pos[i * 3 + 1] > 4) pos[i * 3 + 1] = -4
       if (pos[i * 3 + 1] < -4) pos[i * 3 + 1] = 4
     }
     meshRef.current.geometry.attributes.position.needsUpdate = true
@@ -41,10 +41,10 @@ function Particles() {
   const colors = useMemo(() => {
     const c = new Float32Array(PARTICLE_COUNT * 3)
     const orange = new THREE.Color('#FF5500')
-    const amber  = new THREE.Color('#FFAA3B')
+    const amber = new THREE.Color('#FFAA3B')
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const color = Math.random() > 0.4 ? orange : amber
-      c[i * 3]     = color.r
+      c[i * 3] = color.r
       c[i * 3 + 1] = color.g
       c[i * 3 + 2] = color.b
     }

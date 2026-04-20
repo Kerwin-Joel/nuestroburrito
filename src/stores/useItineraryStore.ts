@@ -56,7 +56,11 @@ export const useItineraryStore = create<ItineraryState>()(
       loadDemo: () => set({ current: MOCK_ITINERARY }),
 
       // clear limpia localStorage también
-      clear: () => set({ current: null, preferences: null }),
+      clear: () => {
+        set({ current: null, preferences: null, isSelectingSpot: false })
+        // Limpia también localStorage
+        localStorage.removeItem('burrito-itinerary')
+      },
       isSelectingSpot: false,
       setSelectingSpot: (v) => set({ isSelectingSpot: v }),
     }),

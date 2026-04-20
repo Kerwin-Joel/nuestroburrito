@@ -48,6 +48,7 @@ export default function CreateItineraryModal({ isOpen, onClose }: Props) {
     const placeholder = PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]
 
     const handleCreate = async () => {
+        sessionStorage.removeItem('burrito-discarded')
         if (!title.trim() || !user) return
         setCreating(true)
         try {
