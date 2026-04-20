@@ -39,35 +39,35 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         try {
           set({ isLoading: true })
           const session = await authService.getSession()
+
           if (session) {
             set({ user: session, isAuthenticated: true, isLoading: false })
           } else {
+            // ← si no hay sesión válida, limpia todo
             set({ user: null, isAuthenticated: false, isLoading: false })
+            localStorage.removeItem('burrito-auth')
           }
 
-          // ← ESTO ES LO QUE FALTABA
-          // Escucha cambios de sesión incluyendo
-          // el callback de Google OAuth
           authService.onAuthStateChange((event: string, session: any) => {
-
-            // ← Ignora INITIAL_SESSION, ya lo maneja el initialize()
             if (event === 'INITIAL_SESSION') return
 
-            if (event === 'SIGNED_IN' && session) {
+            if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
               authService.getSession().then((user: any) => {
-                if (user) {
-                  set({ user, isAuthenticated: true, isLoading: false })
-                }
+                if (user) set({ user, isAuthenticated: true, isLoading: false })
               })
             }
+
             if (event === 'SIGNED_OUT') {
               set({ user: null, isAuthenticated: false, isLoading: false })
+              localStorage.removeItem('burrito-auth')
+              window.location.href = '/'
             }
           })
 
         } catch (err) {
           console.error('Auth initialization error:', err)
           set({ user: null, isAuthenticated: false, isLoading: false })
+          localStorage.removeItem('burrito-auth')
         }
       },
 
@@ -99,9 +99,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       logout: async () => {
         set({ isLoading: true })
         try {
-          await authService.logout()
+          // ← limpia PRIMERO antes del signOut
+          localStorage.removeItem('burrito-auth')
           set({ user: null, isAuthenticated: false, isLoading: false, error: null })
-          localStorage.removeItem('burrito-auth')  // ← limpia el storage
+          await authService.logout()
           window.location.href = '/'
         } catch (err) {
           set({ isLoading: false })
