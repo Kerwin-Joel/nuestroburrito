@@ -101,6 +101,8 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         try {
           await authService.logout()
           set({ user: null, isAuthenticated: false, isLoading: false, error: null })
+          localStorage.removeItem('burrito-auth')  // ← limpia el storage
+          window.location.href = '/'
         } catch (err) {
           set({ isLoading: false })
         }
