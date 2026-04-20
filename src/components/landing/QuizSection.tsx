@@ -48,7 +48,7 @@ interface RevealProps {
 }
 
 interface QuizSectionProps {
-  quizRef: RefObject<HTMLDivElement>;
+  quizRef: RefObject<HTMLDivElement | null>;
 }
 
 /* ─── Colores ─── */
