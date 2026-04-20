@@ -154,7 +154,7 @@ const getProfile = (answers: Answers): Profile => {
 };
 
 /* ─── Hook ─── */
-const useInView = (threshold = 0.15): [RefObject<HTMLDivElement>, boolean] => {
+const useInView = (threshold = 0.15): [React.RefObject<HTMLDivElement | null>, boolean] => {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
