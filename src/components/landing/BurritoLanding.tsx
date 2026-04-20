@@ -832,7 +832,7 @@ export default function BurritoLanding() {
                   disabled={loading}
                   style={{ opacity: loading ? 0.6 : 1 }}
                 >
-                  {loading ? "Guardando..." : "Quiero mi acceso →"}
+                  {loading ? "Guardando..." : "Quiero mi acceso y regalo →"}
                 </button>
               </div>
               <p className="b-cproof">
@@ -848,7 +848,7 @@ export default function BurritoLanding() {
       {/* footer */}
       <footer className="b-foot">
         <div className="b-flogo">burri<span>to</span></div>
-        <p>© 2025 Burrito · Piura, Perú 🌊</p>
+        <p>© 2026 Burrito · Piura, Perú 🌊</p>
         <nav className="b-flinks"><a href="#">Privacidad</a><a href="#">Instagram</a><a href="#">Contacto</a></nav>
       </footer>
 
