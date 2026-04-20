@@ -31,9 +31,9 @@ export default function HomePage() {
               La guía<br />
               <span style={{ color: 'var(--orange)' }}>piurana</span>
             </h1>
-            <div style={{ width: "100%", height: "500px" }}>
+            {/* <div style={{ width: "100%", height: "500px" }}>
               <BurritoDonkey autoRotate={true} />
-            </div>
+            </div> */}
             <p style={{ fontFamily: 'var(--font-body)', fontSize: '18px', color: 'var(--muted)', lineHeight: 1.6, maxWidth: '420px' }}>
               Construida por piuranos, para quienes quieren el Piura real. No el del folleto.
             </p>

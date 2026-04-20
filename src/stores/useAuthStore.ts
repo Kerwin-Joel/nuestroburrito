@@ -26,7 +26,7 @@ interface AuthActions {
   resetPassword: (email: string) => Promise<void>
   clearError: () => void
 }
-
+let isLoggingOut = false
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
     (set) => ({
@@ -43,13 +43,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           if (session) {
             set({ user: session, isAuthenticated: true, isLoading: false })
           } else {
-            // ← si no hay sesión válida, limpia todo
             set({ user: null, isAuthenticated: false, isLoading: false })
             localStorage.removeItem('burrito-auth')
           }
 
           authService.onAuthStateChange((event: string, session: any) => {
             if (event === 'INITIAL_SESSION') return
+            if (isLoggingOut) return  // ← ignora eventos durante logout
 
             if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
               authService.getSession().then((user: any) => {
@@ -65,7 +65,6 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           })
 
         } catch (err) {
-          console.error('Auth initialization error:', err)
           set({ user: null, isAuthenticated: false, isLoading: false })
           localStorage.removeItem('burrito-auth')
         }
@@ -97,14 +96,27 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
 
       logout: async () => {
-        set({ isLoading: true })
+        isLoggingOut = true
         try {
-          // ← limpia PRIMERO antes del signOut
-          localStorage.removeItem('burrito-auth')
+          // 1. Limpia TODO el localStorage — no solo burrito-auth
+          const keysToRemove = Object.keys(localStorage).filter(
+            key => key.startsWith('sb-') || key === 'burrito-auth'
+          )
+          keysToRemove.forEach(key => localStorage.removeItem(key))
+
+          // 2. Limpia sessionStorage también
+          sessionStorage.clear()
+
+          // 3. Actualiza el estado
           set({ user: null, isAuthenticated: false, isLoading: false, error: null })
+
+          // 4. Llama al signOut de Supabase
           await authService.logout()
+
+          // 5. Redirige
           window.location.href = '/'
         } catch (err) {
+          isLoggingOut = false
           set({ isLoading: false })
         }
       },
