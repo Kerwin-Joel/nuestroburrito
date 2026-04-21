@@ -10,6 +10,8 @@ import { useUIStore } from '../../stores/useUIStore'
 import { useItineraryStore } from '../../stores/useItineraryStore'
 import { formatDate, timeUntil, initials } from '../../lib/formatters'
 import type { Itinerary } from '../../types/itinerary'
+import { supabase } from '../../lib/supabase'
+
 
 export default function PerfilTouristPage() {
   const { user } = useAuthStore()
@@ -19,8 +21,10 @@ export default function PerfilTouristPage() {
 
   const { itineraries, lastFetchAt, setItineraries, removeItinerary } = useProfileStore()
   const [loading, setLoading] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput] = useState(user?.profile?.name || '')
+
   const [refreshKey, setRefreshKey] = useState(0)
   const CACHE_TTL = 5 * 1000 // 5 segundos
   const { reminders, load: loadReminders, cancel } = useReminders(
@@ -51,6 +55,14 @@ export default function PerfilTouristPage() {
 
   useEffect(() => {
     loadItineraries()
+  }, [])
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const url = data.user?.user_metadata?.avatar_url
+        || data.user?.user_metadata?.picture
+      if (url) setAvatarUrl(url)
+    })
   }, [])
 
   useEffect(() => {
@@ -94,15 +106,30 @@ export default function PerfilTouristPage() {
 
         {/* Profile header */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '48px' }}>
+          {/* Avatar */}
           <div style={{
             width: '80px', height: '80px', borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--orange) 0%, var(--hot) 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '28px', color: 'white',
-            marginBottom: '16px',
+            marginBottom: '16px', overflow: 'hidden', flexShrink: 0,
             boxShadow: '0 8px 32px rgba(255,85,0,0.3)',
+            border: '2px solid rgba(255,85,0,0.3)',
           }}>
-            {initials(user?.profile?.name || 'V')}
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={user?.profile?.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={() => setAvatarUrl(null)}
+              />
+            ) : (
+              <div style={{
+                width: '100%', height: '100%',
+                background: 'linear-gradient(135deg, var(--orange) 0%, var(--hot) 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '28px', color: 'white',
+              }}>
+                {initials(user?.profile?.name || 'V')}
+              </div>
+            )}
           </div>
 
           <p style={{

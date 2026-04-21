@@ -25,7 +25,7 @@ const mapSpot = (row: any): Spot => ({
 })
 
 // Convierte camelCase a snake_case para Supabase
-const mapToRow = (data: Partial<Spot>) => ({
+const mapToRow = (data: Partial<Spot> & { price_range?: string; rating?: number; review_count?: number; schedule?: any }) => ({
   churre_id: data.churreId,
   name: data.name,
   description: data.description,
@@ -36,7 +36,9 @@ const mapToRow = (data: Partial<Spot>) => ({
   lng: data.lng,
   address: data.address,
   schedule: data.schedule,
-  price_range: data.priceRange,
+  price_range: data.priceRange ?? (data as any).price_range,
+  rating: data.rating ?? (data as any).rating,
+  review_count: data.reviewCount ?? (data as any).review_count,
   status: data.status,
   tiktok_urls: data.tiktokUrls,
 })
@@ -95,14 +97,19 @@ export const spotsService = {
   },
 
   async createSpot(
-    spotData: Omit<Spot, 'id' | 'createdAt' | 'rating' | 'reviewCount'>
+    spotData: Omit<Spot, 'id' | 'createdAt'> & {
+      price_range?: string
+      rating?: number
+      review_count?: number
+      schedule?: Record<string, string>
+    }
   ): Promise<Spot> {
     if (!FEATURES.REAL_AUTH) {
       return {
         ...spotData,
         id: `spot-${Date.now()}`,
-        rating: 0,
-        reviewCount: 0,
+        rating: spotData.rating ?? 0,
+        reviewCount: spotData.review_count ?? 0,
         createdAt: new Date().toISOString(),
       }
     }

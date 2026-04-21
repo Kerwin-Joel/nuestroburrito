@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MapPin, Clock, DollarSign, Star, ExternalLink, Tag, Gift, Percent, Zap } from 'lucide-react'
+import { X, MapPin, Clock, DollarSign, Star, ExternalLink, Tag, Gift, Percent, Zap, Upload, Camera, ChevronRight, Plus } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { ItineraryStop } from '../../types/itinerary'
 
@@ -36,26 +36,14 @@ interface Props {
     onClose: () => void
 }
 
-const BENEFIT_ICONS = {
-    discount: Percent,
-    gift: Gift,
-    experience: Zap,
-    priority: Star,
-}
-
+const BENEFIT_ICONS = { discount: Percent, gift: Gift, experience: Zap, priority: Star }
 const BENEFIT_COLORS = {
     discount: { bg: 'rgba(255,85,0,0.10)', border: 'rgba(255,85,0,0.25)', color: 'var(--orange)' },
     gift: { bg: 'rgba(255,209,102,0.10)', border: 'rgba(255,209,102,0.25)', color: 'var(--amber)' },
     experience: { bg: 'rgba(34,197,94,0.10)', border: 'rgba(34,197,94,0.25)', color: '#22c55e' },
     priority: { bg: 'rgba(139,92,246,0.10)', border: 'rgba(139,92,246,0.25)', color: '#8b5cf6' },
 }
-
-const BENEFIT_LABELS = {
-    discount: 'Descuento exclusivo',
-    gift: 'Regalo Burrito',
-    experience: 'Experiencia especial',
-    priority: 'Acceso prioritario',
-}
+const BENEFIT_LABELS = { discount: 'Descuento', gift: 'Regalo', experience: 'Experiencia', priority: 'Acceso VIP' }
 
 const DAY_LABELS: Record<string, string> = {
     mon: 'Lun', tue: 'Mar', wed: 'Mié',
@@ -175,7 +163,7 @@ export default function SpotDrawer({ stop, onClose }: Props) {
                                 Cargando info del spot...
                             </div>
                         ) : (
-                            <div style={{ padding: '16px 20px 40px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div style={{ padding: '16px 20px 100px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                                 {/* Foto */}
                                 {spot?.photo_url && (

@@ -94,7 +94,7 @@ export default function CreateItineraryModal({ isOpen, onClose }: Props) {
                         <div style={{
                             background: 'var(--card)', borderRadius: '24px 24px 0 0',
                             border: '1px solid var(--border)', padding: '24px',
-                            display: 'flex', flexDirection: 'column', gap: '20px',
+                            display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '100px'
                         }}>
                             <div style={{ width: '36px', height: '4px', background: 'var(--dim)', borderRadius: '2px', margin: '0 auto' }} />
 
