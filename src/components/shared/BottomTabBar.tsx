@@ -25,12 +25,14 @@ export function TouristBottomTabBar() {
 
   // Find active index
   useEffect(() => {
-    const idx = TOURIST_TABS.findLastIndex(t =>
+    const reversed = [...TOURIST_TABS].reverse()
+    const reversedIdx = reversed.findIndex((t: TabItem) =>
       t.to === '/app'
         ? location.pathname === '/app' || location.pathname === '/app/'
         : location.pathname.startsWith(t.to)
     )
-    setActiveIdx(idx >= 0 ? idx : 0)
+    const idx = reversedIdx === -1 ? 0 : TOURIST_TABS.length - 1 - reversedIdx
+    setActiveIdx(idx)
   }, [location.pathname])
 
   // Measure pill position
