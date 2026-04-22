@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Map, List, X, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../../components/shared/Navbar'
 import MapView from '../../components/shared/MapView'
 import SpotCard from '../../components/tourist/SpotCard'
 import SpotBottomSheet from '../../components/tourist/SpotBottomSheet'
@@ -18,10 +17,11 @@ import type { ItineraryStop } from '../../types/itinerary'
 import { itinerariesService } from '../../services/itineraries'
 
 const CATEGORIES = [
-  { id: null, label: 'Todos' },
+  { id: null, label: 'Todos', emoji: '✨' },
   ...Object.entries(CATEGORY_LABELS).map(([id, c]) => ({
     id: id as SpotCategory,
-    label: `${c.emoji} ${c.label}`
+    label: (c as any).label,
+    emoji: (c as any).emoji,
   })),
 ]
 
@@ -33,9 +33,7 @@ export default function ExplorarPage() {
   const { addToast } = useUIStore()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    load(true)
-  }, [load])
+  useEffect(() => { load(true) }, [load])
 
   const handleAddSpot = async (spot: Spot) => {
     if (!current) return
@@ -45,13 +43,11 @@ export default function ExplorarPage() {
       navigate('/app/itinerario')
       return
     }
-
     const alreadyAdded = current.stops.some(s => s.spotId === spot.id)
     if (alreadyAdded) {
       addToast({ type: 'error', message: `${spot.name} ya está en tu itinerario` })
       return
     }
-
     const lastStop = current.stops[current.stops.length - 1]
     const suggestedTime = lastStop?.time
       ? (() => {
@@ -61,7 +57,6 @@ export default function ExplorarPage() {
         return `${String(next.getHours()).padStart(2, '0')}:${String(next.getMinutes()).padStart(2, '0')}`
       })()
       : '09:00'
-
     const stop: ItineraryStop = {
       id: `stop-${Date.now()}`,
       spotId: spot.id,
@@ -75,25 +70,18 @@ export default function ExplorarPage() {
       lng: spot.lng,
       visited: false,
     }
-
     addStop(stop)
-
     if (current.id && current.id !== 'itinerary-demo' && !current.id.startsWith('new-')) {
       try {
         const fresh = await itinerariesService.getById(current.id)
-        console.log('Fresh stops:', fresh.stops.length) // ← agrega
         const alreadyInFresh = fresh.stops.some((s: any) => s.spotId === spot.id)
         if (!alreadyInFresh) {
-          await itinerariesService.update(current.id, {
-            stops: [...fresh.stops, stop],
-          })
-          console.log('Guardado en Supabase ✅') // ← agrega
+          await itinerariesService.update(current.id, { stops: [...fresh.stops, stop] })
         }
       } catch (err) {
-        console.error('Error guardando spot:', err) // ← ya lo tienes
+        console.error('Error guardando spot:', err)
       }
     }
-
     setSelectingSpot(false)
     addToast({ type: 'success', message: `✓ ${spot.name} agregado al itinerario` })
     navigate('/app/itinerario')
@@ -105,155 +93,151 @@ export default function ExplorarPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Banner de selección */}
+      {/* Banner selección */}
       <AnimatePresence>
         {isSelectingSpot && current && (
           <motion.div
-            initial={{ y: -60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
+            initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
             exit={{ y: -60, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             style={{
-              background: 'var(--orange)',
-              padding: '12px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '12px',
-              zIndex: 900,
+              background: 'var(--orange)', padding: '12px 16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: '12px', zIndex: 900,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Plus size={18} color="white" />
               <div>
-                <p style={{
-                  fontFamily: 'var(--font-body)', fontSize: '13px',
-                  fontWeight: 700, color: 'white', margin: 0,
-                }}>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700, color: 'white', margin: 0 }}>
                   Selecciona un spot
                 </p>
-                <p style={{
-                  fontFamily: 'var(--font-mono)', fontSize: '10px',
-                  color: 'rgba(255,255,255,0.8)', margin: 0,
-                }}>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'rgba(255,255,255,0.8)', margin: 0 }}>
                   Para: {current.title}
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleCancelSelection}
-              style={{
-                background: 'rgba(255,255,255,0.2)',
-                border: 'none', borderRadius: '8px',
-                padding: '6px 12px', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: '6px',
-                color: 'white', fontFamily: 'var(--font-body)',
-                fontSize: '13px', fontWeight: 600,
-              }}
-            >
+            <button onClick={handleCancelSelection} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'white', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600 }}>
               <X size={14} /> Cancelar
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Geolocation Alert */}
+      {/* Geo error */}
       {geoError && (
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          style={{
-            background: 'rgba(239,68,68,0.1)',
-            borderBottom: '1px solid rgba(239,68,68,0.2)',
-            padding: '8px 16px',
-            textAlign: 'center',
-            zIndex: 90
-          }}
-        >
+        <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+          style={{ background: 'rgba(239,68,68,0.1)', borderBottom: '1px solid rgba(239,68,68,0.2)', padding: '8px 16px', textAlign: 'center', zIndex: 90 }}>
           <span style={{ fontSize: '11px', color: '#ff4040', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
-            ⚠️ UBICACIÓN DESACTIVADA: Activa GPS y recarga para una mejor experiencia.
+            ⚠️ UBICACIÓN DESACTIVADA — Activa GPS para mejor experiencia
           </span>
         </motion.div>
       )}
 
-      {/* Filter row + toggle */}
+      {/* ── FILTROS ── */}
       <div style={{
-        background: 'rgba(8,7,5,0.95)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid var(--border)',
-        padding: '8px 0',
-        position: 'sticky',
-        top: '72px',
-        zIndex: 800,
+        background: 'rgba(8,7,5,0.97)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        position: 'sticky', top: 0, zIndex: 800,
       }}>
-        <div className="page-container" style={{
-          display: 'flex', alignItems: 'center',
-          gap: '12px', justifyContent: 'space-between'
-        }}>
-          <div className="scroll-row" style={{ flex: 1, minWidth: 0, overflowX: 'auto', paddingRight: '12px' }}>
-            {CATEGORIES.map(({ id, label }) => (
+        {/* Categorías + toggle */}
+        <div style={{ padding: '10px 16px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+
+          {/* Scroll de chips con fade derecho */}
+          <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+            <div style={{
+              display: 'flex', gap: '6px', overflowX: 'auto',
+              scrollbarWidth: 'none', msOverflowStyle: 'none',
+              paddingBottom: '2px',
+            }}>
+              {CATEGORIES.map(({ id, label, emoji }) => {
+                const isActive = activeCategory === id
+                return (
+                  <button
+                    key={String(id)}
+                    onClick={() => setCategory(id as SpotCategory | null)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '5px',
+                      padding: '7px 14px', borderRadius: '100px',
+                      border: isActive ? '1px solid rgba(255,85,0,0.5)' : '1px solid rgba(255,255,255,0.08)',
+                      background: isActive ? 'rgba(255,85,0,0.15)' : 'rgba(255,255,255,0.04)',
+                      color: isActive ? 'var(--orange)' : 'var(--muted)',
+                      fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: isActive ? 700 : 500,
+                      cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <span style={{ fontSize: '13px' }}>{emoji}</span>
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+            {/* Fade derecho */}
+            <div style={{
+              position: 'absolute', right: 0, top: 0, bottom: 0, width: '32px',
+              background: 'linear-gradient(to right, transparent, rgba(8,7,5,0.97))',
+              pointerEvents: 'none',
+            }} />
+          </div>
+
+          {/* Toggle mapa/lista */}
+          <div style={{
+            display: 'flex', background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px',
+            overflow: 'hidden', flexShrink: 0, padding: '3px', gap: '2px', flexDirection: 'column'
+          }}>
+            {([['map', Map, 'Mapa'], ['list', List, 'Lista']] as const).map(([mode, Icon, label]) => (
               <button
-                key={String(id)}
-                onClick={() => setCategory(id as SpotCategory | null)}
-                className={`chip ${activeCategory === id ? 'selected' : ''}`}
-                style={{ fontSize: '12px', padding: '6px 12px' }}
+                key={mode}
+                onClick={() => viewMode !== mode && toggleView()}
+                style={{
+                  padding: '6px 10px', borderRadius: '7px', border: 'none', cursor: 'pointer',
+                  background: viewMode === mode ? 'var(--orange)' : 'transparent',
+                  color: viewMode === mode ? 'white' : 'var(--muted)',
+                  fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 700,
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  transition: 'all 0.2s',
+                }}
               >
+                <Icon size={12} />
                 {label}
               </button>
             ))}
           </div>
+        </div>
 
+        {/* Contador de resultados */}
+        <div style={{ padding: '6px 16px 8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <div style={{
-            display: 'flex', background: 'var(--card)',
-            border: '1px solid var(--border)', borderRadius: '10px',
-            overflow: 'hidden', flexShrink: 0, padding: '2px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-          }}>
-            {([['map', Map], ['list', List]] as const).map(([mode, Icon]) => (
-              <button
-                key={mode}
-                onClick={() => viewMode !== mode && toggleView()}
-                aria-label={mode === 'map' ? 'Ver mapa' : 'Ver lista'}
-                style={{
-                  padding: '6px 10px',
-                  background: viewMode === mode ? 'var(--orange)' : 'transparent',
-                  border: 'none', cursor: 'pointer', borderRadius: '8px',
-                  color: viewMode === mode ? 'white' : 'var(--gray)',
-                  transition: 'all 0.3s',
-                  display: 'flex', alignItems: 'center',
-                }}
-              >
-                <Icon size={14} />
-              </button>
-            ))}
-          </div>
+            width: '6px', height: '6px', borderRadius: '50%',
+            background: filtered.length > 0 ? 'var(--orange)' : 'var(--muted)',
+            boxShadow: filtered.length > 0 ? '0 0 6px var(--orange)' : 'none',
+          }} />
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--muted)', letterSpacing: '1px' }}>
+            {filtered.length} SPOT{filtered.length !== 1 ? 'S' : ''}
+            {activeCategory ? ` · ${activeCategory.toUpperCase()}` : ' · PIURA'}
+          </span>
         </div>
       </div>
 
-      {/* Content */}
+      {/* Contenido */}
       <div style={{ flex: 1, position: 'relative' }}>
         {viewMode === 'map' ? (
-          <motion.div
-            key="map"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            style={{ height: 'calc(100vh - 140px)', width: '100%' }}
-          >
+          <motion.div key="map" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            style={{ height: 'calc(100vh - 140px)', width: '100%' }}>
             <MapView />
           </motion.div>
         ) : (
-          <motion.div
-            key="list"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="page-container"
-            style={{ paddingTop: '24px', paddingBottom: '120px' }}
-          >
+            style={{ paddingTop: '16px', paddingBottom: '120px' }}>
             {filtered.length === 0 ? (
-              <div style={{
-                border: '2px dashed rgba(255,85,0,0.3)',
-                borderRadius: '16px', padding: '48px', textAlign: 'center',
-              }}>
+              <div style={{ border: '2px dashed rgba(255,85,0,0.3)', borderRadius: '16px', padding: '48px', textAlign: 'center' }}>
                 <p style={{ fontSize: '40px', marginBottom: '12px' }}>🗺️</p>
                 <p style={{ fontFamily: 'var(--font-display)', fontSize: '20px', color: 'var(--white)', letterSpacing: '-0.5px' }}>
                   No hay spots en esta categoría aún
@@ -261,7 +245,7 @@ export default function ExplorarPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {filtered.map((spot) => {
+                {filtered.map(spot => {
                   const dist = getDistance(spot, userLat ?? undefined, userLng ?? undefined)
                   return (
                     <SpotCard
@@ -269,7 +253,6 @@ export default function ExplorarPage() {
                       spot={spot}
                       distanceMeters={dist ?? undefined}
                       onClick={() => isSelectingSpot ? handleAddSpot(spot) : selectSpot(spot)}
-                      // ← Pasa prop para mostrar botón "+"
                       isSelecting={isSelectingSpot}
                       onAddToItinerary={() => handleAddSpot(spot)}
                     />
@@ -282,6 +265,10 @@ export default function ExplorarPage() {
       </div>
 
       <SpotBottomSheet />
+
+      <style>{`
+        div::-webkit-scrollbar { display: none; }
+      `}</style>
     </div>
   )
 }

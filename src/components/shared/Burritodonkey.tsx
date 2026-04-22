@@ -16,24 +16,29 @@ export default function BurritoDonkey({ autoRotate = true, className = "" }: Pro
         const W = stage.clientWidth;
         const H = stage.clientHeight;
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        // ← alpha: true + setClearColor con opacity 0 = fondo transparente
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(W, H);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setClearColor(0x120b04, 1);
+        renderer.setClearColor(0x000000, 0);
         stage.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
-        scene.fog = new THREE.Fog(0x120b04, 12, 30);
+        // sin fog para que no haya niebla oscura
 
         const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
 
-        scene.add(new THREE.AmbientLight(0xffe8b0, 0.55));
-        const sun = new THREE.DirectionalLight(0xffd080, 1.4);
+        scene.add(new THREE.AmbientLight(0xffe8b0, 0.8));
+        const sun = new THREE.DirectionalLight(0xffd080, 1.6);
         sun.position.set(3, 8, 5);
         scene.add(sun);
-        const rim = new THREE.DirectionalLight(0xff6010, 0.45);
+        const rim = new THREE.DirectionalLight(0xff6010, 0.5);
         rim.position.set(-4, 2, -4);
         scene.add(rim);
+        // luz de relleno frontal para que se vea bien sin fondo
+        const fill = new THREE.DirectionalLight(0xffeedd, 0.4);
+        fill.position.set(0, 2, 6);
+        scene.add(fill);
 
         const mb = (w: number, h: number, d: number) => new THREE.BoxGeometry(w, h, d);
         const ms = (c: number, r = 0.85) =>
@@ -48,76 +53,9 @@ export default function BurritoDonkey({ autoRotate = true, className = "" }: Pro
             hoof: 0x1e110a, bag: 0xd06818, bagd: 0x8a3a08, gold: 0xf5c842,
             hat: 0x5a2e08, hatd: 0x3d1e05, nose: 0xa87848, chin: 0xc09a60,
             lip: 0x8a5e30, cheek: 0xd4aa72, eye: 0x1a0800,
-            ground: 0x7a5020, ground2: 0x5a3810, rock: 0x4a2c0c,
-            palm: 0x4a2808, leaf: 0x2a6018,
         };
-
-        // Ground
-        const gnd = mk(mb(14, 0.12, 14), ms(C.ground, 0.97));
-        gnd.position.y = -0.06;
-        scene.add(gnd);
-        const gnd2 = mk(mb(14, 0.04, 14), ms(C.ground2, 1));
-        gnd2.position.y = 0.001;
-        scene.add(gnd2);
-
-        // Rocks
-        let seed = 1;
-        const rnd = () => {
-            seed = (seed * 16807) % 2147483647;
-            return (seed - 1) / 2147483646;
-        };
-        for (let i = 0; i < 20; i++) {
-            const rx = (rnd() - 0.5) * 10;
-            const rz = (rnd() - 0.5) * 10;
-            if (Math.abs(rx) < 2 && Math.abs(rz) < 2) continue;
-            const rh = 0.04 + rnd() * 0.06;
-            const rock = mk(mb(0.08 + rnd() * 0.12, rh, 0.07 + rnd() * 0.1), ms(C.rock, 1));
-            rock.position.set(rx, rh / 2, rz);
-            scene.add(rock);
-        }
-
-        // Palms
-        for (let i = 0; i < 5; i++) {
-            const a = (i / 5) * Math.PI * 2;
-            const pd = 3.8 + rnd() * 0.7;
-            const px = Math.cos(a) * pd;
-            const pz = Math.sin(a) * pd;
-            const ph = 1.6 + rnd() * 1.0;
-            const trunk = mk(mb(0.12, ph, 0.12), ms(C.palm, 0.9));
-            trunk.position.set(px, ph / 2, pz);
-            scene.add(trunk);
-            for (let j = 0; j < 4; j++) {
-                const la = (j / 4) * Math.PI * 2;
-                const ll = 0.4 + rnd() * 0.3;
-                const lf = mk(mb(ll, 0.055, 0.07), ms(C.leaf, 0.7));
-                lf.position.set(px + Math.cos(la) * ll * 0.4, ph + 0.1, pz + Math.sin(la) * ll * 0.4);
-                lf.rotation.y = la;
-                scene.add(lf);
-            }
-        }
-
-        // Stars
-        interface StarData { m: THREE.Mesh; base: number; ph: number }
-        const starMeshes: StarData[] = [];
-        for (let i = 0; i < 60; i++) {
-            const sa = rnd() * Math.PI * 2;
-            const se = 0.35 + rnd() * 0.5;
-            const sr = 11 + rnd() * 5;
-            const sm = mk(
-                mb(0.05, 0.05, 0.05),
-                new THREE.MeshBasicMaterial({ color: 0xf5c842, transparent: true, opacity: rnd() * 0.6 + 0.3 })
-            );
-            sm.position.set(
-                Math.cos(sa) * Math.cos(se) * sr,
-                Math.sin(se) * sr,
-                Math.sin(sa) * Math.cos(se) * sr
-            );
-            scene.add(sm);
-            starMeshes.push({ m: sm, base: (sm.material as THREE.MeshBasicMaterial).opacity, ph: rnd() * Math.PI * 2 });
-        }
 
         // ── DONKEY ──
-        // Body faces +Z. rotateX on hips → feet swing forward/back in Z ✓
         const donkey = new THREE.Group();
         scene.add(donkey);
 
@@ -135,15 +73,12 @@ export default function BurritoDonkey({ autoRotate = true, className = "" }: Pro
             const bg = box(0.14, 0.22, 0.24, C.bag);
             bg.position.set(sx, -0.08, 0);
             bodyG.add(bg);
-
             const fl = box(0.016, 0.10, 0.24, C.bagd);
             fl.position.set(sx > 0 ? 0.078 : -0.078, 0.02, 0);
             bodyG.add(fl);
-
             const bk = box(0.022, 0.065, 0.065, C.gold);
             bk.position.set(sx > 0 ? 0.079 : -0.079, 0.02, 0);
             bodyG.add(bk);
-
             const st = box(0.15, 0.20, 0.022, C.gold);
             st.position.set(sx, -0.09, 0.08);
             bodyG.add(st);
@@ -269,32 +204,26 @@ export default function BurritoDonkey({ autoRotate = true, className = "" }: Pro
             const hipG = new THREE.Group();
             bodyG.add(hipG);
             hipG.position.set(def.x, -0.17, def.z);
-
             const upper = box(0.105, 0.26, 0.105, C.body);
             upper.position.y = -0.13;
             hipG.add(upper);
-
             const knee = box(0.095, 0.06, 0.095, C.dark);
             knee.position.y = -0.26;
             hipG.add(knee);
-
             const lowerG = new THREE.Group();
             lowerG.position.y = -0.26;
             hipG.add(lowerG);
-
             const shin = box(0.082, 0.24, 0.082, C.dark);
             shin.position.y = -0.12;
             lowerG.add(shin);
-
             const hf = box(0.105, 0.07, 0.105, C.hoof);
             hf.position.y = -0.275;
             lowerG.add(hf);
-
             return { hipG, lowerG, phase: def.phase };
         });
 
         // ── Orbit camera ──
-        const orb = { th: 0.0, ph: 1.1, r: 4.2 };
+        const orb = { th: 0.0, ph: 1.1, r: 3.2 };
         let autoRot = autoRotate;
         const drag = { on: false, x: 0, y: 0, pd: 0 };
 
@@ -366,25 +295,16 @@ export default function BurritoDonkey({ autoRotate = true, className = "" }: Pro
         const animate = () => {
             rafId = requestAnimationFrame(animate);
             tick++;
-
             if (autoRot) { orb.th += 0.006; updateCam(); }
-
             donkey.position.y = Math.sin(tick * 0.28) * 0.022;
             headG.rotation.x = Math.sin(tick * 0.14) * 0.035;
             tailG.rotation.x = 0.35 + Math.sin(tick * 0.13) * 0.28;
             tailG.rotation.z = Math.sin(tick * 0.09) * 0.12;
-
             legs.forEach(({ hipG, lowerG, phase }) => {
                 const s = Math.sin(tick * 0.20 + phase);
                 hipG.rotation.x = s * 0.40;
                 lowerG.rotation.x = Math.max(0, -s) * 0.44;
             });
-
-            starMeshes.forEach(({ m, base, ph }) => {
-                (m.material as THREE.MeshBasicMaterial).opacity =
-                    base * (0.5 + 0.5 * Math.sin(tick * 0.04 + ph));
-            });
-
             renderer.render(scene, camera);
         };
         animate();
@@ -398,7 +318,6 @@ export default function BurritoDonkey({ autoRotate = true, className = "" }: Pro
         });
         ro.observe(stage);
 
-        // Cleanup
         return () => {
             cancelAnimationFrame(rafId);
             ro.disconnect();
@@ -418,7 +337,7 @@ export default function BurritoDonkey({ autoRotate = true, className = "" }: Pro
         <div
             ref={stageRef}
             className={className}
-            style={{ width: "100%", height: "100%", cursor: "grab", borderRadius: "16px", overflow: "hidden" }}
+            style={{ width: "100%", height: "100%", cursor: "grab", overflow: "hidden" }}
         />
     );
 }

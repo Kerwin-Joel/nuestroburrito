@@ -4,13 +4,12 @@ import { TouristBottomTabBar } from '../components/shared/BottomTabBar'
 
 export default function TouristLayout() {
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100dvh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Navbar />
-      <main style={{ flex: 1, paddingBottom: '100px' }}>
+      <main style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
         <Outlet />
       </main>
-      
-      {/* Mobile bottom nav */}
+
       <div className="show-mobile-nav">
         <TouristBottomTabBar />
       </div>

@@ -13,6 +13,7 @@ import { useAutoSave } from '../../hooks/useAutoSave'
 import SaveFAB from '../../components/tourist/SaveFAB'
 import CreateItineraryModal from './CreateItineraryModal'
 import { useAuthStore } from '../../stores/useAuthStore'
+import BurritoDonkey from '../../components/shared/Burritodonkey'
 
 
 export default function ItinerarioPage() {
@@ -133,21 +134,38 @@ export default function ItinerarioPage() {
   if (!current) {
     return (
       <div style={{
-        minHeight: '100vh', background: 'var(--bg)',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', gap: '20px',
+        height: '100%',           // ← cambia 100dvh por 100%
+        minHeight: '60vh',        // ← fallback por si acaso
+        background: 'var(--bg)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '20px',
         padding: '24px',
       }}>
-        <p style={{ fontSize: '64px' }}>🌯</p>
+        {/* Burrito 3D en vez del emoji */}
+        <div style={{ width: '200px', height: '200px' }}>
+          <BurritoDonkey autoRotate />
+        </div>
+
         <div style={{ textAlign: 'center' }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '26px', fontWeight: 800, color: 'var(--white)', letterSpacing: '-1px', margin: '0 0 8px' }}>
+          <h2 style={{
+            fontFamily: 'var(--font-display)', fontSize: '26px',
+            fontWeight: 800, color: 'var(--white)',
+            letterSpacing: '-1px', margin: '0 0 8px'
+          }}>
             Tu día piurano te espera
           </h2>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--muted)', margin: 0 }}>
             Crea tu ruta o genera una con IA
           </p>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '320px' }}>
+
+        <div style={{
+          display: 'flex', flexDirection: 'column', gap: '10px',
+          width: '100%', maxWidth: '320px', paddingBottom: '100px'
+        }}>
           <button
             onClick={() => setShowCreateModal(true)}
             className="btn btn-primary"
@@ -155,7 +173,8 @@ export default function ItinerarioPage() {
           >
             ✏️ Crear mi propia ruta
           </button>
-          <Link to="/app" className="btn btn-ghost" style={{ width: '100%', padding: '16px', textAlign: 'center' }}>
+          <Link to="/app" className="btn btn-ghost"
+            style={{ width: '100%', padding: '16px', textAlign: 'center' }}>
             🤖 Generar con IA
           </Link>
         </div>

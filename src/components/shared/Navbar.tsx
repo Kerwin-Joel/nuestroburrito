@@ -12,9 +12,17 @@ export default function Navbar() {
   const location = useLocation()
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
+    // Busca el elemento main más cercano
+    const main = document.querySelector('main')
+    const target = main ?? window
+
+    const onScroll = () => {
+      const scrollTop = main ? main.scrollTop : window.scrollY
+      setScrolled(scrollTop > 40)
+    }
+
+    target.addEventListener('scroll', onScroll)
+    return () => target.removeEventListener('scroll', onScroll)
   }, [])
 
   useEffect(() => {
@@ -55,7 +63,7 @@ export default function Navbar() {
           background: scrolled ? 'rgba(8,7,5,0.92)' : 'rgba(8,7,5,0.6)',
           borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
           transition: 'all 0.4s ease',
-          padding: scrolled ? '10px 0' : '18px 0',
+          padding: scrolled ? '10px 0' : '12px 0',  // ← era '18px 0'
         }}
       >
         <div className="page-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
