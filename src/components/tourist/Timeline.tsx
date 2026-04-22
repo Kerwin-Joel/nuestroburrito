@@ -10,6 +10,9 @@ import StopReviewModal from '../../pages/tourist/StopReviewModal'
 import { reviewsService } from '../../services/reviews'
 import { itinerariesService } from '../../services/itineraries'
 import SpotDrawer from './SpotDrawer'
+import { supabase } from '../../lib/supabase'
+import QRScannerModal from '../../pages/verify/QRScannerModal'
+
 
 export default function Timeline({ readOnly = false,
   canVisit = false, }: {
@@ -24,6 +27,8 @@ export default function Timeline({ readOnly = false,
   const [newStop, setNewStop] = useState({ time: '', spotName: '', localTip: '' })
   const [reviewStop, setReviewStop] = useState<ItineraryStop | null>(null)
   const [selectedStop, setSelectedStop] = useState<ItineraryStop | null>(null)
+  const [scanningStop, setScanningStop] = useState<ItineraryStop | null>(null)
+
 
   useEffect(() => {
     if (lineRef.current) {
@@ -95,6 +100,30 @@ export default function Timeline({ readOnly = false,
       } catch (err) {
         console.error('Error eliminando stop:', err)
       }
+    }
+  }
+
+  const handleQRScan = async (code: string) => {
+    setScanningStop(null)
+    if (!scanningStop) return
+
+    try {
+      const { data: qr } = await supabase
+        .from('spot_qr_codes')
+        .select('spot_id')
+        .eq('code', code)
+        .eq('active', true)
+        .single()
+
+      if (!qr || qr.spot_id !== scanningStop.spotId) {
+        addToast({ type: 'error', message: 'Este QR no corresponde a este spot' })
+        return
+      }
+
+      // QR válido → abre el modal de reseña
+      setReviewStop(scanningStop)
+    } catch {
+      addToast({ type: 'error', message: 'QR inválido o no reconocido' })
     }
   }
 
@@ -223,12 +252,9 @@ export default function Timeline({ readOnly = false,
                   </div>
                 )}
 
-                {(canVisit || !readOnly) && !stop.visited && (
+                {canVisit && !stop.visited && (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation()  // ← agrega esto
-                      handleVisited(stop)
-                    }}
+                    onClick={(e) => { e.stopPropagation(); setScanningStop(stop) }}
                     style={{
                       marginTop: '12px',
                       display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -383,6 +409,11 @@ export default function Timeline({ readOnly = false,
       <SpotDrawer
         stop={selectedStop}
         onClose={() => setSelectedStop(null)}
+      />
+      <QRScannerModal
+        isOpen={!!scanningStop}
+        onClose={() => setScanningStop(null)}
+        onScan={handleQRScan}
       />
       <StopReviewModal
         stop={reviewStop}

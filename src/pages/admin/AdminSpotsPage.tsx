@@ -83,6 +83,14 @@ export default function AdminSpotsPage() {
         })
         setSpots(prev => [newSpot, ...prev])
         spotId = newSpot.id
+
+        // generacion de codido QR
+        const qrCode = `BURRITO-${newSpot.name.toUpperCase().replace(/\s+/g, '-')}-${Date.now().toString(36).toUpperCase()}`
+        await supabase.from('spot_qr_codes').insert({
+          spot_id: newSpot.id,
+          code: qrCode,
+          active: true,
+        })
       }
 
       const newBenefits = (data.benefits ?? []).filter((b: any) => b.id?.startsWith('new-'))

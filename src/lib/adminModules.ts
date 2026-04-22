@@ -1,14 +1,15 @@
-import { 
-  LayoutDashboard, 
-  MapPin, 
-  Video, 
-  Users, 
-  UserCircle, 
-  Sun, 
-  Star, 
-  Tag, 
+import {
+  LayoutDashboard,
+  MapPin,
+  Video,
+  Users,
+  UserCircle,
+  Sun,
+  Star,
+  Tag,
   Settings,
-  LucideIcon 
+  QrCode,
+  LucideIcon
 } from 'lucide-react'
 
 export interface AdminModule {
@@ -95,5 +96,13 @@ export const ADMIN_MODULES: AdminModule[] = [
     path: '/admin/configuracion',
     enabled: true,
     description: 'Settings globales de la plataforma',
+  },
+  {
+    id: 'qr',
+    label: 'Códigos QR',
+    icon: QrCode,
+    path: '/admin/qr',
+    enabled: true,
+    description: 'Genera e imprime QR para locales aliados',
   },
 ]

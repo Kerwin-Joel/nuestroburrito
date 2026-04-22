@@ -26,6 +26,7 @@ const SpotsPage = lazy(() => import('./pages/churre/SpotsPage'))
 const ToursPage = lazy(() => import('./pages/churre/ToursPage'))
 const ResenasPage = lazy(() => import('./pages/churre/ResenasPage'))
 const PerfilChurre = lazy(() => import('./pages/churre/PerfilPage'))
+const VerifyPage = lazy(() => import('./pages/verify/VerifyPage'))
 
 // Admin pages
 const AdminLayout = lazy(() => import('./layouts/AdminLayout'))
@@ -39,6 +40,8 @@ const AdminResenasPage = lazy(() => import('./pages/admin/AdminResenasPage'))
 const AdminCategoriasPage = lazy(() => import('./pages/admin/AdminCategoriasPage'))
 const AdminConfigPage = lazy(() => import('./pages/admin/AdminConfigPage'))
 const AuthCallbackPage = lazy(() => import('./pages/auth/AuthCallbackPage'))
+const AdminQRPage = lazy(() => import('./pages/admin/AdminQRPage'))
+
 
 // Landing page
 const LandingPage = lazy(() => import('./pages/LandingPage'))
@@ -101,6 +104,7 @@ export default function App() {
             <Route path="itinerario" element={<ItinerarioPage />} />
             <Route path="explorar" element={<ExplorarPage />} />
             <Route path="perfil" element={<PerfilTourist />} />
+            <Route path="verify" element={<VerifyPage />} />
           </Route>
 
           {/* Churre routes (Protected) */}
@@ -133,6 +137,7 @@ export default function App() {
             <Route path="resenas" element={<AdminResenasPage />} />
             <Route path="categorias" element={<AdminCategoriasPage />} />
             <Route path="configuracion" element={<AdminConfigPage />} />
+            <Route path="qr" element={<AdminQRPage />} />
           </Route>
 
           {/* Fallback */}
