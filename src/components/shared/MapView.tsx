@@ -65,8 +65,8 @@ function MapControls({ onRecenter }: { onRecenter: () => void }) {
   return (
     <div style={{
       position: 'absolute',
-      bottom: '154px',
-      right: '24px',
+      bottom: '25vh',   // ← relativo a la altura del viewport
+      right: '5vw',
       zIndex: 500,
       display: 'flex',
       flexDirection: 'column',

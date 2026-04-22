@@ -109,8 +109,8 @@ export default function SpotDrawer({ stop, onClose }: Props) {
                         initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                         transition={{ type: 'spring', stiffness: 320, damping: 30 }}
                         style={{
-                            position: 'fixed', bottom: 0, left: 0, right: 0,
-                            zIndex: 601, maxHeight: '88vh', overflowY: 'auto',
+                            position: 'fixed', bottom: 10, left: 0, right: 0,
+                            zIndex: 601, maxHeight: '70vh', overflowY: 'auto',
                             background: 'var(--card)',
                             borderRadius: '24px 24px 0 0',
                             border: '1px solid var(--border)',
