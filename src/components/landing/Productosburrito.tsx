@@ -33,9 +33,9 @@ const productosBurrito: Producto[] = [
     emoji: "🗺️",
     titulo: "Tu itinerario en 60 segundos",
     descripcion:
-      "Planes listos para usar: cultural, playero, gastronómico, sierra. Con horarios exactos, tiempos de traslado y tips que no están en ninguna guía.",
+      "Rutas listas para usar: playa, gastronomía, cultura o sierra. Con horarios, traslados y tips que no encuentras en Google.",
     features: [
-      "Ruta Cultural — Circuito de museos + ceviche",
+      "Ceviche piurano de verdad — Piura por ser norte es conocida por su ceviche y sobre todo por el ceviche piurano.",
       "Ruta Playera — Piura → Paita → 3 playas",
       "Ruta Diversión — Parques, música y mercados",
       "Ruta Sierra — Ayabaca, Aypate y Las Huaringas",
@@ -50,7 +50,7 @@ const productosBurrito: Producto[] = [
     emoji: "🤝",
     titulo: "Tu guía local. No uno de TripAdvisor.",
     descripcion:
-      "Jóvenes piuranos — estudiantes de Turismo y voluntarios culturales — que te llevan a los lugares que solo conocen los que viven aquí.",
+      "Chicos piuranos -  estudiantes de Turismo y voluntarios culturales - que comparten su ciudad como se la mostrarían a un amigo. Sin rutas de agencia ni sin lugares de relleno.",
     features: [
       "Tours personalizados medio día / día completo",
       "Alianza con UDEP, UNP y UCV Piura",
@@ -65,14 +65,14 @@ const productosBurrito: Producto[] = [
     id: "ia",
     tag: "BURRITO IA",
     emoji: "🤖",
-    titulo: "El bot que habla piurano",
+    titulo: "El bot piuranisisisiiiimo",
     descripcion:
-      "Dinos cuánto tiempo tienes, qué te provoca y dónde estás. En segundos tienes un plan armado. Sin scroll infinito, sin tabs abiertos.",
+      "Dile cuánto tiempo tienes, qué se te antoja y dónde estás. En segundos tienes tu plan. Sin buscar, sin comparar, sin volverte loco.",
     features: [
       "Filtros: tiempo, presupuesto, estado de ánimo",
       "Itinerarios con lógica de ruta y traslados",
       "Tips secretos de locales incluidos",
-      "Tono amigable — como hablar con un pata piurano",
+      "Te habla como un pata de Piura - no como un robot .",
     ],
     accent: "#FFD166",
     accentSoft: "rgba(255,209,102,0.10)",
@@ -102,9 +102,9 @@ const S = {
     fontFamily: "'Syne', sans-serif",
     fontSize: "clamp(30px, 4vw, 54px)",
     fontWeight: 800,
-    letterSpacing: "-2px",
+    letterSpacing: "1px",
     color: "#FDFAF4",
-    lineHeight: 1,
+    lineHeight: 1.1,
     marginBottom: 18,
   },
   sub: {
@@ -152,10 +152,10 @@ const S = {
   cardTitle: {
     fontFamily: "'Syne', sans-serif",
     fontSize: "clamp(17px, 1.8vw, 22px)",
-    fontWeight: 800,
+    fontWeight: 750,
     letterSpacing: "-0.5px",
     color: "#FDFAF4",
-    lineHeight: 1.1,
+    lineHeight: 1.3,
     marginBottom: 12,
   },
   desc: {
@@ -297,8 +297,7 @@ export default function ProductosBurrito({ onCTAClick, quizRef }: ProductosBurri
           <span style={{ color: "#FF5500" }}>vivir Piura de verdad.</span>
         </h2>
         <p style={S.sub}>
-          Desde el itinerario automático hasta el guía que solo los locales conocen.
-          Elige tu forma de explorar.
+          Arma tu ruta solo. <br /> Explórala con un piurano de verdad o <br /> pregúntale a la IA. <br />Tú eliges cómo vivirla
         </p>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
