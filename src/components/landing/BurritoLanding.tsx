@@ -6,7 +6,6 @@ import AlianzasBurrito from './Alianzasburrito.tsx';
 import { QuizSection } from './QuizSection.tsx';
 import { supabase } from "../../lib/supabase";
 import WaitlistSuccess from "./WaitlistSuccess";
-import BurritoDonkey from '../shared/BurritoDonkey'
 
 
 /* ─── Data ─── */
