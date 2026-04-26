@@ -6,7 +6,7 @@ import AlianzasBurrito from './Alianzasburrito.tsx';
 import { QuizSection } from './QuizSection.tsx';
 import { supabase } from "../../lib/supabase";
 import WaitlistSuccess from "./WaitlistSuccess";
-import BurritoDonkey from '../shared/BurritoDonkey.tsx';
+import BurritoDonkey from '../shared/BurritoDonkey';
 
 /* ─── Data ─── */
 const TICKERS = [
@@ -410,7 +410,7 @@ export default function BurritoLanding() {
         <div className="b-si">
           <div className="b-slbl">El problema real</div>
           <h2 className="b-stitle">Cada hora planeando<br />es una hora que no<br />estás en Piura.</h2>
-          <p className="b-ssub">Pestañas abiertos, reseñas contradictorias, restaurantes cerrados. El ciclo de siempre.</p>
+          <p className="b-ssub">Pestañas abiertas, reseñas contradictorias, restaurantes cerrados. El ciclo de siempre.</p>
           <div className="b-plist" data-rv>
             {PAIN.map(([n, m, s], i) => <div className="b-pitem" key={i}><span className="b-pnum">{n}</span><span className="b-ptxt">{m} <span>{s}</span></span></div>)}
           </div>
