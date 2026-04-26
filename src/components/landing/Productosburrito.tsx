@@ -35,7 +35,6 @@ const productosBurrito: Producto[] = [
     descripcion:
       "Rutas listas para usar: playa, gastronomía, cultura o sierra. Con horarios, traslados y tips que no encuentras en Google.",
     features: [
-      "Ceviche piurano de verdad — Piura por ser norte es conocida por su ceviche y sobre todo por el ceviche piurano.",
       "Ruta Playera — Piura → Paita → 3 playas",
       "Ruta Diversión — Parques, música y mercados",
       "Ruta Sierra — Ayabaca, Aypate y Las Huaringas",
@@ -50,7 +49,7 @@ const productosBurrito: Producto[] = [
     emoji: "🤝",
     titulo: "Tu guía local. No uno de TripAdvisor.",
     descripcion:
-      "Chicos piuranos -  estudiantes de Turismo y voluntarios culturales - que comparten su ciudad como se la mostrarían a un amigo. Sin rutas de agencia ni sin lugares de relleno.",
+      "Chicos piuranos -  estudiantes de Turismo y voluntarios culturales - que comparten su ciudad como se la mostrarían a un amigo. Sin rutas de agencia ni lugares de relleno.",
     features: [
       "Tours personalizados medio día / día completo",
       "Alianza con UDEP, UNP y UCV Piura",
