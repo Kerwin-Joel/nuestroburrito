@@ -26,7 +26,7 @@ export default function TiktokVideoCard({ url }: Props) {
 
   // Constants for the 'virtual width' trick to force high-quality player
   const CARD_WIDTH = 260
-  const VIRTUAL_WIDTH = 340 
+  const VIRTUAL_WIDTH = 340
   const SCALE = CARD_WIDTH / VIRTUAL_WIDTH // ~0.76
 
   if (!videoId || error) {
@@ -48,7 +48,7 @@ export default function TiktokVideoCard({ url }: Props) {
   const embedUrl = `https://www.tiktok.com/embed/v2/${videoId}?lang=es-ES`
 
   return (
-    <div 
+    <div
       className="tiktok-card"
       style={{
         width: `${CARD_WIDTH}px`,
@@ -63,7 +63,7 @@ export default function TiktokVideoCard({ url }: Props) {
     >
       {/* Thumbnail / Poster View */}
       {!isStarted && (
-        <div 
+        <div
           onClick={() => setIsStarted(true)}
           style={{
             position: 'absolute',
@@ -77,13 +77,13 @@ export default function TiktokVideoCard({ url }: Props) {
           }}
         >
           {data?.thumbnail_url ? (
-            <img 
-              src={data.thumbnail_url} 
+            <img
+              src={data.thumbnail_url}
               alt={data.title}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }}
             />
           ) : (
-             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, var(--dim), #000)', opacity: 0.8 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, var(--dim), #000)', opacity: 0.8 }} />
           )}
 
           <div style={{
@@ -108,11 +108,11 @@ export default function TiktokVideoCard({ url }: Props) {
             <Play size={32} color="white" fill="white" style={{ marginLeft: '4px' }} />
           </div>
 
-          <p style={{ 
-            marginTop: '20px', 
-            fontFamily: 'var(--font-display)', 
-            fontSize: '11px', 
-            fontWeight: 800, 
+          <p style={{
+            marginTop: '20px',
+            fontFamily: 'var(--font-display)',
+            fontSize: '11px',
+            fontWeight: 800,
             color: 'var(--white)',
             letterSpacing: '3px',
             textTransform: 'uppercase',
@@ -139,12 +139,12 @@ export default function TiktokVideoCard({ url }: Props) {
 
       {/* High-Fidelity Iframe Player */}
       {isStarted && (
-        <div style={{ 
-          width: '100%', 
-          height: '100%', 
-          position: 'relative', 
+        <div style={{
+          width: '100%',
+          height: '100%',
+          position: 'relative',
           background: '#000',
-          overflow: 'hidden' 
+          overflow: 'hidden'
         }}>
           {!iframeLoaded && (
             <div style={{
@@ -159,7 +159,7 @@ export default function TiktokVideoCard({ url }: Props) {
               <Loader2 size={24} color="var(--orange)" className="animate-spin" />
             </div>
           )}
-          
+
           <div style={{
             width: `${VIRTUAL_WIDTH}px`,
             height: '680px', // Large virtual height to allow deep clipping
@@ -171,17 +171,17 @@ export default function TiktokVideoCard({ url }: Props) {
           }}>
             <iframe
               src={embedUrl}
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; clipboard-write"
               onLoad={() => setIframeLoaded(true)}
+              allowFullScreen
               style={{
                 width: '100%',
                 height: '100%',
                 border: 'none',
                 opacity: iframeLoaded ? 1 : 0,
                 transition: 'opacity 0.6s ease',
-                marginTop: '-80px', // Clip the top parts
+                marginTop: '-80px',
               }}
-              allow="autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen
             />
           </div>
         </div>

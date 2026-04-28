@@ -1,7 +1,8 @@
-import { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { UserRole } from '../../types/auth'
+import { ReactNode, useState, useEffect } from 'react'
+import SolBurrito from '../shared/SolBurrito'
 
 interface Props {
   allowedRoles: UserRole[]
@@ -9,38 +10,27 @@ interface Props {
 }
 
 function FullPageLoader() {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setProgress(p => {
+        if (p >= 95) { clearInterval(iv); return 95 }
+        return p + (p < 60 ? 3 : p < 85 ? 1.5 : 0.5)
+      })
+    }, 80)
+    return () => clearInterval(iv)
+  }, [])
+
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--bg)',
+      background: '#080705',
       display: 'flex',
-      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '20px'
     }}>
-      <div style={{
-        width: '40px',
-        height: '40px',
-        borderRadius: '50%',
-        background: 'var(--orange)',
-        boxShadow: '0 0 20px rgba(255,85,0,0.4)',
-        animation: 'pulse-dot 1s ease-in-out infinite'
-      }} />
-      <span style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: '13px',
-        color: 'var(--gray)',
-        letterSpacing: '1px'
-      }}>
-        Cargando...
-      </span>
-      <style>{`
-        @keyframes pulse-dot {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.4); opacity: 0.5; }
-        }
-      `}</style>
+      <SolBurrito progress={progress} message="Armando tu día..." size={200} />
     </div>
   )
 }

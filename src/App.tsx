@@ -1,8 +1,9 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import ToastContainer from './components/shared/ToastContainer'
 import { useAuthStore } from './stores/useAuthStore'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import SolBurrito from './components/shared/SolBurrito'
 
 // Auth pages (lazy)
 const AuthLayout = lazy(() => import('./layouts/AuthLayout'))
@@ -48,34 +49,42 @@ const LandingPage = lazy(() => import('./pages/LandingPage'))
 
 
 function PageLoader() {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setProgress(p => {
+        if (p >= 95) { clearInterval(iv); return 95 }
+        return p + (p < 60 ? 3 : p < 85 ? 1.5 : 0.5)
+      })
+    }, 80)
+    return () => clearInterval(iv)
+  }, [])
+
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--bg)',
+      background: '#080705',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
     }}>
-      <div style={{
-        width: '40px', height: '40px', borderRadius: '50%',
-        background: 'var(--orange)',
-        animation: 'pulse 1.2s ease-in-out infinite',
-      }} />
-      <style>{`@keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.3);opacity:0.6} }`}</style>
+      <SolBurrito progress={progress} message="Armando tu día..." size={200} />
     </div>
   )
 }
 
 export default function App() {
   const initializeAuth = useAuthStore(state => state.initialize)
-
   useEffect(() => {
     initializeAuth()
   }, [])
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<PageLoader />}>
+      <Suspense fallback={
+        <div style={{ minHeight: '100vh', background: '#080705' }} />
+      }>
         <Routes>
           {/* Public Auth Routes */}
           <Route path="/landing" element={<LandingPage />} />
