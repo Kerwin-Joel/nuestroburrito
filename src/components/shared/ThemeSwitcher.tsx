@@ -1,7 +1,7 @@
 import { useThemeStore, ThemeMode } from '../../stores/useThemeStore'
-import { Sun, Moon, Sunset, Settings2 } from 'lucide-react'
+import { Sun, Moon, Sunset, Settings2, type LucideIcon } from 'lucide-react'
 
-const options: { id: ThemeMode; label: string; Icon: React.ElementType }[] = [
+const options: { id: ThemeMode; label: string; Icon: LucideIcon }[] = [
   { id: 'light',    label: 'Día',    Icon: Sun      },
   { id: 'twilight', label: 'Tarde',  Icon: Sunset   },
   { id: 'dark',     label: 'Noche',  Icon: Moon     },
