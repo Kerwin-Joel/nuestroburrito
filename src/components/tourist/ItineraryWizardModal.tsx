@@ -360,7 +360,7 @@ export default function ItineraryWizardModal({ isOpen, onClose }: Props) {
                       transition: 'all 0.2s',
                     }}
                   >
-                    {step === 2 ? '🌯 Generar mi itinerario' : 'Continuar'} {step < 2 && <ArrowRight size={15} />}
+                    {step === 2 ? 'Generar mi itinerario' : 'Continuar'} {step < 2 && <ArrowRight size={15} />}
                   </button>
                 </div>
               )}
