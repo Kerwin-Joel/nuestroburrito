@@ -1,7 +1,9 @@
 /* ===========================
    BURRITO — DESIGN TOKENS
    =========================== */
-:root {
+
+/* ─── DARK / Noche (default) ─── */
+:root, [data-theme="dark"] {
   --bg:           #080705;
   --card:         #111009;
   --card2:        #181510;
@@ -9,31 +11,92 @@
   --hot:          #FF8C00;
   --amber:        #FFAA3B;
   --yellow:       #FFD166;
+  --text-brand:   #FF5500;
   --white:        #FDFAF4;
   --gray:         #6b6055;
   --dim:          #2a2318;
   --muted:        #8a7e6a;
-  --border:       rgba(255,120,30,0.16);
-  --border-hover: rgba(255,120,30,0.32);
+  --border:       rgba(255,120,30,0.14);
+  --border-hover: rgba(255,120,30,0.30);
 
-  /* Typography scale */
-  --font-display:  'Syne', sans-serif;
-  --font-body:     'Bricolage Grotesque', sans-serif;
-  --font-mono:     'IBM Plex Mono', monospace;
+  --nav-bg:          rgba(8,7,5,0.55);
+  --nav-bg-scrolled: rgba(8,7,5,0.94);
+  --hero-gradient:   linear-gradient(to bottom, rgba(8,7,5,0.72) 0%, rgba(8,7,5,0.85) 55%, rgba(8,7,5,0.28) 100%);
 
-  /* Spacing */
-  --radius-sm:    8px;
-  --radius-md:    12px;
-  --radius-lg:    16px;
-  --radius-xl:    20px;
-  --radius-full:  100px;
+  --shadow-glow:    0 8px 32px rgba(255,85,0,0.30);
+  --shadow-glow-lg: 0 16px 48px rgba(255,85,0,0.40);
+  --shadow-card:    0 16px 48px rgba(0,0,0,0.55);
 
-  /* Shadows */
-  --shadow-glow:  0 8px 32px rgba(255,85,0,0.32);
-  --shadow-glow-lg: 0 16px 48px rgba(255,85,0,0.42);
-  --shadow-card:  0 24px 60px rgba(0,0,0,0.5);
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'Bricolage Grotesque', sans-serif;
+  --font-mono:    'IBM Plex Mono', monospace;
+  --radius-sm:   8px;  --radius-md:   12px;
+  --radius-lg:   16px; --radius-xl:   20px; --radius-full: 100px;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-  /* Animation */
-  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-smooth:  cubic-bezier(0.4, 0, 0.2, 1);
+/* ─── LIGHT / Día — Amanecer Piurano ─── */
+[data-theme="light"] {
+  /* Warm cream sand base */
+  --bg:           #FDF8EF;
+  --card:         #FFFCF5;
+  --card2:        #F5EDD8;
+
+  /* Amber gold electric palette */
+  --orange:       #E8920A;   /* deep amber gold — vivid, premium */
+  --hot:          #D4780A;   /* richer amber for hover */
+  --amber:        #B85C00;   /* dark caramel for text accents */
+  --yellow:       #F5A623;   /* highlight yellow */
+
+  /* Brand text — readable on cream */
+  --text-brand:   #C27A00;
+
+  /* Typography */
+  --white:        #1A120A;   /* very dark warm brown — rich, not harsh */
+  --gray:         #7A6550;
+  --dim:          #E8DFC8;
+  --muted:        #A08060;
+
+  /* Borders — warm parchment tones */
+  --border:       rgba(160, 100, 20, 0.14);
+  --border-hover: rgba(160, 100, 20, 0.32);
+
+  --nav-bg:          rgba(253, 248, 239, 0.65);
+  --nav-bg-scrolled: rgba(253, 248, 239, 0.97);
+  --hero-gradient:   linear-gradient(to bottom, rgba(253,248,239,0.75) 0%, rgba(253,248,239,0.92) 55%, rgba(253,248,239,0.35) 100%);
+
+  --shadow-glow:    0 8px 32px rgba(200, 120, 0, 0.22);
+  --shadow-glow-lg: 0 16px 48px rgba(200, 120, 0, 0.32);
+  --shadow-card:    0 8px 40px rgba(100, 60, 0, 0.10);
+}
+
+/* ─── TWILIGHT / Tarde — Atardecer de Piura ─── */
+[data-theme="twilight"] {
+  --bg:           #1C1108;
+  --card:         #251508;
+  --card2:        #301A09;
+
+  /* Warm golden sunset palette */
+  --orange:       #FF8C1A;
+  --hot:          #FFAA3B;
+  --amber:        #FFC566;
+  --yellow:       #FFD9A0;
+  --text-brand:   #FFAA3B;
+
+  --white:        #FFF5E8;
+  --gray:         #A08060;
+  --dim:          #4A2E12;
+  --muted:        #B09070;
+
+  --border:       rgba(255, 140, 26, 0.18);
+  --border-hover: rgba(255, 140, 26, 0.38);
+
+  --nav-bg:          rgba(28, 17, 8, 0.60);
+  --nav-bg-scrolled: rgba(28, 17, 8, 0.95);
+  --hero-gradient:   linear-gradient(to bottom, rgba(28,17,8,0.75) 0%, rgba(28,17,8,0.88) 55%, rgba(28,17,8,0.30) 100%);
+
+  --shadow-glow:    0 8px 32px rgba(255, 140, 26, 0.30);
+  --shadow-glow-lg: 0 16px 48px rgba(255, 140, 26, 0.42);
+  --shadow-card:    0 16px 48px rgba(0, 0, 0, 0.48);
 }

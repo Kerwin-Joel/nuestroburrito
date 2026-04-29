@@ -4,17 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg:     '#080705',
-        card:   '#111009',
-        card2:  '#181510',
-        orange: '#FF5500',
-        hot:    '#FF8C00',
-        amber:  '#FFAA3B',
-        yellow: '#FFD166',
-        cream:  '#FDFAF4',
-        gray:   '#6b6055',
-        dim:    '#2a2318',
-        muted:  '#8a7e6a',
+        bg:     'var(--bg)',
+        card:   'var(--card)',
+        card2:  'var(--card2)',
+        orange: 'var(--orange)',
+        hot:    'var(--hot)',
+        amber:  'var(--amber)',
+        yellow: 'var(--yellow)',
+        cream:  'var(--white)',
+        white:  'var(--white)',
+        gray:   'var(--gray)',
+        dim:    'var(--dim)',
+        muted:  'var(--muted)',
       },
       fontFamily: {
         display: ['Syne', 'sans-serif'],
@@ -29,9 +30,9 @@ export default {
         full: '100px',
       },
       boxShadow: {
-        glow:    '0 8px 32px rgba(255,85,0,0.32)',
-        'glow-lg': '0 16px 48px rgba(255,85,0,0.42)',
-        card:    '0 24px 60px rgba(0,0,0,0.5)',
+        glow:    'var(--shadow-glow)',
+        'glow-lg': 'var(--shadow-glow-lg)',
+        card:    'var(--shadow-card)',
       },
       animation: {
         shimmer: 'shimmer 1.6s infinite',

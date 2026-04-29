@@ -138,10 +138,10 @@ export default function ExplorarPage() {
 
       {/* ── FILTROS ── */}
       <div style={{
-        background: 'rgba(8,7,5,0.97)',
+        background: 'var(--card)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: '1px solid var(--border)',
         position: 'sticky', top: 0, zIndex: 800,
       }}>
         {/* Categorías + toggle */}
@@ -163,8 +163,8 @@ export default function ExplorarPage() {
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: '5px',
                       padding: '7px 14px', borderRadius: '100px',
-                      border: isActive ? '1px solid rgba(255,85,0,0.5)' : '1px solid rgba(255,255,255,0.08)',
-                      background: isActive ? 'rgba(255,85,0,0.15)' : 'rgba(255,255,255,0.04)',
+                      border: isActive ? '1px solid var(--border-hover)' : '1px solid var(--border)',
+                      background: isActive ? 'var(--border)' : 'transparent',
                       color: isActive ? 'var(--orange)' : 'var(--muted)',
                       fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: isActive ? 700 : 500,
                       cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
@@ -180,15 +180,15 @@ export default function ExplorarPage() {
             {/* Fade derecho */}
             <div style={{
               position: 'absolute', right: 0, top: 0, bottom: 0, width: '32px',
-              background: 'linear-gradient(to right, transparent, rgba(8,7,5,0.97))',
+              background: 'linear-gradient(to right, transparent, var(--card))',
               pointerEvents: 'none',
             }} />
           </div>
 
           {/* Toggle mapa/lista */}
           <div style={{
-            display: 'flex', background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px',
+            display: 'flex', background: 'var(--card2)',
+            border: '1px solid var(--border)', borderRadius: '10px',
             overflow: 'hidden', flexShrink: 0, padding: '3px', gap: '2px', flexDirection: 'column'
           }}>
             {([['map', Map, 'Mapa'], ['list', List, 'Lista']] as const).map(([mode, Icon, label]) => (
@@ -237,7 +237,7 @@ export default function ExplorarPage() {
             className="page-container"
             style={{ paddingTop: '16px', paddingBottom: '120px' }}>
             {filtered.length === 0 ? (
-              <div style={{ border: '2px dashed rgba(255,85,0,0.3)', borderRadius: '16px', padding: '48px', textAlign: 'center' }}>
+              <div style={{ border: '2px dashed var(--border-hover)', borderRadius: '16px', padding: '48px', textAlign: 'center' }}>
                 <p style={{ fontSize: '40px', marginBottom: '12px' }}>🗺️</p>
                 <p style={{ fontFamily: 'var(--font-display)', fontSize: '20px', color: 'var(--white)', letterSpacing: '-0.5px' }}>
                   No hay spots en esta categoría aún

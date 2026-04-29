@@ -29,6 +29,22 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 0.4s var(--ease-smooth),
+    color 0.4s var(--ease-smooth);
+}
+
+/* Theme transitions — only color properties, not transforms/opacity (would break animations) */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow, fill, stroke;
+  transition-duration: 0.3s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reset transition for elements that need custom animations */
+.no-theme-transition,
+.no-theme-transition * {
+  transition: none !important;
 }
 
 /* ─── Grain Noise Overlay ─── */
@@ -83,7 +99,7 @@ code, kbd, pre, samp {
   font-weight: 700;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--text-brand);
   font-family: var(--font-mono);
 }
 
@@ -111,7 +127,7 @@ code, kbd, pre, samp {
   box-shadow: var(--shadow-glow);
 }
 .btn-primary:hover {
-  background: #ff7730;
+  background: var(--hot);
   transform: translateY(-3px);
   box-shadow: var(--shadow-glow-lg);
 }
@@ -123,12 +139,13 @@ code, kbd, pre, samp {
 
 .btn-ghost {
   background: transparent;
-  border: 1px solid rgba(196,154,90,0.25);
-  color: #C49A5A;
+  border: 1px solid var(--border-hover);
+  color: var(--muted);
 }
 .btn-ghost:hover {
-  border-color: #C49A5A;
-  background: rgba(196,154,90,0.06);
+  border-color: var(--amber);
+  color: var(--white);
+  background: var(--border);
 }
 
 .btn-danger {
@@ -187,19 +204,19 @@ code, kbd, pre, samp {
   right: -40px;
   width: 200px;
   height: 200px;
-  background: radial-gradient(circle, rgba(255,85,0,0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--border-hover) 0%, transparent 70%);
   filter: blur(60px);
   pointer-events: none;
   transition: opacity 0.3s;
 }
 .card:hover .card-glow {
-  opacity: 2;
+  opacity: 1;
 }
 
 /* ─── Inputs ─── */
 .input {
   background: var(--card2);
-  border: 1px solid rgba(255,120,30,0.2);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--white);
   font-family: var(--font-body);
@@ -210,11 +227,11 @@ code, kbd, pre, samp {
   transition: all 0.2s;
 }
 .input::placeholder {
-  color: #3d3628;
+  color: var(--muted);
 }
 .input:focus {
   border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(255,85,0,0.12);
+  box-shadow: 0 0 0 3px var(--border-hover);
 }
 
 textarea.input {
@@ -228,7 +245,7 @@ textarea.input {
   align-items: center;
   gap: 6px;
   background: var(--card2);
-  border: 1px solid rgba(255,120,30,0.15);
+  border: 1px solid var(--border);
   border-radius: var(--radius-full);
   padding: 8px 16px;
   font-size: 14px;
@@ -240,13 +257,13 @@ textarea.input {
   font-family: var(--font-body);
 }
 .chip:hover {
-  border-color: rgba(255,85,0,0.4);
+  border-color: var(--border-hover);
   color: var(--white);
 }
 .chip.selected {
   border-color: var(--orange);
-  background: rgba(255,85,0,0.10);
-  color: var(--hot);
+  background: var(--border);
+  color: var(--text-brand);
 }
 
 /* ─── Badges ─── */
@@ -264,19 +281,19 @@ textarea.input {
   text-transform: uppercase;
 }
 .badge-orange {
-  background: rgba(255,85,0,0.12);
-  border-color: rgba(255,85,0,0.25);
+  background: var(--border);
+  border-color: var(--border-hover);
   color: var(--hot);
 }
 .badge-green {
-  background: rgba(37,211,102,0.12);
-  border-color: rgba(37,211,102,0.25);
+  background: rgba(37,211,102,0.10);
+  border-color: rgba(37,211,102,0.22);
   color: #25D366;
 }
 .badge-amber {
-  background: rgba(255,170,59,0.12);
-  border-color: rgba(255,170,59,0.25);
-  color: var(--amber);
+  background: var(--border);
+  border-color: var(--border-hover);
+  color: var(--text-brand);
 }
 .badge-red {
   background: rgba(255,64,64,0.12);
@@ -286,14 +303,14 @@ textarea.input {
 
 /* ─── Star Rating ─── */
 .stars {
-  color: var(--yellow);
+  color: var(--text-brand);
   font-size: 14px;
   letter-spacing: 1px;
 }
 
 /* ─── Skeleton Shimmer ─── */
 .skeleton {
-  background: linear-gradient(90deg, var(--card) 0%, #1a1710 50%, var(--card) 100%);
+  background: linear-gradient(90deg, var(--card) 0%, var(--card2) 50%, var(--card) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.6s infinite;
   border-radius: var(--radius-sm);

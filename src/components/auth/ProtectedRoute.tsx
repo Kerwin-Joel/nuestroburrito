@@ -25,7 +25,7 @@ function FullPageLoader() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#080705',
+      background: 'var(--bg)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

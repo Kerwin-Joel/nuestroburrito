@@ -65,7 +65,7 @@ export default function DashboardPage() {
                   {/* Avatar */}
                   <div style={{
                     width: '36px', height: '36px', borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #FF5500 0%, #FFAA3B 100%)',
+                    background: 'linear-gradient(135deg, var(--orange) 0%, var(--amber) 100%)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '12px', color: 'white',
                     flexShrink: 0,

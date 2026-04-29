@@ -11,6 +11,7 @@ import { useItineraryStore } from '../../stores/useItineraryStore'
 import { formatDate, timeUntil, initials } from '../../lib/formatters'
 import type { Itinerary } from '../../types/itinerary'
 import { supabase } from '../../lib/supabase'
+import ThemeSwitcher from '../../components/shared/ThemeSwitcher'
 
 
 export default function PerfilTouristPage() {
@@ -110,8 +111,8 @@ export default function PerfilTouristPage() {
           <div style={{
             width: '80px', height: '80px', borderRadius: '50%',
             marginBottom: '16px', overflow: 'hidden', flexShrink: 0,
-            boxShadow: '0 8px 32px rgba(255,85,0,0.3)',
-            border: '2px solid rgba(255,85,0,0.3)',
+            boxShadow: 'var(--shadow-glow)',
+            border: '2px solid var(--border-hover)',
           }}>
             {avatarUrl ? (
               <img
@@ -153,10 +154,15 @@ export default function PerfilTouristPage() {
           ].map(s => (
             <div key={s.label} className="card" style={{ padding: '16px', textAlign: 'center' }}>
               <p style={{ fontSize: '24px', marginBottom: '6px' }}>{s.emoji}</p>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 800, color: 'var(--yellow)', letterSpacing: '-0.5px' }}>{s.value}</p>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 800, color: 'var(--text-brand)', letterSpacing: '-0.5px' }}>{s.value}</p>
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{s.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Theme settings */}
+        <div style={{ marginBottom: '40px' }}>
+          <ThemeSwitcher />
         </div>
 
         {/* Active reminders */}
@@ -188,7 +194,7 @@ export default function PerfilTouristPage() {
             <Loader2 size={32} color="var(--orange)" className="animate-spin" />
           </div>
         ) : itineraries.length === 0 ? (
-          <div style={{ border: '2px dashed rgba(255,85,0,0.3)', borderRadius: '16px', padding: '48px', textAlign: 'center' }}>
+          <div style={{ border: '2px dashed var(--border-hover)', borderRadius: '16px', padding: '48px', textAlign: 'center' }}>
             <p style={{ fontSize: '40px', marginBottom: '12px' }}>🌯</p>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '20px', color: 'var(--white)', letterSpacing: '-0.5px' }}>
               Aún no tienes itinerarios
@@ -229,9 +235,9 @@ export default function PerfilTouristPage() {
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: '4px',
                         padding: '2px 8px', borderRadius: '100px',
-                        background: 'rgba(255,170,59,0.12)',
-                        border: '1px solid rgba(255,170,59,0.25)',
-                        color: 'var(--amber)',
+                        background: 'var(--border)',
+                        border: '1px solid var(--border-hover)',
+                        color: 'var(--text-brand)',
                         fontFamily: 'var(--font-mono)', fontSize: '9px', fontWeight: 700,
                         letterSpacing: '0.5px', textTransform: 'uppercase'
                       }}>

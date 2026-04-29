@@ -4,6 +4,7 @@ import ToastContainer from './components/shared/ToastContainer'
 import { useAuthStore } from './stores/useAuthStore'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import SolBurrito from './components/shared/SolBurrito'
+import { useThemeStore } from './stores/useThemeStore'
 
 // Auth pages (lazy)
 const AuthLayout = lazy(() => import('./layouts/AuthLayout'))
@@ -64,7 +65,7 @@ function PageLoader() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#080705',
+      background: 'var(--bg)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -76,14 +77,30 @@ function PageLoader() {
 
 export default function App() {
   const initializeAuth = useAuthStore(state => state.initialize)
+  const { computedTheme, updateComputedTheme } = useThemeStore()
+
   useEffect(() => {
     initializeAuth()
+  }, [])
+
+  // Setup theme
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', computedTheme)
+  }, [computedTheme])
+
+  // Check auto theme every minute
+  useEffect(() => {
+    updateComputedTheme() // Init
+    const interval = setInterval(() => {
+      updateComputedTheme()
+    }, 60000)
+    return () => clearInterval(interval)
   }, [])
 
   return (
     <BrowserRouter>
       <Suspense fallback={
-        <div style={{ minHeight: '100vh', background: '#080705' }} />
+        <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />
       }>
         <Routes>
           {/* Public Auth Routes */}

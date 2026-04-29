@@ -82,7 +82,7 @@ export default function HeroCanvas() {
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'linear-gradient(to bottom, rgba(8,7,5,0.78) 0%, rgba(8,7,5,0.28) 50%, rgba(8,7,5,0.92) 100%)',
+        background: 'var(--hero-gradient)',
       }} />
     </div>
   )

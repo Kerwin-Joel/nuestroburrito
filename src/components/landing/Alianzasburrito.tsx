@@ -131,7 +131,7 @@ export default function AlianzasBurrito() {
   return (
     <section style={{
       padding: "88px 48px",
-      background: "#080705",
+      background: "var(--bg)",
       position: "relative" as const,
       zIndex: 5,
     }}>

@@ -6,6 +6,7 @@ import { CATEGORY_LABELS, ZONES } from '../../lib/constants'
 import { useUIStore } from '../../stores/useUIStore'
 import { initials } from '../../lib/formatters'
 import type { SpotCategory } from '../../types/spot'
+import ThemeSwitcher from '../../components/shared/ThemeSwitcher'
 
 const churre = { ...MOCK_CHURRES[0] }
 
@@ -195,6 +196,11 @@ export default function PerfilChurrePage() {
                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>{s.label}</p>
               </div>
             ))}
+          </div>
+
+          {/* Theme settings */}
+          <div style={{ marginBottom: '32px' }}>
+            <ThemeSwitcher />
           </div>
 
           {/* Save button */}

@@ -363,7 +363,7 @@ export default function BurritoLanding() {
   }, [nombre, email, wsp, dia, mes, anio]);
 
   return (
-    <div style={{ background: "#080705", minHeight: "100vh", color: "#FDFAF4", fontFamily: "'Bricolage Grotesque',sans-serif" }}>
+    <div style={{ background: "var(--bg)", minHeight: "100vh", color: "var(--white)", fontFamily: "'Bricolage Grotesque',sans-serif" }}>
 
       {/* ticker */}
       <div className="b-ticker"><div className="b-tki">{[...TICKERS, ...TICKERS].map((t, i) => <span className="b-ti" key={i}>{t}</span>)}</div></div>

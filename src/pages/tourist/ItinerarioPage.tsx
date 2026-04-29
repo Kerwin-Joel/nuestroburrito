@@ -253,7 +253,7 @@ export default function ItinerarioPage() {
                   transition: 'border-color 0.2s',
                 }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--orange)')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,85,0,0.3)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-hover)')}
               >
                 {current.title}
               </h1>
@@ -323,11 +323,11 @@ export default function ItinerarioPage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px',
-                  borderBottom: '1px dashed rgba(255,85,0,0.3)',
+                  borderBottom: '1px dashed var(--border-hover)',
                   paddingBottom: '1px',
                 }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--orange)')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,85,0,0.3)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-hover)')}
               >
                 {current.preferences.group === 'solo' ? 'Solo/a' :
                   current.preferences.group === 'couple' ? 'En pareja' :
@@ -379,8 +379,8 @@ export default function ItinerarioPage() {
                 flex: 1, display: 'inline-flex', alignItems: 'center',
                 justifyContent: 'center', gap: '6px',
                 padding: '6px 12px', borderRadius: '8px',
-                background: 'rgba(255,85,0,0.1)',
-                border: '1px solid rgba(255,85,0,0.3)',
+                background: 'var(--border)',
+                border: '1px solid var(--border-hover)',
                 color: 'var(--orange)',
                 fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600
               }}>
@@ -460,7 +460,7 @@ export default function ItinerarioPage() {
               padding: '14px',
               marginBottom: '16px',
               background: 'transparent',
-              border: '2px dashed rgba(255,85,0,0.3)',
+              border: '2px dashed var(--border-hover)',
               borderRadius: '12px',
               cursor: 'pointer',
               color: 'var(--orange)',
@@ -475,10 +475,10 @@ export default function ItinerarioPage() {
             }}
             onMouseEnter={e => {
               e.currentTarget.style.borderColor = 'var(--orange)'
-              e.currentTarget.style.background = 'rgba(255,85,0,0.05)'
+              e.currentTarget.style.background = 'var(--border)'
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'rgba(255,85,0,0.3)'
+              e.currentTarget.style.borderColor = 'var(--border-hover)'
               e.currentTarget.style.background = 'transparent'
             }}
           >

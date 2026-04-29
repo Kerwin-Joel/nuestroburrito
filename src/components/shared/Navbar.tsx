@@ -60,7 +60,7 @@ export default function Navbar() {
           zIndex: 1000,
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          background: scrolled ? 'rgba(8,7,5,0.92)' : 'rgba(8,7,5,0.6)',
+          background: scrolled ? 'var(--nav-bg-scrolled)' : 'var(--nav-bg)',
           borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
           transition: 'all 0.4s ease',
           padding: scrolled ? '10px 0' : '12px 0',  // ← era '18px 0'
@@ -99,19 +99,20 @@ export default function Navbar() {
             onClick={() => setIsOpen(!isOpen)}
             className="show-mobile"
             style={{
-              zIndex: 10000, // Very high to stay above everything
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.15)',
+              zIndex: 10000,
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
               color: 'var(--white)',
               cursor: 'pointer',
-              padding: '8px',
-              width: '42px',
-              height: '42px',
+              padding: '0',
+              width: '44px',
+              height: '44px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              borderRadius: '12px',
-              transition: 'all 0.3s'
+              borderRadius: '14px',
+              transition: 'all 0.2s',
+              boxShadow: '0 2px 8px var(--border)',
             }}
           >
             {isOpen ? <X size={24} /> : <Menu size={20} />}
@@ -131,7 +132,7 @@ export default function Navbar() {
             style={{
               position: 'fixed',
               inset: 0,
-              backgroundColor: '#080705', // PURE SOLID BACKGROUND
+              backgroundColor: 'var(--bg)', // PURE SOLID BACKGROUND
               zIndex: 9000,
               display: 'flex',
               flexDirection: 'column',
@@ -159,8 +160,8 @@ export default function Navbar() {
                 position: 'absolute',
                 top: '18px',
                 right: '24px',
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.2)',
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
                 color: 'var(--white)',
                 cursor: 'pointer',
                 padding: '8px',
@@ -225,7 +226,7 @@ export default function Navbar() {
                   fontSize: '17px',
                   borderRadius: '18px',
                   justifyContent: 'center',
-                  boxShadow: '0 12px 40px rgba(255,85,0,0.3)',
+                  boxShadow: 'var(--shadow-glow-lg)',
                 }}>
                   Armar mi día <ArrowRight size={20} style={{ marginLeft: '12px' }} />
                 </Link>
@@ -291,14 +292,14 @@ export default function Navbar() {
         .mobile-premium-link .icon-circ {
           width: 50px;
           height: 50px;
-          background: #111009;
+          background: var(--card2);
           border: 1px solid var(--border);
           border-radius: 14px;
           display: flex;
           align-items: center;
           justify-content: center;
           color: var(--orange);
-          transition: all 0.3s ease;
+          transition: all 0.2s ease;
         }
 
         .mobile-premium-link .text-group {
