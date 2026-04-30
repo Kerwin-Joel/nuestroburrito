@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { UserRole, LoginCredentials } from '../../types/auth'
-import gsap from 'gsap'
 
 const loginSchema = z.object({
   email: z.string().email('Email no válido'),
@@ -305,7 +304,7 @@ export default function LoginPage() {
   )
 }
 
-function RoleCard({ icon, title, sub, onClick, index }: { icon: React.ReactNode, title: string, sub: string, onClick: () => void, index: number }) {
+function RoleCard({ icon, title, sub, onClick, index }: { icon: string, title: string, sub: string, onClick: () => void, index: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
