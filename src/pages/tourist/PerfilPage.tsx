@@ -195,7 +195,7 @@ export default function PerfilTouristPage() {
           </div>
         ) : itineraries.length === 0 ? (
           <div style={{ border: '2px dashed var(--border-hover)', borderRadius: '16px', padding: '48px', textAlign: 'center' }}>
-            <p style={{ fontSize: '40px', marginBottom: '12px' }}>🌯</p>
+            <img src="/imagotipo.png" alt="burrito" style={{ height: '80px', width: 'auto', marginBottom: '12px', display: 'block', margin: '0 auto 12px' }} />
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '20px', color: 'var(--white)', letterSpacing: '-0.5px' }}>
               Aún no tienes itinerarios
             </p>
@@ -265,7 +265,7 @@ export default function PerfilTouristPage() {
                   </button>
                   <button
                     onClick={() => {
-                      const text = `🌯 *${it.title}*\n\n` +
+                      const text = `🫔 *${it.title}*\n\n` +
                         it.stops.map((s, i) =>
                           `${i + 1}. *${s.time}* — ${s.spotName}${s.localTip ? `\n   💡 ${s.localTip}` : ''}`
                         ).join('\n\n') +

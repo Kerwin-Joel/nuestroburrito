@@ -7,7 +7,7 @@ export const whatsappService = {
   async sendItinerary(phone: string | null, itinerary: Itinerary): Promise<void> {
     await delay()
 
-    const text = `🌯 *${itinerary.title}*\n\n` +
+    const text = `🫔 *${itinerary.title}*\n\n` +
       itinerary.stops.map((s, i) =>
         `${i + 1}. *${s.time}* — ${s.spotName}${s.localTip ? `\n   💡 ${s.localTip}` : ''}`
       ).join('\n\n') +

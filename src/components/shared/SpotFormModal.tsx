@@ -2,10 +2,25 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { X, Upload, MapPin, Clock, Camera, Star, DollarSign, ChevronRight, Plus, Percent, Gift, Zap } from 'lucide-react'
+import { X, Upload, MapPin, Clock, Camera, Star, DollarSign, ChevronRight, Plus, Percent, Gift, Zap, Globe, MessageCircle, Trash2 } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { CATEGORY_LABELS } from '../../lib/constants'
 import { supabase } from '../../lib/supabase'
+import type { SpotSocialLinks } from '../../types/spot'
+
+const FacebookIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
+  </svg>
+)
+
+const InstagramIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+    <circle cx="12" cy="12" r="4"/>
+    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+  </svg>
+)
 
 const schema = z.object({
   name: z.string().min(3, 'Mínimo 3 caracteres'),
@@ -41,11 +56,12 @@ const DAYS = [
 ]
 
 const SECTIONS = [
-  { id: 'basic', label: 'Básico', icon: '📝' },
-  { id: 'media', label: 'Foto', icon: '📸' },
-  { id: 'details', label: 'Detalles', icon: '⭐' },
-  { id: 'location', label: 'Ubicación', icon: '📍' },
-  { id: 'benefits', label: 'Beneficios', icon: '🎁' },
+  { id: 'basic',    label: 'Básico',    icon: '📝' },
+  { id: 'media',   label: 'Fotos',     icon: '📸' },
+  { id: 'social',  label: 'Redes',     icon: '🔗' },
+  { id: 'details', label: 'Detalles',  icon: '⭐' },
+  { id: 'location',label: 'Ubicación', icon: '📍' },
+  { id: 'benefits',label: 'Beneficios',icon: '🎁' },
 ]
 
 interface Benefit {
@@ -76,7 +92,7 @@ const BENEFIT_LABELS: Record<string, string> = {
 interface Props {
   isOpen: boolean
   onClose: () => void
-  onSave: (data: FormData & { photoUrl?: string; schedule?: Record<string, string>; benefits?: Benefit[] }) => void
+  onSave: (data: FormData & { photoUrl?: string; photos?: string[]; schedule?: Record<string, string>; benefits?: Benefit[]; socialLinks?: SpotSocialLinks }) => void
   initialData?: any
 }
 
@@ -87,6 +103,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
 
   const [activeSection, setActiveSection] = useState('basic')
   const [preview, setPreview] = useState<string | null>(null)
+  const [photos, setPhotos] = useState<string[]>([])
   const [descLen, setDescLen] = useState(0)
   const [tipLen, setTipLen] = useState(0)
   const [schedule, setSchedule] = useState<Record<string, string>>({})
@@ -95,6 +112,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
   const [benefits, setBenefits] = useState<Benefit[]>([])
   const [addingBenefit, setAdding] = useState(false)
   const [newBenefit, setNewBenefit] = useState<Partial<Benefit>>({ type: 'discount', active: true })
+  const [socialLinks, setSocialLinks] = useState<SpotSocialLinks>({})
 
   // Estado local para price_range y category — independiente del form
   const [selectedPrice, setSelectedPrice] = useState<PriceRange | undefined>(undefined)
@@ -139,6 +157,11 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
       setSelectedPrice(priceRange)
       setSelectedCategory(category)
       setPreview(initialData.photoUrl ?? initialData.photo_url ?? null)
+      // Load existing photos array
+      const existingPhotos: string[] = initialData.photos ?? []
+      setPhotos(existingPhotos)
+      // Load social links
+      setSocialLinks(initialData.socialLinks ?? initialData.social_links ?? {})
       setDescLen(initialData.description?.length || 0)
       setTipLen((initialData.localTip ?? initialData.local_tip ?? '').length)
       const sched = initialData.schedule ?? {}
@@ -150,6 +173,8 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
       reset({ name: '', category: '', description: '', localTip: '', address: '', lat: -5.1945, lng: -80.6328, price_range: undefined, rating: undefined, review_count: undefined })
       setSelectedPrice(undefined)
       setSelectedCategory('')
+      setPhotos([])
+      setSocialLinks({})
       setPreview(null); setDescLen(0); setTipLen(0); setSchedule({}); setEnabledDays({})
     }
   }, [isOpen, initialData, reset])
@@ -157,8 +182,22 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
   const handleFile = (file: File) => {
     if (!file.type.startsWith('image/')) return
     const reader = new FileReader()
-    reader.onload = ev => setPreview(ev.target?.result as string)
+    reader.onload = ev => {
+      const dataUrl = ev.target?.result as string
+      // First photo also sets preview
+      if (!preview) setPreview(dataUrl)
+      setPhotos(p => [...p, dataUrl])
+    }
     reader.readAsDataURL(file)
+  }
+
+  const removePhoto = (i: number) => {
+    setPhotos(p => {
+      const next = p.filter((_, idx) => idx !== i)
+      // Keep preview in sync with first remaining photo
+      setPreview(next[0] ?? null)
+      return next
+    })
   }
 
   const toggleDay = (key: string) => {
@@ -179,14 +218,15 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
   }
 
   const onSubmit: SubmitHandler<FormData> = data => {
-    // Asegura que price_range y category lleguen aunque el hidden input falle
     onSave({
       ...data,
       price_range: selectedPrice,
       category: selectedCategory || data.category,
-      photoUrl: preview || undefined,
+      photoUrl: photos[0] ?? preview ?? undefined,
+      photos,
       schedule,
       benefits,
+      socialLinks,
     })
   }
 
@@ -199,7 +239,8 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
 
   const sectionComplete: Record<string, boolean> = {
     basic: !!(watch('name') && selectedCategory && watch('description')),
-    media: !!preview,
+    media: photos.length > 0,
+    social: Object.values(socialLinks).some(Boolean),
     details: !!selectedPrice,
     location: !!watch('address'),
     benefits: benefits.length > 0,
@@ -212,15 +253,15 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
       style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
       onClick={onClose}
     >
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(4,3,2,0.92)', backdropFilter: 'blur(12px)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'var(--overlay, rgba(4,3,2,0.8))', backdropFilter: 'blur(12px)' }} />
 
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          position: 'relative', background: '#0e0c09', border: '1px solid rgba(255,85,0,0.15)',
+          position: 'relative', background: 'var(--card)', border: '1px solid var(--border)',
           borderRadius: '24px', width: '100%', maxWidth: '600px', maxHeight: '92vh',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
-          boxShadow: '0 40px 80px rgba(0,0,0,0.7)', zIndex: 1,
+          boxShadow: '0 40px 80px rgba(0,0,0,0.35)', zIndex: 1,
         }}
       >
         {/* HEADER */}
@@ -234,14 +275,14 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
             </h2>
           </div>
           <button type="button" onClick={onClose}
-            style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', flexShrink: 0 }}>
+            style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--card2)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', flexShrink: 0 }}>
             <X size={15} />
           </button>
         </div>
 
         {/* TABS */}
         <div style={{ padding: '16px 24px 0', flexShrink: 0 }}>
-          <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', padding: '4px' }}>
+          <div style={{ display: 'flex', gap: '4px', background: 'var(--card2)', borderRadius: '12px', padding: '4px' }}>
             {SECTIONS.map(sec => (
               <button key={sec.id} type="button" onClick={() => setActiveSection(sec.id)}
                 style={{ flex: 1, padding: '8px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: activeSection === sec.id ? 'rgba(255,85,0,0.15)' : 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', transition: 'all 0.2s', position: 'relative' }}>
@@ -273,7 +314,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                     {Object.entries(CATEGORY_LABELS).map(([id, cat]) => (
                       <button key={id} type="button" onClick={() => handleCategorySelect(id)}
-                        style={{ padding: '10px 6px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: selectedCategory === id ? 'rgba(255,85,0,0.12)' : 'rgba(255,255,255,0.04)', outline: selectedCategory === id ? '1.5px solid rgba(255,85,0,0.6)' : '1.5px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.15s' }}>
+                        style={{ padding: '10px 6px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: selectedCategory === id ? 'rgba(255,85,0,0.12)' : 'var(--card2)', outline: selectedCategory === id ? '1.5px solid rgba(255,85,0,0.6)' : '1.5px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.15s' }}>
                         <span style={{ fontSize: '20px' }}>{(cat as any).emoji}</span>
                         <span style={{ fontFamily: 'var(--font-body)', fontSize: '10px', fontWeight: 600, color: selectedCategory === id ? 'var(--orange)' : 'var(--muted)' }}>{(cat as any).label}</span>
                       </button>
@@ -289,39 +330,94 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
               </div>
             )}
 
-            {/* FOTO */}
+            {/* FOTOS — múltiples */}
             {activeSection === 'media' && (
-              <div>
-                <input ref={fileRef} type="file" accept="image/*" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} style={{ display: 'none' }} />
-                {preview ? (
-                  <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden' }}>
-                    <img src={preview} alt="Preview" style={{ width: '100%', height: '240px', objectFit: 'cover', display: 'block' }} />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%)' }} />
-                    <button type="button" onClick={() => { setPreview(null); if (fileRef.current) fileRef.current.value = '' }}
-                      style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: 'white', cursor: 'pointer', padding: '6px 12px', fontSize: '12px', fontFamily: 'var(--font-body)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Camera size={12} /> Cambiar
-                    </button>
-                    <div style={{ position: 'absolute', bottom: '12px', left: '12px', fontFamily: 'var(--font-body)', fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>✓ Foto lista</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <input ref={fileRef} type="file" accept="image/*" multiple onChange={e => {
+                  const files = Array.from(e.target.files ?? [])
+                  files.forEach(f => handleFile(f))
+                  if (fileRef.current) fileRef.current.value = ''
+                }} style={{ display: 'none' }} />
+
+                {/* Drop zone */}
+                <div
+                  onClick={() => fileRef.current?.click()}
+                  onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={e => { e.preventDefault(); setDragOver(false); Array.from(e.dataTransfer.files).forEach(f => handleFile(f)) }}
+                  style={{
+                    height: '120px', borderRadius: '14px', cursor: 'pointer',
+                    border: `2px dashed ${dragOver ? 'var(--orange)' : 'rgba(255,85,0,0.25)'}`,
+                    background: dragOver ? 'rgba(255,85,0,0.05)' : 'rgba(255,255,255,0.02)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,85,0,0.12)', border: '1px solid rgba(255,85,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Upload size={18} color="var(--orange)" />
                   </div>
-                ) : (
-                  <div onClick={() => fileRef.current?.click()}
-                    onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
-                    style={{ height: '240px', borderRadius: '16px', cursor: 'pointer', border: `2px dashed ${dragOver ? 'var(--orange)' : 'rgba(255,85,0,0.25)'}`, background: dragOver ? 'rgba(255,85,0,0.05)' : 'rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', transition: 'all 0.2s' }}>
-                    <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'rgba(255,85,0,0.12)', border: '1px solid rgba(255,85,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Upload size={22} color="var(--orange)" />
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, color: 'var(--white)', marginBottom: '4px' }}>Sube una foto del lugar</div>
-                      <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--muted)' }}>Arrastra aquí o haz clic · JPG, PNG, WEBP</div>
-                    </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, color: 'var(--white)', marginBottom: '2px' }}>Añadir fotos</div>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--muted)' }}>Arrastra o haz clic · puedes subir varias</div>
                   </div>
+                </div>
+
+                {/* Photo grid */}
+                {photos.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                    {photos.map((url, i) => (
+                      <div key={i} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', aspectRatio: '1' }}>
+                        <img src={url} alt={`Foto ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        {i === 0 && (
+                          <div style={{ position: 'absolute', top: '4px', left: '4px', background: 'var(--orange)', borderRadius: '6px', padding: '2px 7px', fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#fff', fontWeight: 700 }}>PORTADA</div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(i)}
+                          style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: '6px', color: '#fff', cursor: 'pointer', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {photos.length > 0 && (
+                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--muted)', textAlign: 'center' }}>
+                    {photos.length} foto{photos.length !== 1 ? 's' : ''} · La primera será la portada
+                  </p>
                 )}
               </div>
             )}
 
-            {/* DETALLES */}
+            {/* REDES SOCIALES */}
+            {activeSection === 'social' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Añade los perfiles en redes para que los viajeros puedan seguir al spot.</p>
+
+                {([
+                  { key: 'instagram' as const, Icon: InstagramIcon, label: 'Instagram', placeholder: '@nombre_del_spot', color: '#E1306C' },
+                  { key: 'tiktok'   as const, Icon: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.79a4.85 4.85 0 01-1.01-.1z"/></svg>, label: 'TikTok', placeholder: '@usuario_tiktok', color: '#010101' },
+                  { key: 'facebook' as const, Icon: FacebookIcon, label: 'Facebook', placeholder: 'facebook.com/pagina', color: '#1877F2' },
+                  { key: 'whatsapp' as const, Icon: MessageCircle, label: 'WhatsApp', placeholder: '51987654321', color: '#25D366' },
+                  { key: 'website'  as const, Icon: Globe, label: 'Sitio web', placeholder: 'https://misitioweb.com', color: 'var(--orange)' },
+                ] as const).map(({ key, Icon, label, placeholder, color }) => (
+                  <div key={key}>
+                    <label style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                      <span style={{ color }}><Icon size={13} /></span>
+                      {label}
+                    </label>
+                    <input
+                      className="input"
+                      placeholder={placeholder}
+                      value={(socialLinks as any)[key] ?? ''}
+                      onChange={e => setSocialLinks(p => ({ ...p, [key]: e.target.value }))}
+                      style={inputStyle}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
             {activeSection === 'details' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div>
@@ -460,7 +556,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button type="button" onClick={() => { setAdding(false); setNewBenefit({ type: 'discount', active: true }) }}
-                        style={{ flex: 1, padding: '10px', borderRadius: '10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--muted)', fontFamily: 'var(--font-body)', fontSize: '13px', cursor: 'pointer' }}>
+                        style={{ flex: 1, padding: '10px', borderRadius: '10px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', fontFamily: 'var(--font-body)', fontSize: '13px', cursor: 'pointer' }}>
                         Cancelar
                       </button>
                       <button type="button"
@@ -487,9 +583,9 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
           </div>
 
           {/* FOOTER */}
-          <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: '10px', flexShrink: 0, background: '#0e0c09' }}>
+          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)', display: 'flex', gap: '10px', flexShrink: 0, background: 'var(--card)' }}>
             <button type="button" onClick={onClose}
-              style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--muted)', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+              style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--muted)', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
               Cancelar
             </button>
             {activeSection !== 'benefits' ? (
@@ -512,7 +608,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
 }
 
 const inputStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+  background: 'var(--card2)', border: '1px solid var(--border)',
   borderRadius: '10px', color: 'var(--white)', fontFamily: 'var(--font-body)',
   fontSize: '14px', padding: '10px 14px', width: '100%', outline: 'none', transition: 'border-color 0.2s',
 }

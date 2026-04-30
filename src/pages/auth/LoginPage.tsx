@@ -67,7 +67,7 @@ export default function LoginPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
               <RoleCard
-                icon="🌯"
+                icon={<img src="/imagotipo.png" alt="burrito" style={{ height: '36px', width: 'auto', display: 'block' }} />}
                 title="Turista"
                 sub="Explora Piura"
                 onClick={() => setSelectedRole('tourist')}
@@ -115,7 +115,11 @@ export default function LoginPage() {
               color: 'var(--white)',
               margin: '0 0 8px 0'
             }}>
-              {selectedRole === 'tourist' && "Bienvenido de vuelta 🌯"}
+              {selectedRole === 'tourist' && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  Bienvenido de vuelta <img src="/imagotipo.png" alt="burrito" style={{ height: '36px', width: 'auto', verticalAlign: 'middle' }} />
+                </span>
+              )}
               {selectedRole === 'churre' && "Hola, Churre 🤝"}
               {selectedRole === 'admin' && "Acceso admin 🔐"}
             </h2>
@@ -321,7 +325,7 @@ function RoleCard({ icon, title, sub, onClick, index }: { icon: string, title: s
       }}
       className="role-card"
     >
-      <div style={{ fontSize: '32px' }}>{icon}</div>
+      <div style={{ fontSize: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</div>
       <div>
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 800, color: 'var(--white)', margin: 0 }}>{title}</h3>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--gray)', margin: '2px 0 0 0' }}>{sub}</p>

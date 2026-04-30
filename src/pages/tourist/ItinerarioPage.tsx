@@ -89,7 +89,7 @@ export default function ItinerarioPage() {
   const handleWhatsApp = async () => {
     if (!current) return
 
-    const text = `🌯 *${current.title}*\n\n` +
+    const text = `🫔 *${current.title}*\n\n` +
       current.stops.map((s, i) =>
         `${i + 1}. *${s.time}* — ${s.spotName}${s.localTip ? `\n   💡 ${s.localTip}` : ''}`
       ).join('\n\n') +

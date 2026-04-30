@@ -30,15 +30,7 @@ export default function WaitingApprovalPage() {
 
       {/* Logo top left */}
       <div style={{ position: 'absolute', top: '40px', left: '40px' }}>
-        <span style={{
-          fontFamily: 'var(--font-display)',
-          fontWeight: 800,
-          fontSize: '28px',
-          letterSpacing: '-1.5px',
-          color: 'var(--white)',
-        }}>
-          burri<span style={{ color: 'var(--orange)' }}>to</span>
-        </span>
+        <img src="/imagotipo.png" alt="Burrito" style={{ height: '60px', width: 'auto' }} />
       </div>
 
       <motion.div
@@ -73,7 +65,7 @@ export default function WaitingApprovalPage() {
           fontFamily: 'var(--font-display)', fontSize: '32px', fontWeight: 800, 
           color: 'var(--white)', margin: '0 0 16px 0', letterSpacing: '-1px'
         }}>
-          ¡Solicitud enviada! 🌯
+          ¡Solicitud enviada! <img src="/imagotipo.png" alt="" style={{ height: '32px', width: 'auto', verticalAlign: 'middle', display: 'inline-block' }} />
         </h1>
         
         <p style={{ 

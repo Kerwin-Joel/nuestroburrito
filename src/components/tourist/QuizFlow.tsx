@@ -159,7 +159,7 @@ export default function QuizFlow() {
         className="btn btn-primary btn-lg"
         style={{ width: '100%', marginTop: '8px', fontSize: '17px' }}
       >
-        {isGenerating ? '✨ Armando tu día...' : '🌯 Generar mi itinerario'}
+        {isGenerating ? '✨ Armando tu día...' : <><img src="/imagotipo.png" alt="" style={{ height: '22px', width: 'auto', verticalAlign: 'middle', marginRight: '8px' }} />Generar mi itinerario</>}
       </motion.button>
     </div>
   )

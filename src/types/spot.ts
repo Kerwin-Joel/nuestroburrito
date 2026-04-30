@@ -9,6 +9,14 @@ export type SpotCategory =
 
 export type SpotStatus = 'pending' | 'verified' | 'rejected'
 
+export interface SpotSocialLinks {
+  instagram?: string
+  tiktok?: string
+  facebook?: string
+  whatsapp?: string
+  website?: string
+}
+
 export interface Spot {
   id: string
   churreId: string
@@ -16,7 +24,8 @@ export interface Spot {
   description: string
   localTip: string
   category: SpotCategory
-  photoUrl: string
+  photoUrl: string          // main photo (backward compat)
+  photos?: string[]         // carousel photos
   lat: number
   lng: number
   address: string
@@ -26,5 +35,6 @@ export interface Spot {
   rating: number
   reviewCount: number
   tiktokUrls: string[]
+  socialLinks?: SpotSocialLinks
   createdAt: string
 }

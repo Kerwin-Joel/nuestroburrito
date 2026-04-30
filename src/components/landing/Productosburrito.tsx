@@ -336,7 +336,8 @@ export default function ProductosBurrito({ onCTAClick, quizRef }: ProductosBurri
                 e.currentTarget.style.boxShadow = "0 8px 32px rgba(255,85,0,0.32)";
               }}
             >
-              🌯 Armar mi itinerario ahora →
+              <img src="/imagotipo.png" alt="" style={{ height: '22px', width: 'auto', verticalAlign: 'middle', marginRight: '8px', display: 'inline-block' }} />
+              Armar mi itinerario ahora →
             </button>
           </div>
         )}

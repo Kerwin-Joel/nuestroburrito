@@ -98,8 +98,8 @@ function Modal({ isOpen, onClose }) {
   const moveDown = idx => setItems(p => { if (idx === p.length - 1) return p; const a = [...p];[a[idx], a[idx + 1]] = [a[idx + 1], a[idx]]; return a; });
   const addStop = () => { if (!newStop.place) return; setItems(p => [...p, { ...newStop, id: Date.now(), desc: "" }]); setNewStop({ time: "", place: "", tip: "" }); setAdding(false); };
   const fmtItin = () => items.map(i => `${i.time} — ${i.place}${i.tip ? `\n   💡 ${i.tip}` : ""}`).join("\n");
-  const sendWA = () => { if (!user.phone) return; const text = encodeURIComponent(`🌯 *Tu itinerario Burrito — Piura*\n\n${fmtItin()}\n\n_burrito.pe_`); const ph = user.phone.replace(/\D/g, ""); window.open(`https://wa.me/${ph.startsWith("51") ? ph : "51" + ph}?text=${text}`, "_blank"); setSent(true); };
-  const sendEmail = () => { if (!user.email) return; const sub = encodeURIComponent("Tu itinerario en Piura — Burrito 🌯"); const body = encodeURIComponent(`Hola${user.name ? " " + user.name : ""}!\n\n${fmtItin()}\n\nDisfruta Piura 🌊\n— Burrito`); window.location.href = `mailto:${user.email}?subject=${sub}&body=${body}`; setSent(true); };
+  const sendWA = () => { if (!user.phone) return; const text = encodeURIComponent(`🫔 *Tu itinerario Burrito — Piura*\n\n${fmtItin()}\n\n_burrito.pe_`); const ph = user.phone.replace(/\D/g, ""); window.open(`https://wa.me/${ph.startsWith("51") ? ph : "51" + ph}?text=${text}`, "_blank"); setSent(true); };
+  const sendEmail = () => { if (!user.email) return; const sub = encodeURIComponent("Tu itinerario en Piura — Burrito 🫔"); const body = encodeURIComponent(`Hola${user.name ? " " + user.name : ""}!\n\n${fmtItin()}\n\nDisfruta Piura 🌊\n— Burrito`); window.location.href = `mailto:${user.email}?subject=${sub}&body=${body}`; setSent(true); };
 
   if (!isOpen) return null;
   const pct = (step / (STEP_LABELS.length - 1)) * 100;
@@ -213,7 +213,10 @@ function Modal({ isOpen, onClose }) {
           {/* STEP 4 — edit itinerary */}
           {step === 4 && <div className="m-step">
             <div className="m-itin-hd">
-              <div className="m-itin-t">Tu itinerario 🌯</div>
+              <div className="m-itin-t" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <img src="/imagotipo.png" alt="" style={{ height: '24px', width: 'auto' }} />
+                Tu itinerario
+              </div>
               <span className="m-itin-b">{items.length} paradas</span>
             </div>
             {items.map((item, idx) => (
@@ -295,7 +298,7 @@ function Modal({ isOpen, onClose }) {
           <div className="m-foot">
             {step > 0 && <button className="m-back-btn" onClick={back}>← Atrás</button>}
             {step === 2 && <button className="m-skip" onClick={() => setPrefs(p => ({ ...p, interests: [] }))}>Sorpréndeme 🎲</button>}
-            {step < 3 && <button className="m-next-btn" onClick={next} disabled={!canNext()}>{step === 2 ? "Generar itinerario 🌯" : "Continuar →"}</button>}
+            {step < 3 && <button className="m-next-btn" onClick={next} disabled={!canNext()}>{step === 2 ? "Generar itinerario 🫔" : "Continuar →"}</button>}
             {step === 4 && <button className="m-next-btn" onClick={() => setStep(5)}>Confirmar y enviar →</button>}
           </div>
         )}
@@ -396,7 +399,10 @@ export default function BurritoLanding() {
         <div className="b-phone-col">
           <div className="b-phone">
             <div className="b-pst"><span>9:41</span><span>🔋 98%</span></div>
-            <div className="b-pan">🌯 Burrito · Piura</div>
+            <div className="b-pan" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <img src="/imagotipo.png" alt="" style={{ height: '20px', width: 'auto' }} />
+              Burrito · Piura
+            </div>
             <div className="b-itin">
               <div className="b-ith"><span className="b-ititle">Tu día · playa + ceviche</span><span className="b-ibadge">LISTO</span></div>
               {PHONE_ITIN.map((it, i) => <div className="b-irow" key={i}><div className="b-itime">{it.time}</div><div className="b-idot" /><div><div className="b-iplace">{it.icon} {it.place}</div><div className="b-itip"><em>{it.tip}</em></div></div></div>)}
@@ -462,7 +468,7 @@ export default function BurritoLanding() {
           <p className="b-ssub">Google Maps es buenazo para ubicarte. Burrito te recomienda qué hacer cuando llegas.</p>
           <div className="b-cmp" data-rv>
             <div className="b-ccol"><div className="b-chd b-chd-t">Google Maps / Blogs / TripAdvisor</div>{COMPARE.map(([t], i) => <div className="b-crow b-crow-t" key={i}>{t}</div>)}</div>
-            <div className="b-ccol"><div className="b-chd b-chd-u">🌯 Burrito</div>{COMPARE.map(([, u], i) => <div className="b-crow b-crow-u" key={i}>{u}</div>)}</div>
+            <div className="b-ccol"><div className="b-chd b-chd-u" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><img src="/imagotipo.png" alt="" style={{ height: '18px', width: 'auto' }} />Burrito</div>{COMPARE.map(([, u], i) => <div className="b-crow b-crow-u" key={i}>{u}</div>)}</div>
           </div>
         </div>
       </section>
@@ -485,7 +491,10 @@ export default function BurritoLanding() {
           <h2 className="b-cta-t">Tu día en Piura<br />empieza <span className="b-hot">aquí.</span></h2>
           <p className="b-cta-sub">Arma tu itinerario ahora o déjanos tu email.</p>
           <div style={{ marginBottom: 24, textAlign: "center" }}>
-            <button className="b-btn-fire" onClick={open} style={{ fontSize: 16, padding: "17px 38px" }}>🌯 Armar mi itinerario ahora</button>
+            <button className="b-btn-fire" onClick={open} style={{ fontSize: 16, padding: "17px 38px", display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <img src="/imagotipo.png" alt="" style={{ height: '24px', width: 'auto' }} />
+              Armar mi itinerario ahora
+            </button>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 14, maxWidth: 440, margin: "0 auto 22px", color: "#2a2318", fontSize: 12 }}>
             <div style={{ flex: 1, height: 1, background: "rgba(255,120,30,.12)" }} /><span>o déjanos tu email</span><div style={{ flex: 1, height: 1, background: "rgba(255,120,30,.12)" }} />

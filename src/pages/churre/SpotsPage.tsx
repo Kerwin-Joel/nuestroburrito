@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Topbar from '../../components/churre/Topbar'
@@ -6,6 +6,7 @@ import SpotFormModal from '../../components/shared/SpotFormModal'
 import { MOCK_SPOTS } from '../../lib/mockData'
 import { CATEGORY_LABELS } from '../../lib/constants'
 import { useUIStore } from '../../stores/useUIStore'
+import { spotsService } from '../../services/spots'
 import type { Spot, SpotStatus } from '../../types/spot'
 
 const TABS: { label: string; status: SpotStatus | null }[] = [
@@ -23,8 +24,17 @@ const STATUS_BADGE: Record<SpotStatus, { cls: string; icon: string }> = {
 export default function SpotsPage() {
   const [activeTab, setActiveTab] = useState<SpotStatus | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [editSpot, setEditSpot] = useState<Spot | null>(null)
   const [spots, setSpots] = useState<Spot[]>(MOCK_SPOTS.filter(s => s.churreId === 'churre-1'))
+  const [saving, setSaving] = useState(false)
   const { addToast } = useUIStore()
+
+  // Load real spots from Supabase on mount
+  useEffect(() => {
+    spotsService.getAllSpots().then(data => {
+      if (data.length > 0) setSpots(data)
+    }).catch(() => {/* keep mock */})
+  }, [])
 
   const filtered = activeTab ? spots.filter(s => s.status === activeTab) : spots
 
@@ -33,27 +43,59 @@ export default function SpotsPage() {
     addToast({ type: 'info', message: 'Spot eliminado' })
   }
 
-  const handleSave = (data: any) => {
-    const newSpot: Spot = {
-      id: `spot-${Date.now()}`,
-      churreId: 'churre-1',
-      name: data.name,
-      description: data.description,
-      localTip: data.localTip || '',
-      category: data.category,
-      photoUrl: data.photoUrl || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400',
-      lat: data.lat,
-      lng: data.lng,
-      address: data.address,
-      schedule: {},
-      priceRange: 'low',
-      status: 'pending',
-      rating: 0,
-      reviewCount: 0,
-      tiktokUrls: [],
-      createdAt: new Date().toISOString(),
+  const handleSave = async (data: any) => {
+    setSaving(true)
+    try {
+      if (editSpot) {
+        const updated = await spotsService.updateSpot(editSpot.id, {
+          name: data.name,
+          description: data.description,
+          localTip: data.localTip || '',
+          category: data.category,
+          photoUrl: data.photoUrl || editSpot.photoUrl,
+          photos: data.photos ?? editSpot.photos ?? [],
+          address: data.address,
+          lat: data.lat,
+          lng: data.lng,
+          schedule: data.schedule ?? editSpot.schedule,
+          priceRange: data.price_range ?? editSpot.priceRange,
+          rating: data.rating ?? editSpot.rating,
+          reviewCount: data.review_count ?? editSpot.reviewCount,
+          socialLinks: data.socialLinks ?? editSpot.socialLinks,
+        } as any)
+        setSpots(prev => prev.map(s => s.id === editSpot.id ? updated : s))
+        addToast({ type: 'success', message: `${data.name} actualizado` })
+      } else {
+        const created = await spotsService.createSpot({
+          churreId: 'churre-1',
+          name: data.name,
+          description: data.description,
+          localTip: data.localTip || '',
+          category: data.category,
+          photoUrl: data.photoUrl || '',
+          photos: data.photos ?? [],
+          address: data.address,
+          lat: data.lat,
+          lng: data.lng,
+          schedule: data.schedule ?? {},
+          priceRange: data.price_range ?? 'low',
+          status: 'pending',
+          rating: data.rating ?? 0,
+          reviewCount: data.review_count ?? 0,
+          tiktokUrls: [],
+          socialLinks: data.socialLinks,
+        } as any)
+        setSpots(prev => [created, ...prev])
+        addToast({ type: 'success', message: `${data.name} creado` })
+      }
+    } catch (err) {
+      addToast({ type: 'error', message: 'Error al guardar el spot' })
+      console.error(err)
+    } finally {
+      setSaving(false)
+      setModalOpen(false)
+      setEditSpot(null)
     }
-    setSpots(prev => [newSpot, ...prev])
   }
 
   return (
@@ -140,7 +182,14 @@ export default function SpotsPage() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--yellow)' }}>⭐ {spot.rating || '—'}</span>
                         <div style={{ display: 'flex', gap: '6px' }}>
-                          <button aria-label="Editar" className="btn btn-ghost btn-icon" style={{ width: '32px', height: '32px' }}><Pencil size={13} /></button>
+                          <button
+                            aria-label="Editar"
+                            className="btn btn-ghost btn-icon"
+                            style={{ width: '32px', height: '32px' }}
+                            onClick={() => { setEditSpot(spot); setModalOpen(true) }}
+                          >
+                            <Pencil size={13} />
+                          </button>
                           <button onClick={() => handleDelete(spot.id)} aria-label="Eliminar" className="btn btn-danger btn-icon" style={{ width: '32px', height: '32px' }}><Trash2 size={13} /></button>
                         </div>
                       </div>
@@ -151,7 +200,12 @@ export default function SpotsPage() {
             </div>
           )}
         </div>
-        <SpotFormModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} />
+        <SpotFormModal
+          isOpen={modalOpen}
+          onClose={() => { setModalOpen(false); setEditSpot(null) }}
+          onSave={handleSave}
+          initialData={editSpot}
+        />
     </div>
   )
 }

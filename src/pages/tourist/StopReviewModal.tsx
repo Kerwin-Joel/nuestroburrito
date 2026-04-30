@@ -155,7 +155,7 @@ export default function StopReviewModal({ stop, onClose, onSave }: Props) {
                                             {rating === 1 ? 'Muy malo' :
                                                 rating === 2 ? 'Regular' :
                                                     rating === 3 ? 'Bueno' :
-                                                        rating === 4 ? 'Muy bueno' : '¡Excelente! 🌯'}
+                                                        rating === 4 ? 'Muy bueno' : '¡Excelente! 🫔'}
                                         </p>
                                     )}
                                 </div>

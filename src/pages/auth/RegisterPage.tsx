@@ -76,7 +76,7 @@ export default function RegisterPage() {
               color: 'var(--white)',
               margin: '0 0 8px 0'
             }}>
-              Únete a Burrito 🌯
+              Únete a Burrito <img src="/imagotipo.png" alt="burrito" style={{ height: '32px', width: 'auto', verticalAlign: 'middle', display: 'inline-block' }} />
             </h2>
             <p style={{ fontFamily: 'var(--font-body)', color: 'var(--gray)', fontSize: '15px', marginBottom: '32px' }}>
               Empieza a descubrir Piura de verdad

@@ -63,24 +63,26 @@ export default function Navbar() {
           background: scrolled ? 'var(--nav-bg-scrolled)' : 'var(--nav-bg)',
           borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
           transition: 'all 0.4s ease',
-          padding: scrolled ? '10px 0' : '12px 0',  // ← era '18px 0'
+          padding: scrolled ? '8px 0' : '10px 0',
         }}
       >
         <div className="page-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Logo */}
           <Link to="/app" style={{ textDecoration: 'none', zIndex: 1100 }}>
-            <span style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 800,
-              fontSize: '24px',
-              letterSpacing: '-1.5px',
-              color: 'var(--white)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}>
-              burri<span style={{ color: 'var(--orange)' }}>to</span>
-            </span>
+            <img
+              src="/imagotipo.png"
+              alt="Burrito"
+              style={{
+                height: '100px',
+                width: 'auto',
+                display: 'block',
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 2px 8px rgba(255,85,0,0.15))',
+                transition: 'transform 0.2s ease',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
+              onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+            />
           </Link>
 
           {/* Desktop Nav */}

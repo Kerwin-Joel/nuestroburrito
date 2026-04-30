@@ -12,6 +12,7 @@ const mapSpot = (row: any): Spot => ({
   localTip: row.local_tip,
   category: row.category,
   photoUrl: row.photo_url,
+  photos: row.photos ?? [],
   lat: parseFloat(row.lat),
   lng: parseFloat(row.lng),
   address: row.address,
@@ -21,17 +22,19 @@ const mapSpot = (row: any): Spot => ({
   rating: parseFloat(row.rating),
   reviewCount: row.review_count,
   tiktokUrls: row.tiktok_urls ?? [],
+  socialLinks: row.social_links ?? undefined,
   createdAt: row.created_at,
 })
 
 // Convierte camelCase a snake_case para Supabase
-const mapToRow = (data: Partial<Spot> & { price_range?: string; rating?: number; review_count?: number; schedule?: any }) => ({
+const mapToRow = (data: Partial<Spot> & { price_range?: string; rating?: number; review_count?: number; schedule?: any; photos?: string[]; socialLinks?: any }) => ({
   churre_id: data.churreId,
   name: data.name,
   description: data.description,
   local_tip: data.localTip,
   category: data.category,
   photo_url: data.photoUrl,
+  photos: data.photos ?? (data as any).photos,
   lat: data.lat,
   lng: data.lng,
   address: data.address,
@@ -41,6 +44,7 @@ const mapToRow = (data: Partial<Spot> & { price_range?: string; rating?: number;
   review_count: data.reviewCount ?? (data as any).review_count,
   status: data.status,
   tiktok_urls: data.tiktokUrls,
+  social_links: data.socialLinks ?? (data as any).social_links,
 })
 
 export const spotsService = {
