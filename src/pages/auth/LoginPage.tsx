@@ -305,7 +305,7 @@ export default function LoginPage() {
   )
 }
 
-function RoleCard({ icon, title, sub, onClick, index }: { icon: string, title: string, sub: string, onClick: () => void, index: number }) {
+function RoleCard({ icon, title, sub, onClick, index }: { icon: React.ReactNode, title: string, sub: string, onClick: () => void, index: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
