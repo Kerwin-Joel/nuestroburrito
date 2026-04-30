@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -304,7 +304,7 @@ export default function LoginPage() {
   )
 }
 
-function RoleCard({ icon, title, sub, onClick, index }: { icon: string, title: string, sub: string, onClick: () => void, index: number }) {
+function RoleCard({ icon, title, sub, onClick, index }: { icon: ReactNode, title: string, sub: string, onClick: () => void, index: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
