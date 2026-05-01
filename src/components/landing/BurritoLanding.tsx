@@ -98,8 +98,8 @@ function Modal({ isOpen, onClose }) {
   const moveDown = idx => setItems(p => { if (idx === p.length - 1) return p; const a = [...p];[a[idx], a[idx + 1]] = [a[idx + 1], a[idx]]; return a; });
   const addStop = () => { if (!newStop.place) return; setItems(p => [...p, { ...newStop, id: Date.now(), desc: "" }]); setNewStop({ time: "", place: "", tip: "" }); setAdding(false); };
   const fmtItin = () => items.map(i => `${i.time} — ${i.place}${i.tip ? `\n   💡 ${i.tip}` : ""}`).join("\n");
-  const sendWA = () => { if (!user.phone) return; const text = encodeURIComponent(`🫔 *Tu itinerario Burrito — Piura*\n\n${fmtItin()}\n\n_burrito.pe_`); const ph = user.phone.replace(/\D/g, ""); window.open(`https://wa.me/${ph.startsWith("51") ? ph : "51" + ph}?text=${text}`, "_blank"); setSent(true); };
-  const sendEmail = () => { if (!user.email) return; const sub = encodeURIComponent("Tu itinerario en Piura — Burrito 🫔"); const body = encodeURIComponent(`Hola${user.name ? " " + user.name : ""}!\n\n${fmtItin()}\n\nDisfruta Piura 🌊\n— Burrito`); window.location.href = `mailto:${user.email}?subject=${sub}&body=${body}`; setSent(true); };
+  const sendWA = () => { if (!user.phone) return; const text = encodeURIComponent(`🌯 *Tu itinerario Burrito — Piura*\n\n${fmtItin()}\n\n_burrito.pe_`); const ph = user.phone.replace(/\D/g, ""); window.open(`https://wa.me/${ph.startsWith("51") ? ph : "51" + ph}?text=${text}`, "_blank"); setSent(true); };
+  const sendEmail = () => { if (!user.email) return; const sub = encodeURIComponent("Tu itinerario en Piura — Burrito 🌯"); const body = encodeURIComponent(`Hola${user.name ? " " + user.name : ""}!\n\n${fmtItin()}\n\nDisfruta Piura 🌊\n— Burrito`); window.location.href = `mailto:${user.email}?subject=${sub}&body=${body}`; setSent(true); };
 
   if (!isOpen) return null;
   const pct = (step / (STEP_LABELS.length - 1)) * 100;
@@ -298,7 +298,7 @@ function Modal({ isOpen, onClose }) {
           <div className="m-foot">
             {step > 0 && <button className="m-back-btn" onClick={back}>← Atrás</button>}
             {step === 2 && <button className="m-skip" onClick={() => setPrefs(p => ({ ...p, interests: [] }))}>Sorpréndeme 🎲</button>}
-            {step < 3 && <button className="m-next-btn" onClick={next} disabled={!canNext()}>{step === 2 ? "Generar itinerario 🫔" : "Continuar →"}</button>}
+            {step < 3 && <button className="m-next-btn" onClick={next} disabled={!canNext()}>{step === 2 ? "Generar itinerario 🌯" : "Continuar →"}</button>}
             {step === 4 && <button className="m-next-btn" onClick={() => setStep(5)}>Confirmar y enviar →</button>}
           </div>
         )}
@@ -379,7 +379,9 @@ export default function BurritoLanding() {
 
       {/* hero */}
       <section className="b-hero">
-        <MapHero />
+        {/* <MapHero /> */}
+        <MapHero marginTop="0" transformValue="translate(30%)" sizeLoaded={true} />
+
         <div className="b-hero-ov" />
         <div className="b-hcopy">
           <div className="b-kicker"><div className="b-kdot" /><span className="b-ktxt">BETA ABIERTA · PIURA, PERÚ</span></div>
