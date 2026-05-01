@@ -1,9 +1,11 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Sun, Music, AlertTriangle, Lightbulb, Edit, Trash2, Calendar, Check } from 'lucide-react'
 import StatusBadge from '../../components/admin/StatusBadge'
 import FeedEntryModal from '../../components/admin/FeedEntryModal'
 import { useUIStore } from '../../stores/useUIStore'
+import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
+
 
 interface FeedEntry {
   id: string
@@ -22,10 +24,10 @@ const MOCK_FEED: FeedEntry[] = [
 ]
 
 export default function AdminHoyEnPiuraPage() {
-  const [feed, setFeed] = useState(MOCK_FEED)
+  const [feed, setFeed] = useState<FeedEntry[]>([])
+  const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingEntry, setEditingEntry] = useState<FeedEntry | null>(null)
-  const { addToast } = useUIStore()
 
   const handleOpenAdd = () => {
     setEditingEntry(null)
@@ -36,30 +38,67 @@ export default function AdminHoyEnPiuraPage() {
     setEditingEntry(entry)
     setIsModalOpen(true)
   }
+  const { addToast } = useUIStore()
 
-  const handleDelete = (id: string) => {
-    if (confirm('¿Estás seguro de eliminar esta entrada?')) {
-      setFeed(prev => prev.filter(e => e.id !== id))
-      addToast({ type: 'info', message: 'Entrada eliminada' })
-    }
+  useEffect(() => {
+    loadFeed()
+  }, [])
+
+  const loadFeed = async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('hoy_en_piura')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    // Mapear snake_case de Supabase a camelCase del componente
+    const mapped = (data ?? []).map((item: any) => ({
+      id: item.id,
+      type: item.tipo,
+      title: item.titulo,
+      description: item.subtitulo,
+      emoji: item.emoji ?? '📌',
+      publishDate: item.fecha,
+      active: item.activo,
+    }))
+
+    setFeed(mapped as FeedEntry[])
+    setLoading(false)
   }
 
-  const handleSave = (data: any) => {
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Eliminar esta entrada?')) return
+    await supabase.from('hoy_en_piura').delete().eq('id', id)
+    setFeed(prev => prev.filter(e => e.id !== id))
+    addToast({ type: 'info', message: 'Entrada eliminada' })
+  }
+
+  const handleSave = async (data: any) => {
+    const payload = {
+      tipo: data.type,
+      titulo: data.title,
+      subtitulo: data.description,
+      emoji: data.emoji ?? '📌',
+      activo: data.active ?? true,
+      fecha: data.publishDate ?? new Date().toISOString().split('T')[0],
+    }
+
     if (editingEntry) {
-      setFeed(prev => prev.map(e => e.id === editingEntry.id ? { ...e, ...data } : e))
+      await supabase.from('hoy_en_piura').update(payload).eq('id', editingEntry.id)
     } else {
-      const newEntry: FeedEntry = {
-        id: `feed-${Date.now()}`,
-        ...data,
-      }
-      setFeed(prev => [newEntry, ...prev])
+      await supabase.from('hoy_en_piura').insert(payload)
     }
+
+    await loadFeed()
     setIsModalOpen(false)
+    addToast({ type: 'success', message: editingEntry ? 'Actualizado ✓' : 'Creado ✓' })
   }
 
-  const handlePublishNow = (id: string) => {
-    setFeed(prev => prev.map(e => e.id === id ? { ...e, publishDate: new Date().toISOString().split('T')[0] } : e))
-    addToast({ type: 'success', message: 'Entrada publicada para hoy' })
+  const handlePublishNow = async (id: string) => {
+    const today = new Date().toISOString().split('T')[0]
+    await supabase.from('hoy_en_piura').update({ fecha: today }).eq('id', id)
+    await loadFeed()
+    addToast({ type: 'success', message: 'Publicado para hoy ✓' })
   }
 
   const today = new Date().toISOString().split('T')[0]
@@ -149,10 +188,10 @@ export default function AdminHoyEnPiuraPage() {
                       <span style={{ fontSize: '11px', color: 'var(--orange)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>Programado: {entry.publishDate}</span>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => handlePublishNow(entry.id)}
-                    className="btn btn-ghost btn-xs" 
-                    style={{ width: '100%', justifyContent: 'center', background: 'rgba(255,85,0,0.1)', color: 'var(--orange)'}}
+                    className="btn btn-ghost btn-xs"
+                    style={{ width: '100%', justifyContent: 'center', background: 'rgba(255,85,0,0.1)', color: 'var(--orange)' }}
                   >
                     🚀 Publicar ahora
                   </button>
@@ -162,9 +201,9 @@ export default function AdminHoyEnPiuraPage() {
           </div>
         )}
       </section>
-      <FeedEntryModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <FeedEntryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
         initialData={editingEntry}
       />

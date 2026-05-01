@@ -15,7 +15,7 @@ export default defineConfig({
   },
   server: {
     host: true,
-    allowedHosts: ['matilde-riverless-kynlee.ngrok-free.dev']
+    allowedHosts: ['shrink-blimp-poser.ngrok-free.dev']
   },
   build: {
     rollupOptions: {
