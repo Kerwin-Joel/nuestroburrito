@@ -20,6 +20,7 @@ const HomePage = lazy(() => import('./pages/tourist/HomePage'))
 const ItinerarioPage = lazy(() => import('./pages/tourist/ItinerarioPage'))
 const ExplorarPage = lazy(() => import('./pages/tourist/ExplorarPage'))
 const PerfilTourist = lazy(() => import('./pages/tourist/PerfilPage'))
+const HistoriaPage = lazy(() => import('./pages/tourist/HistoriaPage'))
 
 // Churre pages (lazy)
 const ChurreLayout = lazy(() => import('./layouts/ChurreLayout'))
@@ -129,6 +130,7 @@ export default function App() {
             <Route index element={<HomePage />} />
             <Route path="itinerario" element={<ItinerarioPage />} />
             <Route path="explorar" element={<ExplorarPage />} />
+            <Route path="historia" element={<HistoriaPage />} />
             <Route path="perfil" element={<PerfilTourist />} />
             <Route path="verify" element={<VerifyPage />} />
           </Route>

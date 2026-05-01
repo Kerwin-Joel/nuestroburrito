@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Home, Map, User, Calendar, type LucideIcon } from 'lucide-react'
+import { Home, Map, User, Calendar, BookOpen, type LucideIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 
@@ -13,6 +13,7 @@ const TOURIST_TABS: TabItem[] = [
   { to: '/app',             icon: Home,     label: 'Inicio'  },
   { to: '/app/explorar',   icon: Map,      label: 'Explorar'},
   { to: '/app/itinerario', icon: Calendar, label: 'Mi día'  },
+  { to: '/app/historia',   icon: BookOpen, label: 'Historia'},
   { to: '/app/perfil',     icon: User,     label: 'Perfil'  },
 ]
 
