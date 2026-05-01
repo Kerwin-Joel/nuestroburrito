@@ -22,10 +22,10 @@ const DATA: HistoriaItem[] = [
     titulo: 'Los Tallanes: Los Primeros Piuranos',
     resumen: 'Los Tallanes fueron el pueblo originario que habitó la costa norte del Perú. Expertos pescadores y navegantes del Pacífico, dejaron su huella en la lengua Sec y en la cerámica piurana.',
     datos: ['Primera cultura de la costa norte', 'Navegantes del Pacífico', 'Su idioma era el Sec o Tallan', 'Aliados comerciales de los Chimú'],
-    imagenes: ['https://picsum.photos/seed/tallanes1/600/340','https://picsum.photos/seed/tallanes2/600/340','https://picsum.photos/seed/tallanes3/600/340'],
+    imagenes: ['https://picsum.photos/seed/tallanes1/600/340', 'https://picsum.photos/seed/tallanes2/600/340', 'https://picsum.photos/seed/tallanes3/600/340'],
     descripcionLarga: 'Los Tallanes constituyeron la primera gran civilización de la costa norte del Perú, mucho antes que llegara el Imperio Inca. Su territorio abarcaba desde el actual departamento de Tumbes hasta Lambayeque, y su cultura se distinguió por una cerámica única de tonos ocres y figuras zoomorfas. Expertos navegantes, usaban balsas de madera para comerciar a lo largo de toda la costa del Pacífico.',
     sabiasQue: ['Los Tallanes construyeron complejos de adobe antes que los Incas llegaran a Piura', 'Su lengua, el Sec, aún tiene palabras que se usan en el dialecto piurano actual', 'Los conquistadores españoles los describieron como "indios pacíficos y comerciantes"'],
-    lugaresRelacionados: [{nombre:'Museo de Historia Regional de Piura', distancia:'Centro', tipo:'Museo'},{nombre:'Complejo Arqueológico de Narihualá', distancia:'15 min', tipo:'Sitio Arqueológico'}],
+    lugaresRelacionados: [{ nombre: 'Museo de Historia Regional de Piura', distancia: 'Centro', tipo: 'Museo' }, { nombre: 'Complejo Arqueológico de Narihualá', distancia: '15 min', tipo: 'Sitio Arqueológico' }],
     horario: 'Mar-Dom 9am-5pm', entrada: 'S/ 5.00', rating: 4.3,
   },
   {
@@ -33,10 +33,10 @@ const DATA: HistoriaItem[] = [
     titulo: 'San Miguel de Piura: La Ciudad Más Antigua del Perú',
     resumen: 'Fundada por Francisco Pizarro el 15 de agosto de 1532, Piura fue la primera ciudad española en Sudamérica. Antes que Lima, antes que Cusco colonial — Piura ya existía.',
     datos: ['Primera ciudad española de Sudamérica', 'Fundada por Pizarro en 1532', 'Cambió de ubicación 3 veces', 'Conocida como "La Ciudad del Eterno Calor"'],
-    imagenes: ['https://picsum.photos/seed/piura1/600/340','https://picsum.photos/seed/piura2/600/340'],
+    imagenes: ['https://picsum.photos/seed/piura1/600/340', 'https://picsum.photos/seed/piura2/600/340'],
     descripcionLarga: 'La fundación de Piura el 15 de agosto de 1532 por Francisco Pizarro la convierte en la ciudad más antigua de América del Sur con presencia española continua. A diferencia de otras ciudades coloniales, Piura cambió de ubicación hasta tres veces antes de asentarse en su lugar actual, buscando tierras más fértiles y mejor acceso al agua del río Piura.',
     sabiasQue: ['Piura se fundó 9 años antes que Lima (1541)', 'El nombre original era "San Miguel de Tangarará"', 'La Catedral de Piura guarda pinturas coloniales del siglo XVII'],
-    lugaresRelacionados: [{nombre:'Catedral de Piura', distancia:'Plaza de Armas', tipo:'Iglesia Colonial'},{nombre:'Plaza de Armas de Piura', distancia:'Centro', tipo:'Plaza Histórica'},{nombre:'Museo Arqueológico de Piura', distancia:'5 min', tipo:'Museo'}],
+    lugaresRelacionados: [{ nombre: 'Catedral de Piura', distancia: 'Plaza de Armas', tipo: 'Iglesia Colonial' }, { nombre: 'Plaza de Armas de Piura', distancia: 'Centro', tipo: 'Plaza Histórica' }, { nombre: 'Museo Arqueológico de Piura', distancia: '5 min', tipo: 'Museo' }],
     horario: 'Todo el día', entrada: 'Libre', rating: 4.7,
   },
   {
@@ -331,7 +331,7 @@ export default function HistoriaPage() {
               onClick={() => setCatActiva(cat.id)}
               whileTap={{ scale: 0.95 }}
               style={{
-                padding: '7px 14px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+                padding: '7px 14px', borderRadius: '20px', cursor: 'pointer',
                 background: catActiva === cat.id ? 'var(--orange)' : 'var(--card)',
                 color: catActiva === cat.id ? '#fff' : 'var(--muted)',
                 fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600,
