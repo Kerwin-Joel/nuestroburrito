@@ -34,6 +34,7 @@ const schema = z.object({
   rating: z.coerce.number().min(0).max(5).optional(),
   review_count: z.coerce.number().min(0).optional(),
   event_date: z.string().optional(),
+  event_date_end: z.string().optional(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -154,6 +155,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
         rating: initialData.rating ?? undefined,
         review_count: initialData.reviewCount ?? initialData.review_count ?? undefined,
         event_date: initialData?.event_date ?? initialData?.eventDate ?? '',
+        event_date_end: initialData?.event_date_end ?? initialData?.eventDateEnd ?? '',
       })
 
       setSelectedPrice(priceRange)
@@ -172,7 +174,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
       DAYS.forEach(d => { enabled[d.key] = !!sched[d.key] })
       setEnabledDays(enabled)
     } else {
-      reset({ name: '', category: '', description: '', localTip: '', address: '', lat: -5.1945, lng: -80.6328, price_range: undefined, rating: undefined, review_count: undefined })
+      reset({ name: '', category: '', description: '', localTip: '', address: '', lat: -5.1945, lng: -80.6328, price_range: undefined, rating: undefined, review_count: undefined, event_date: '', event_date_end: '', })
       setSelectedPrice(undefined)
       setSelectedCategory('')
       setPhotos([])
@@ -326,14 +328,14 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                 <Field label={`Descripción · ${descLen}/400`} error={errors.description?.message}>
                   <textarea {...register('description')} className="input" placeholder="Describe este lugar como le contarías a un amigo..." maxLength={400} onChange={e => setDescLen(e.target.value.length)} style={{ ...inputStyle, height: '96px', resize: 'none' as const }} />
                 </Field>
-                <Field label="📅 Fecha del evento (opcional)">
-                  <input
-                    type="date"
-                    {...register('event_date')}
-                    className="input"
-                    style={inputStyle}
-                  />
-                </Field>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <Field label="📅 Inicio del evento">
+                    <input type="date" {...register('event_date')} className="input" style={inputStyle} />
+                  </Field>
+                  <Field label="🏁 Fin del evento (opcional)">
+                    <input type="date" {...register('event_date_end')} className="input" style={inputStyle} />
+                  </Field>
+                </div>
                 <Field label={`💡 Tip local · ${tipLen}/200`}>
                   <textarea {...register('localTip')} className="input" placeholder="El secreto que solo los locales conocen..." maxLength={200} onChange={e => setTipLen(e.target.value.length)} style={{ ...inputStyle, height: '72px', resize: 'none' as const }} />
                 </Field>

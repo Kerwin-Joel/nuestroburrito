@@ -38,4 +38,5 @@ export interface Spot {
   socialLinks?: SpotSocialLinks
   createdAt: string
   eventDate: string | null
+  eventDateEnd?: string | null
 }

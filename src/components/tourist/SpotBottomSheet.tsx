@@ -344,12 +344,19 @@ export default function SpotBottomSheet() {
                   color: 'var(--orange)', letterSpacing: '1.5px',
                   textTransform: 'uppercase', marginBottom: '2px',
                 }}>
-                  Fecha del evento
+                  {selectedSpot.eventDateEnd ? 'Fechas del evento' : 'Fecha del evento'}
                 </div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--white)', fontWeight: 600 }}>
-                  {new Date(selectedSpot.eventDate + 'T00:00:00').toLocaleDateString('es-PE', {
-                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-                  })}
+                  {selectedSpot.eventDateEnd
+                    ? `${new Date(selectedSpot.eventDate + 'T00:00:00').toLocaleDateString('es-PE', {
+                      weekday: 'long', day: 'numeric', month: 'long'
+                    })} hasta ${new Date(selectedSpot.eventDateEnd + 'T00:00:00').toLocaleDateString('es-PE', {
+                      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                    })}`
+                    : new Date(selectedSpot.eventDate + 'T00:00:00').toLocaleDateString('es-PE', {
+                      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                    })
+                  }
                 </div>
               </div>
             </div>

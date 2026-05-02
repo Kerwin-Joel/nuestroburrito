@@ -25,6 +25,7 @@ const mapSpot = (row: any): Spot => ({
   socialLinks: row.social_links ?? undefined,
   createdAt: row.created_at,
   eventDate: row.event_date ?? null,
+  eventDateEnd: row.event_date_end ?? null,
 })
 
 // Convierte camelCase a snake_case para Supabase
@@ -47,6 +48,7 @@ const mapToRow = (data: Partial<Spot> & { price_range?: string; rating?: number;
   tiktok_urls: data.tiktokUrls,
   social_links: data.socialLinks ?? (data as any).social_links,
   event_date: data.eventDate ?? (data as any).event_date ?? null,
+  event_date_end: data.eventDateEnd ?? (data as any).event_date_end ?? null,
 
 })
 
