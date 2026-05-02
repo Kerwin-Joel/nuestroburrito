@@ -19,7 +19,7 @@ const ROLES: { role: UserRole; icon: ReactNode; title: string; sub: string; colo
     icon: <span style={{ fontSize: '28px', lineHeight: 1 }}> 🏇</span>,
     title: 'Turista',
     sub: 'Explora Piura como local',
-    color: 'var(--orange)',
+    color: '#FF5500',
   },
   {
     role: 'churre',
