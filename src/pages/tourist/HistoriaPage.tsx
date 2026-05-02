@@ -107,12 +107,13 @@ const CATEGORIAS = [
 
 
 const PIURANADAS_RAPIDAS = [
-  { frase: '¡Tá peludera la cosa!', significado: 'Está muy difícil la situación' },
-  { frase: '¡Qué churre más bicharraco!', significado: 'Qué muchacho más fastidioso' },
-  { frase: 'Oye compadre, ¿aonde vas?', significado: 'Oye amigo, ¿a dónde vas?' },
-  { frase: 'El asunto tá capeao', significado: 'El asunto está bajo control' },
-  { frase: '¡Asu mare, qué calor!', significado: '¡Dios mío, qué calor tan fuerte!' },
-  { frase: 'Está como la zaranda', significado: 'Está muy animado/agitado' },
+  { frase: '¡Churreeeee!', significado: 'Se refiere a uno niño adolecente' },
+  { frase: '¡Ñeeenda!', significado: 'Expresión de sorpresa' },
+  { frase: 'Anda payá', significado: 'Oye amigo, no me molestes' },
+  { frase: 'Aquisito nomás', significado: 'Indica que un lugar está cerca' },
+  { frase: 'Me dio chucaque', significado: 'Malestar fisico provocado por pasar una gran vergüenza' },
+  { frase: 'Eres un ardiloso', significado: 'Persona atrevida o mañosa' },
+  { frase: '!Ché, ese churre esta muy pespito¡', significado: 'Wow, ese niño es muy coqueto' },
 ]
 
 /* ─── Sub-componentes ─── */
