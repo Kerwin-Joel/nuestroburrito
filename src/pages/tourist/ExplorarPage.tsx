@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import MapView from '../../components/shared/MapView'
 import SpotCard from '../../components/tourist/SpotCard'
 import SpotBottomSheet from '../../components/tourist/SpotBottomSheet'
+import ExplorarSkeleton from './ExplorarSkeleton'
 import { useSpots } from '../../hooks/useSpots'
 import { useSpotsStore } from '../../stores/useSpotsStore'
 import { useItineraryStore } from '../../stores/useItineraryStore'
@@ -26,7 +27,7 @@ const CATEGORIES = [
 ]
 
 export default function ExplorarPage() {
-  const { load, filtered, setCategory, activeCategory, selectSpot, getDistance } = useSpots()
+  const { load, filtered, setCategory, activeCategory, selectSpot, getDistance, loading } = useSpots()
   const { viewMode, toggleView } = useSpotsStore()
   const { lat: userLat, lng: userLng, error: geoError } = useGeolocation()
   const { current, isSelectingSpot, setSelectingSpot, addStop } = useItineraryStore()
@@ -93,8 +94,8 @@ export default function ExplorarPage() {
   }
 
   return (
-    <div style={{ background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
 
+    <div style={{ background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
       {/* Banner selección */}
       <AnimatePresence>
         {isSelectingSpot && current && (
@@ -227,7 +228,9 @@ export default function ExplorarPage() {
 
       {/* Contenido */}
       <div style={{ flex: 1, position: 'relative' }}>
-        {viewMode === 'map' ? (
+        {loading ? (
+          <ExplorarSkeleton viewMode={viewMode} />
+        ) : viewMode === 'map' ? (
           <motion.div key="map" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             style={{ height: 'calc(100vh - 140px)', width: '100%' }}>
             <MapView />
