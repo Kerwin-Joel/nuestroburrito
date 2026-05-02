@@ -115,7 +115,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
   const [addingBenefit, setAdding] = useState(false)
   const [newBenefit, setNewBenefit] = useState<Partial<Benefit>>({ type: 'discount', active: true })
   const [socialLinks, setSocialLinks] = useState<SpotSocialLinks>({})
-
+  const [saving, setSaving] = useState(false)
   // Estado local para price_range y category — independiente del form
   const [selectedPrice, setSelectedPrice] = useState<PriceRange | undefined>(undefined)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
@@ -221,17 +221,22 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
     setValue('category', id)
   }
 
-  const onSubmit: SubmitHandler<FormData> = data => {
-    onSave({
-      ...data,
-      price_range: selectedPrice,
-      category: selectedCategory || data.category,
-      photoUrl: photos[0] ?? preview ?? undefined,
-      photos,
-      schedule,
-      benefits,
-      socialLinks,
-    })
+  const onSubmit: SubmitHandler<FormData> = async data => {
+    setSaving(true)
+    try {
+      await onSave({
+        ...data,
+        price_range: selectedPrice,
+        category: selectedCategory || data.category,
+        photoUrl: photos[0] ?? preview ?? undefined,
+        photos,
+        schedule,
+        benefits,
+        socialLinks,
+      })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const goNext = (e: React.MouseEvent) => {
@@ -606,13 +611,34 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                 Siguiente <ChevronRight size={16} />
               </button>
             ) : (
-              <button type="submit"
-                style={{ flex: 2, padding: '12px', borderRadius: '10px', background: 'var(--orange)', border: 'none', color: '#fff', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
-                {initialData ? 'Actualizar spot ✓' : 'Guardar spot →'}
+              <button
+                type="submit"
+                disabled={saving}
+                style={{
+                  flex: 2, padding: '12px', borderRadius: '10px',
+                  background: saving ? 'rgba(255,85,0,0.5)' : 'var(--orange)',
+                  border: 'none', color: '#fff', fontFamily: 'var(--font-body)',
+                  fontSize: '14px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {saving ? (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                      style={{ animation: 'spin 0.8s linear infinite' }}>
+                      <path d="M21 12a9 9 0 11-6.219-8.56" strokeLinecap="round" />
+                    </svg>
+                    {initialData ? 'Actualizando...' : 'Guardando...'}
+                  </>
+                ) : (
+                  initialData ? 'Actualizar spot ✓' : 'Guardar spot →'
+                )}
               </button>
             )}
           </div>
         </form>
+        <style>{`@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }`}</style>
       </div>
     </div>,
     document.body

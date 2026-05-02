@@ -47,8 +47,8 @@ const mapToRow = (data: Partial<Spot> & { price_range?: string; rating?: number;
   status: data.status,
   tiktok_urls: data.tiktokUrls,
   social_links: data.socialLinks ?? (data as any).social_links,
-  event_date: data.eventDate ?? (data as any).event_date ?? null,
-  event_date_end: data.eventDateEnd ?? (data as any).event_date_end ?? null,
+  event_date: (data.eventDate ?? (data as any).event_date) || null,
+  event_date_end: (data.eventDateEnd ?? (data as any).event_date_end) || null,
 
 })
 
