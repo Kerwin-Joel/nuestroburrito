@@ -16,7 +16,7 @@ const loginSchema = z.object({
 const ROLES: { role: UserRole; icon: ReactNode; title: string; sub: string; color: string }[] = [
   {
     role: 'tourist',
-    icon: <img src="/imagotipo.png" alt="burrito" style={{ height: '34px', width: 'auto', display: 'block' }} />,
+    icon: <span style={{ fontSize: '28px', lineHeight: 1 }}> 🏇</span>,
     title: 'Turista',
     sub: 'Explora Piura como local',
     color: 'var(--orange)',

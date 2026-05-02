@@ -103,8 +103,8 @@ export default function AuthLayout() {
         {/* Mobile header */}
         <div className="auth-mobile-header">
           <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/imagotipo.png" alt="Burrito" style={{ height: '32px', width: 'auto' }} />
-            <span className="auth-logo-text" style={{ fontSize: '22px' }}>burri<span style={{ color: 'var(--orange)' }}>to</span></span>
+            <img src="/imagotipo.png" alt="Burrito" style={{ height: '10vw', width: 'auto' }} />
+            {/* <span className="auth-logo-text" style={{ fontSize: '22px' }}>burri<span style={{ color: 'var(--orange)' }}>to</span></span> */}
           </Link>
         </div>
 
