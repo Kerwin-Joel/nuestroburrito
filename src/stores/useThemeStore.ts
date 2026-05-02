@@ -26,8 +26,8 @@ const getAutoTheme = (): 'light' | 'twilight' | 'dark' => {
 export const useThemeStore = create<ThemeState & ThemeActions>()(
   persist(
     (set, get) => ({
-      theme: 'auto',
-      computedTheme: 'dark', // Default, will be recalculated
+      theme: 'light',
+      computedTheme: 'light',
 
       setTheme: (theme) => {
         set({ theme })
