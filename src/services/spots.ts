@@ -24,6 +24,7 @@ const mapSpot = (row: any): Spot => ({
   tiktokUrls: row.tiktok_urls ?? [],
   socialLinks: row.social_links ?? undefined,
   createdAt: row.created_at,
+  eventDate: row.event_date ?? null,
 })
 
 // Convierte camelCase a snake_case para Supabase
@@ -45,6 +46,8 @@ const mapToRow = (data: Partial<Spot> & { price_range?: string; rating?: number;
   status: data.status,
   tiktok_urls: data.tiktokUrls,
   social_links: data.socialLinks ?? (data as any).social_links,
+  event_date: data.eventDate ?? (data as any).event_date ?? null,
+
 })
 
 export const spotsService = {
@@ -106,6 +109,7 @@ export const spotsService = {
       rating?: number
       review_count?: number
       schedule?: Record<string, string>
+      event_date?: string | null;
     }
   ): Promise<Spot> {
     if (!FEATURES.REAL_AUTH) {
@@ -115,6 +119,7 @@ export const spotsService = {
         rating: spotData.rating ?? 0,
         reviewCount: spotData.review_count ?? 0,
         createdAt: new Date().toISOString(),
+        eventDate: spotData.event_date || null,
       }
     }
 

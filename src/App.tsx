@@ -44,6 +44,7 @@ const AdminCategoriasPage = lazy(() => import('./pages/admin/AdminCategoriasPage
 const AdminConfigPage = lazy(() => import('./pages/admin/AdminConfigPage'))
 const AuthCallbackPage = lazy(() => import('./pages/auth/AuthCallbackPage'))
 const AdminQRPage = lazy(() => import('./pages/admin/AdminQRPage'))
+const AdminHistoriaPage = lazy(() => import('./pages/admin/AdminHistoriaPage'))
 
 
 // Landing page
@@ -166,6 +167,7 @@ export default function App() {
             <Route path="categorias" element={<AdminCategoriasPage />} />
             <Route path="configuracion" element={<AdminConfigPage />} />
             <Route path="qr" element={<AdminQRPage />} />
+            <Route path="historia" element={<AdminHistoriaPage />} />
           </Route>
 
           {/* Fallback */}

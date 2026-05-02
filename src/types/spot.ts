@@ -37,4 +37,5 @@ export interface Spot {
   tiktokUrls: string[]
   socialLinks?: SpotSocialLinks
   createdAt: string
+  eventDate: string | null
 }

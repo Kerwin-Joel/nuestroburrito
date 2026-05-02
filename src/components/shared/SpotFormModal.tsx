@@ -10,15 +10,15 @@ import type { SpotSocialLinks } from '../../types/spot'
 
 const FacebookIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
+    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
   </svg>
 )
 
 const InstagramIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-    <circle cx="12" cy="12" r="4"/>
-    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <circle cx="12" cy="12" r="4" />
+    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
   </svg>
 )
 
@@ -33,6 +33,7 @@ const schema = z.object({
   price_range: z.enum(['free', 'low', 'mid', 'high']).optional(),
   rating: z.coerce.number().min(0).max(5).optional(),
   review_count: z.coerce.number().min(0).optional(),
+  event_date: z.string().optional(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -46,22 +47,22 @@ const PRICE_OPTIONS = [
 ]
 
 const DAYS = [
-  { key: 'mon', short: 'L', label: 'Lunes' },
-  { key: 'tue', short: 'M', label: 'Martes' },
-  { key: 'wed', short: 'X', label: 'Miércoles' },
-  { key: 'thu', short: 'J', label: 'Jueves' },
-  { key: 'fri', short: 'V', label: 'Viernes' },
-  { key: 'sat', short: 'S', label: 'Sábado' },
-  { key: 'sun', short: 'D', label: 'Domingo' },
+  { key: 'Lunes', short: 'L', label: 'Lunes' },
+  { key: 'Martes', short: 'M', label: 'Martes' },
+  { key: 'Miércoles', short: 'X', label: 'Miércoles' },
+  { key: 'Jueves', short: 'J', label: 'Jueves' },
+  { key: 'Viernes', short: 'V', label: 'Viernes' },
+  { key: 'Sábado', short: 'S', label: 'Sábado' },
+  { key: 'Domingo', short: 'D', label: 'Domingo' },
 ]
 
 const SECTIONS = [
-  { id: 'basic',    label: 'Básico',    icon: '📝' },
-  { id: 'media',   label: 'Fotos',     icon: '📸' },
-  { id: 'social',  label: 'Redes',     icon: '🔗' },
-  { id: 'details', label: 'Detalles',  icon: '⭐' },
-  { id: 'location',label: 'Ubicación', icon: '📍' },
-  { id: 'benefits',label: 'Beneficios',icon: '🎁' },
+  { id: 'basic', label: 'Básico', icon: '📝' },
+  { id: 'media', label: 'Fotos', icon: '📸' },
+  { id: 'social', label: 'Redes', icon: '🔗' },
+  { id: 'details', label: 'Detalles', icon: '⭐' },
+  { id: 'location', label: 'Ubicación', icon: '📍' },
+  { id: 'benefits', label: 'Beneficios', icon: '🎁' },
 ]
 
 interface Benefit {
@@ -152,6 +153,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
         price_range: priceRange,
         rating: initialData.rating ?? undefined,
         review_count: initialData.reviewCount ?? initialData.review_count ?? undefined,
+        event_date: initialData?.event_date ?? initialData?.eventDate ?? '',
       })
 
       setSelectedPrice(priceRange)
@@ -324,6 +326,14 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                 <Field label={`Descripción · ${descLen}/400`} error={errors.description?.message}>
                   <textarea {...register('description')} className="input" placeholder="Describe este lugar como le contarías a un amigo..." maxLength={400} onChange={e => setDescLen(e.target.value.length)} style={{ ...inputStyle, height: '96px', resize: 'none' as const }} />
                 </Field>
+                <Field label="📅 Fecha del evento (opcional)">
+                  <input
+                    type="date"
+                    {...register('event_date')}
+                    className="input"
+                    style={inputStyle}
+                  />
+                </Field>
                 <Field label={`💡 Tip local · ${tipLen}/200`}>
                   <textarea {...register('localTip')} className="input" placeholder="El secreto que solo los locales conocen..." maxLength={200} onChange={e => setTipLen(e.target.value.length)} style={{ ...inputStyle, height: '72px', resize: 'none' as const }} />
                 </Field>
@@ -397,10 +407,10 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
 
                 {([
                   { key: 'instagram' as const, Icon: InstagramIcon, label: 'Instagram', placeholder: '@nombre_del_spot', color: '#E1306C' },
-                  { key: 'tiktok'   as const, Icon: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.79a4.85 4.85 0 01-1.01-.1z"/></svg>, label: 'TikTok', placeholder: '@usuario_tiktok', color: '#010101' },
+                  { key: 'tiktok' as const, Icon: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.79a4.85 4.85 0 01-1.01-.1z" /></svg>, label: 'TikTok', placeholder: '@usuario_tiktok', color: '#010101' },
                   { key: 'facebook' as const, Icon: FacebookIcon, label: 'Facebook', placeholder: 'facebook.com/pagina', color: '#1877F2' },
                   { key: 'whatsapp' as const, Icon: MessageCircle, label: 'WhatsApp', placeholder: '51987654321', color: '#25D366' },
-                  { key: 'website'  as const, Icon: Globe, label: 'Sitio web', placeholder: 'https://misitioweb.com', color: 'var(--orange)' },
+                  { key: 'website' as const, Icon: Globe, label: 'Sitio web', placeholder: 'https://misitioweb.com', color: 'var(--orange)' },
                 ] as const).map(({ key, Icon, label, placeholder, color }) => (
                   <div key={key}>
                     <label style={{ fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>

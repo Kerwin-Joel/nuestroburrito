@@ -9,7 +9,8 @@ import {
   Tag,
   Settings,
   QrCode,
-  LucideIcon
+  LucideIcon,
+  BookOpen
 } from 'lucide-react'
 
 export interface AdminModule {
@@ -105,4 +106,12 @@ export const ADMIN_MODULES: AdminModule[] = [
     enabled: true,
     description: 'Genera e imprime QR para locales aliados',
   },
+  {
+    id: 'historia',
+    label: 'Biblioteca',
+    icon: BookOpen,
+    path: '/admin/historia',
+    enabled: true,
+    description: 'Crear y editar historias'
+  }
 ]

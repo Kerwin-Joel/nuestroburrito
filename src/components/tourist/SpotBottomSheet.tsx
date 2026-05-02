@@ -14,15 +14,15 @@ import type { SpotSocialLinks } from '../../types/spot'
 
 const FacebookIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
+    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
   </svg>
 )
 
 const InstagramIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-    <circle cx="12" cy="12" r="4"/>
-    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <circle cx="12" cy="12" r="4" />
+    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
   </svg>
 )
 
@@ -124,16 +124,25 @@ function PhotoCarousel({ photos, name }: { photos: string[]; name: string }) {
 
 /* ─── Social Links ─── */
 const SOCIAL_CONFIG: { key: keyof SpotSocialLinks; Icon: any; label: string; color: string; prefix: string }[] = [
-  { key: 'instagram', Icon: InstagramIcon,    label: 'Instagram',  color: '#E1306C', prefix: 'https://instagram.com/' },
-  { key: 'tiktok',   Icon: () => (           // TikTok icon via SVG
+  { key: 'instagram', Icon: InstagramIcon, label: 'Instagram', color: '#E1306C', prefix: 'https://instagram.com/' },
+  {
+    key: 'tiktok', Icon: () => (           // TikTok icon via SVG
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.79a4.85 4.85 0 01-1.01-.1z"/>
+        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.79a4.85 4.85 0 01-1.01-.1z" />
       </svg>
-    ),                                         label: 'TikTok',     color: '#010101', prefix: 'https://tiktok.com/@' },
-  { key: 'facebook',  Icon: FacebookIcon,      label: 'Facebook',   color: '#1877F2', prefix: 'https://facebook.com/' },
-  { key: 'whatsapp',  Icon: MessageCircle,    label: 'WhatsApp',   color: '#25D366', prefix: 'https://wa.me/' },
-  { key: 'website',   Icon: Globe,            label: 'Sitio web',  color: 'var(--orange)', prefix: '' },
+    ), label: 'TikTok', color: '#010101', prefix: 'https://tiktok.com/@'
+  },
+  { key: 'facebook', Icon: FacebookIcon, label: 'Facebook', color: '#1877F2', prefix: 'https://facebook.com/' },
+  { key: 'whatsapp', Icon: MessageCircle, label: 'WhatsApp', color: '#25D366', prefix: 'https://wa.me/' },
+  { key: 'website', Icon: Globe, label: 'Sitio web', color: 'var(--orange)', prefix: '' },
 ]
+
+function buildHref(val: string, prefix: string, key: string): string {
+  if (val.startsWith('http://') || val.startsWith('https://')) return val
+  if (key === 'whatsapp') return `https://wa.me/${val.replace(/\D/g, '')}`
+  if (val.includes('.com/') || val.includes('.pe/') || val.includes('.net/')) return `https://${val}`
+  return prefix + val.replace('@', '')
+}
 
 function SocialLinksSection({ links }: { links: SpotSocialLinks }) {
   const active = SOCIAL_CONFIG.filter(s => !!(links as any)[s.key])
@@ -145,7 +154,7 @@ function SocialLinksSection({ links }: { links: SpotSocialLinks }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
         {active.map(({ key, Icon, label, color, prefix }) => {
           const val = (links as any)[key] as string
-          const href = val.startsWith('http') ? val : prefix + val.replace('@', '')
+          const href = buildHref(val, prefix, key)
           return (
             <a
               key={key}
@@ -161,6 +170,8 @@ function SocialLinksSection({ links }: { links: SpotSocialLinks }) {
                 fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600,
                 textDecoration: 'none',
                 transition: 'border-color 0.15s, background 0.15s',
+                WebkitTapHighlightColor: 'transparent',  // ← móvil
+                touchAction: 'manipulation',
               }}
             >
               <Icon size={14} />
@@ -319,6 +330,30 @@ export default function SpotBottomSheet() {
               {selectedSpot.localTip}
             </p>
           </div>
+          {/* Fecha del evento */}
+          {selectedSpot.eventDate && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              background: 'rgba(255,85,0,0.08)', border: '1px solid rgba(255,85,0,0.2)',
+              borderRadius: '12px', padding: '10px 14px', marginBottom: '16px',
+            }}>
+              <span style={{ fontSize: '16px', flexShrink: 0 }}>📅</span>
+              <div>
+                <div style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 700,
+                  color: 'var(--orange)', letterSpacing: '1.5px',
+                  textTransform: 'uppercase', marginBottom: '2px',
+                }}>
+                  Fecha del evento
+                </div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--white)', fontWeight: 600 }}>
+                  {new Date(selectedSpot.eventDate + 'T00:00:00').toLocaleDateString('es-PE', {
+                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Expanded info */}
           {sheetExpanded && (

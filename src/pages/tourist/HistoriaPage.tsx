@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Sparkles, ChevronDown, ChevronUp, BookOpen, MessageCircle } from 'lucide-react'
 import AIChatModal from '../../components/tourist/AIChatModal'
 import HistoriaDetailModal, { type HistoriaItem } from '../../components/tourist/HistoriaDetailModal'
+import { supabase } from '../../lib/supabase'
 
 /* ─── Mock Data ─── */
 const CATEGORIAS = [
@@ -16,90 +17,94 @@ const CATEGORIAS = [
   { id: 'naturaleza', label: 'Naturaleza', emoji: '🌵' },
 ]
 
-const DATA: HistoriaItem[] = [
-  {
-    id: '1', cat: 'origenes', año: '~1000 a.C.', emoji: '🏺',
-    titulo: 'Los Tallanes: Los Primeros Piuranos',
-    resumen: 'Los Tallanes fueron el pueblo originario que habitó la costa norte del Perú. Expertos pescadores y navegantes del Pacífico, dejaron su huella en la lengua Sec y en la cerámica piurana.',
-    datos: ['Primera cultura de la costa norte', 'Navegantes del Pacífico', 'Su idioma era el Sec o Tallan', 'Aliados comerciales de los Chimú'],
-    imagenes: ['https://picsum.photos/seed/tallanes1/600/340', 'https://picsum.photos/seed/tallanes2/600/340', 'https://picsum.photos/seed/tallanes3/600/340'],
-    descripcionLarga: 'Los Tallanes constituyeron la primera gran civilización de la costa norte del Perú, mucho antes que llegara el Imperio Inca. Su territorio abarcaba desde el actual departamento de Tumbes hasta Lambayeque, y su cultura se distinguió por una cerámica única de tonos ocres y figuras zoomorfas. Expertos navegantes, usaban balsas de madera para comerciar a lo largo de toda la costa del Pacífico.',
-    sabiasQue: ['Los Tallanes construyeron complejos de adobe antes que los Incas llegaran a Piura', 'Su lengua, el Sec, aún tiene palabras que se usan en el dialecto piurano actual', 'Los conquistadores españoles los describieron como "indios pacíficos y comerciantes"'],
-    lugaresRelacionados: [{ nombre: 'Museo de Historia Regional de Piura', distancia: 'Centro', tipo: 'Museo' }, { nombre: 'Complejo Arqueológico de Narihualá', distancia: '15 min', tipo: 'Sitio Arqueológico' }],
-    horario: 'Mar-Dom 9am-5pm', entrada: 'S/ 5.00', rating: 4.3,
-  },
-  {
-    id: '2', cat: 'colonial', año: '1532', emoji: '⛪',
-    titulo: 'San Miguel de Piura: La Ciudad Más Antigua del Perú',
-    resumen: 'Fundada por Francisco Pizarro el 15 de agosto de 1532, Piura fue la primera ciudad española en Sudamérica. Antes que Lima, antes que Cusco colonial — Piura ya existía.',
-    datos: ['Primera ciudad española de Sudamérica', 'Fundada por Pizarro en 1532', 'Cambió de ubicación 3 veces', 'Conocida como "La Ciudad del Eterno Calor"'],
-    imagenes: ['https://picsum.photos/seed/piura1/600/340', 'https://picsum.photos/seed/piura2/600/340'],
-    descripcionLarga: 'La fundación de Piura el 15 de agosto de 1532 por Francisco Pizarro la convierte en la ciudad más antigua de América del Sur con presencia española continua. A diferencia de otras ciudades coloniales, Piura cambió de ubicación hasta tres veces antes de asentarse en su lugar actual, buscando tierras más fértiles y mejor acceso al agua del río Piura.',
-    sabiasQue: ['Piura se fundó 9 años antes que Lima (1541)', 'El nombre original era "San Miguel de Tangarará"', 'La Catedral de Piura guarda pinturas coloniales del siglo XVII'],
-    lugaresRelacionados: [{ nombre: 'Catedral de Piura', distancia: 'Plaza de Armas', tipo: 'Iglesia Colonial' }, { nombre: 'Plaza de Armas de Piura', distancia: 'Centro', tipo: 'Plaza Histórica' }, { nombre: 'Museo Arqueológico de Piura', distancia: '5 min', tipo: 'Museo' }],
-    horario: 'Todo el día', entrada: 'Libre', rating: 4.7,
-  },
-  {
-    id: '3', cat: 'heroes', año: '1834', emoji: '⚓',
-    titulo: 'Miguel Grau: El Caballero de los Mares',
-    resumen: 'Nacido en Piura el 27 de julio de 1834, Miguel Grau Seminario es el héroe naval más grande del Perú. Su valentía en el Combate de Angamos lo inmortalizó en la historia latinoamericana.',
-    datos: ['Nació en Piura el 27 de julio de 1834', 'Comandó el Monitor Huáscar', 'Murió en el Combate de Angamos (1879)', 'Admirado por propios y enemigos'],
-  },
-  {
-    id: '4', cat: 'tradicion', año: 'Cada octubre', emoji: '✝️',
-    titulo: 'El Señor Cautivo de Ayabaca',
-    resumen: 'La festividad religiosa más grande del norte peruano. Cada octubre, miles de peregrinos suben a Ayabaca para venerar al Señor Cautivo en una de las tradiciones más arraigadas de la fe piurana.',
-    datos: ['Más de 400 años de tradición', 'Miles de peregrinos cada año', 'Festival declarado Patrimonio Cultural', 'Subida a 2,715 metros sobre el nivel del mar'],
-  },
-  {
-    id: '5', cat: 'gastronomia', año: 'Desde siempre', emoji: '🍽️',
-    titulo: 'La Chicha de Jora: El Néctar Piurano',
-    resumen: 'La chicha de jora piurana no es igual a ninguna otra. Fermentada con maíz jora y preparada con técnicas ancestrales, es la bebida que acompaña toda celebración en la región.',
-    datos: ['Bebida ancestral de origen pre-hispánico', 'Elaborada con maíz jora fermentado', 'Clave en fiestas y rituales', 'Cada familia tiene su propia receta'],
-  },
-  {
-    id: '6', cat: 'gastronomia', año: 'Siglo XIX', emoji: '🐟',
-    titulo: 'El Cebiche Piurano: Diferente al Limeño',
-    resumen: 'El ceviche piurano tiene su propio carácter: se sirve caliente con mote y chifle. El pescado es fresquísimo, sacado del Pacífico esa misma mañana. Una experiencia que los limeños no entienden.',
-    datos: ['Se sirve caliente, no frío', 'Acompañado de mote y chifle', 'Pescado fresco del Pacífico', 'Base: jugo de limón piurano y ají limo'],
-  },
-  {
-    id: '7', cat: 'piuranadas', año: 'De siempre', emoji: '💬',
-    titulo: '"Tá Peludo" y Otras Piuranadas Históricas',
-    resumen: 'El lenguaje piurano es un arte. Expresiones únicas que solo en Piura tienen sentido y que forman parte del ADN cultural de la región desde tiempos inmemoriales.',
-    datos: ['"Tá peludo" = está muy difícil', '"¡Churre!" = muchacho/chico', '"Bicharraco" = persona fastidiosa', '"¡Asu mare!" = expresión de sorpresa'],
-  },
-  {
-    id: '8', cat: 'piuranadas', año: 'Costumbre viva', emoji: '🎵',
-    titulo: 'La Tondero: Música que Habla de la Tierra',
-    resumen: 'La tondero es la danza y ritmo musical emblema de Piura. Mezcla de influencias africanas, españolas e indígenas, cuenta historias de amor, despecho y la vida en el desierto piurano.',
-    datos: ['Ritmo único del norte del Perú', 'Mezcla africana, española e indígena', 'Declarada Patrimonio Cultural', 'Se baila en fiestas patronales'],
-  },
-  {
-    id: '9', cat: 'naturaleza', año: 'Eterno', emoji: '🌊',
-    titulo: 'El Río Piura: El Que Da Vida y Se Va',
-    resumen: 'El río Piura es caprichoso: en temporada seca casi desaparece, pero en Fenómeno del Niño se desborda y transforma la región. Los piuranos tienen una relación de amor y respeto con este río impredecible.',
-    datos: ['Único río del mundo que cambia de dirección', 'Fuente de vida en temporada húmeda', 'Testigo del Fenómeno El Niño', 'Nace en la sierra de Ayabaca'],
-  },
-  {
-    id: '10', cat: 'naturaleza', año: 'Millones de años', emoji: '🌵',
-    titulo: 'El Bosque Seco: El Pulmón Verde del Desierto',
-    resumen: 'Piura alberga uno de los bosques secos tropicales más importantes del mundo. El algarrobo, árbol símbolo de la región, sobrevive en condiciones extremas y es fuente de vida para la fauna local.',
-    datos: ['Uno de los ecosistemas más raros del mundo', 'El algarrobo: árbol símbolo de Piura', 'Hogar del oso de anteojos', 'Conecta la costa con la sierra'],
-  },
-  {
-    id: '11', cat: 'heroes', año: '1820', emoji: '🗡️',
-    titulo: 'Piura y la Independencia: La Primera del Perú',
-    resumen: 'El 4 de enero de 1821, Piura fue la primera ciudad del Perú en declarar su Independencia de España, meses antes que Lima. Un acto de valentía que la historia a veces olvida pero los piuranos nunca.',
-    datos: ['Primera ciudad peruana en independizarse', '4 de enero de 1821', 'Meses antes que Lima (28 de julio)', 'Acto liderado por el Intendente Robledo'],
-  },
-  {
-    id: '12', cat: 'gastronomia', año: 'Desde 1800s', emoji: '🌶️',
-    titulo: 'El Seco de Cabrito: El Rey de la Mesa Piurana',
-    resumen: 'El seco de cabrito con frijoles es el plato bandera de Piura. Preparado con chicha de jora y culantro, tiene un sabor que no existe en ningún otro lugar del mundo. Es identidad pura.',
-    datos: ['Plato bandera de la región Piura', 'Cocinado con chicha de jora real', 'Acompañado de frijoles y arroz', 'Receta transmitida de generación en generación'],
-  },
-]
+// const DATA: HistoriaItem[] = [
+//   {
+//     id: '1', cat: 'origenes', año: '~1000 a.C.', emoji: '🏺',
+//     titulo: 'Los Tallanes: Los Primeros Piuranos',
+//     resumen: 'Los Tallanes fueron el pueblo originario que habitó la costa norte del Perú. Expertos pescadores y navegantes del Pacífico, dejaron su huella en la lengua Sec y en la cerámica piurana.',
+//     datos: ['Primera cultura de la costa norte', 'Navegantes del Pacífico', 'Su idioma era el Sec o Tallan', 'Aliados comerciales de los Chimú'],
+//     imagenes: ['https://picsum.photos/seed/tallanes1/600/340', 'https://picsum.photos/seed/tallanes2/600/340', 'https://picsum.photos/seed/tallanes3/600/340'],
+//     descripcionLarga: 'Los Tallanes constituyeron la primera gran civilización de la costa norte del Perú, mucho antes que llegara el Imperio Inca. Su territorio abarcaba desde el actual departamento de Tumbes hasta Lambayeque, y su cultura se distinguió por una cerámica única de tonos ocres y figuras zoomorfas. Expertos navegantes, usaban balsas de madera para comerciar a lo largo de toda la costa del Pacífico.',
+//     sabiasQue: ['Los Tallanes construyeron complejos de adobe antes que los Incas llegaran a Piura', 'Su lengua, el Sec, aún tiene palabras que se usan en el dialecto piurano actual', 'Los conquistadores españoles los describieron como "indios pacíficos y comerciantes"'],
+//     lugaresRelacionados: [{ nombre: 'Museo de Historia Regional de Piura', distancia: 'Centro', tipo: 'Museo' }, { nombre: 'Complejo Arqueológico de Narihualá', distancia: '15 min', tipo: 'Sitio Arqueológico' }],
+//     horario: 'Mar-Dom 9am-5pm', entrada: 'S/ 5.00', rating: 4.3,
+//   },
+//   {
+//     id: '2', cat: 'colonial', año: '1532', emoji: '⛪',
+//     titulo: 'San Miguel de Piura: La Ciudad Más Antigua del Perú',
+//     resumen: 'Fundada por Francisco Pizarro el 15 de agosto de 1532, Piura fue la primera ciudad española en Sudamérica. Antes que Lima, antes que Cusco colonial — Piura ya existía.',
+//     datos: ['Primera ciudad española de Sudamérica', 'Fundada por Pizarro en 1532', 'Cambió de ubicación 3 veces', 'Conocida como "La Ciudad del Eterno Calor"'],
+//     imagenes: ['https://picsum.photos/seed/piura1/600/340', 'https://picsum.photos/seed/piura2/600/340'],
+//     descripcionLarga: 'La fundación de Piura el 15 de agosto de 1532 por Francisco Pizarro la convierte en la ciudad más antigua de América del Sur con presencia española continua. A diferencia de otras ciudades coloniales, Piura cambió de ubicación hasta tres veces antes de asentarse en su lugar actual, buscando tierras más fértiles y mejor acceso al agua del río Piura.',
+//     sabiasQue: ['Piura se fundó 9 años antes que Lima (1541)', 'El nombre original era "San Miguel de Tangarará"', 'La Catedral de Piura guarda pinturas coloniales del siglo XVII'],
+//     lugaresRelacionados: [{ nombre: 'Catedral de Piura', distancia: 'Plaza de Armas', tipo: 'Iglesia Colonial' }, { nombre: 'Plaza de Armas de Piura', distancia: 'Centro', tipo: 'Plaza Histórica' }, { nombre: 'Museo Arqueológico de Piura', distancia: '5 min', tipo: 'Museo' }],
+//     horario: 'Todo el día', entrada: 'Libre', rating: 4.7,
+//   },
+//   {
+//     id: '3', cat: 'heroes', año: '1834', emoji: '⚓',
+//     titulo: 'Miguel Grau: El Caballero de los Mares',
+//     resumen: 'Nacido en Piura el 27 de julio de 1834, Miguel Grau Seminario es el héroe naval más grande del Perú. Su valentía en el Combate de Angamos lo inmortalizó en la historia latinoamericana.',
+//     datos: ['Nació en Piura el 27 de julio de 1834', 'Comandó el Monitor Huáscar', 'Murió en el Combate de Angamos (1879)', 'Admirado por propios y enemigos'],
+//   },
+//   {
+//     id: '4', cat: 'tradicion', año: 'Cada octubre', emoji: '✝️',
+//     titulo: 'El Señor Cautivo de Ayabaca',
+//     resumen: 'La festividad religiosa más grande del norte peruano. Cada octubre, miles de peregrinos suben a Ayabaca para venerar al Señor Cautivo en una de las tradiciones más arraigadas de la fe piurana.',
+//     datos: ['Más de 400 años de tradición', 'Miles de peregrinos cada año', 'Festival declarado Patrimonio Cultural', 'Subida a 2,715 metros sobre el nivel del mar'],
+//   },
+//   {
+//     id: '5', cat: 'gastronomia', año: 'Desde siempre', emoji: '🍽️',
+//     titulo: 'La Chicha de Jora: El Néctar Piurano',
+//     resumen: 'La chicha de jora piurana no es igual a ninguna otra. Fermentada con maíz jora y preparada con técnicas ancestrales, es la bebida que acompaña toda celebración en la región.',
+//     datos: ['Bebida ancestral de origen pre-hispánico', 'Elaborada con maíz jora fermentado', 'Clave en fiestas y rituales', 'Cada familia tiene su propia receta'],
+//   },
+//   {
+//     id: '6', cat: 'gastronomia', año: 'Siglo XIX', emoji: '🐟',
+//     titulo: 'El Cebiche Piurano: Diferente al Limeño',
+//     resumen: 'El ceviche piurano tiene su propio carácter: se sirve caliente con mote y chifle. El pescado es fresquísimo, sacado del Pacífico esa misma mañana. Una experiencia que los limeños no entienden.',
+//     datos: ['Se sirve caliente, no frío', 'Acompañado de mote y chifle', 'Pescado fresco del Pacífico', 'Base: jugo de limón piurano y ají limo'],
+//   },
+//   {
+//     id: '7', cat: 'piuranadas', año: 'De siempre', emoji: '💬',
+//     titulo: '"Tá Peludo" y Otras Piuranadas Históricas',
+//     resumen: 'El lenguaje piurano es un arte. Expresiones únicas que solo en Piura tienen sentido y que forman parte del ADN cultural de la región desde tiempos inmemoriales.',
+//     datos: ['"Tá peludo" = está muy difícil', '"¡Churre!" = muchacho/chico', '"Bicharraco" = persona fastidiosa', '"¡Asu mare!" = expresión de sorpresa'],
+//   },
+//   {
+//     id: '8', cat: 'piuranadas', año: 'Costumbre viva', emoji: '🎵',
+//     titulo: 'La Tondero: Música que Habla de la Tierra',
+//     resumen: 'La tondero es la danza y ritmo musical emblema de Piura. Mezcla de influencias africanas, españolas e indígenas, cuenta historias de amor, despecho y la vida en el desierto piurano.',
+//     datos: ['Ritmo único del norte del Perú', 'Mezcla africana, española e indígena', 'Declarada Patrimonio Cultural', 'Se baila en fiestas patronales'],
+//   },
+//   {
+//     id: '9', cat: 'naturaleza', año: 'Eterno', emoji: '🌊',
+//     titulo: 'El Río Piura: El Que Da Vida y Se Va',
+//     resumen: 'El río Piura es caprichoso: en temporada seca casi desaparece, pero en Fenómeno del Niño se desborda y transforma la región. Los piuranos tienen una relación de amor y respeto con este río impredecible.',
+//     datos: ['Único río del mundo que cambia de dirección', 'Fuente de vida en temporada húmeda', 'Testigo del Fenómeno El Niño', 'Nace en la sierra de Ayabaca'],
+//   },
+//   {
+//     id: '10', cat: 'naturaleza', año: 'Millones de años', emoji: '🌵',
+//     titulo: 'El Bosque Seco: El Pulmón Verde del Desierto',
+//     resumen: 'Piura alberga uno de los bosques secos tropicales más importantes del mundo. El algarrobo, árbol símbolo de la región, sobrevive en condiciones extremas y es fuente de vida para la fauna local.',
+//     datos: ['Uno de los ecosistemas más raros del mundo', 'El algarrobo: árbol símbolo de Piura', 'Hogar del oso de anteojos', 'Conecta la costa con la sierra'],
+//   },
+//   {
+//     id: '11', cat: 'heroes', año: '1820', emoji: '🗡️',
+//     titulo: 'Piura y la Independencia: La Primera del Perú',
+//     resumen: 'El 4 de enero de 1821, Piura fue la primera ciudad del Perú en declarar su Independencia de España, meses antes que Lima. Un acto de valentía que la historia a veces olvida pero los piuranos nunca.',
+//     datos: ['Primera ciudad peruana en independizarse', '4 de enero de 1821', 'Meses antes que Lima (28 de julio)', 'Acto liderado por el Intendente Robledo'],
+//   },
+//   {
+//     id: '12', cat: 'gastronomia', año: 'Desde 1800s', emoji: '🌶️',
+//     titulo: 'El Seco de Cabrito: El Rey de la Mesa Piurana',
+//     resumen: 'El seco de cabrito con frijoles es el plato bandera de Piura. Preparado con chicha de jora y culantro, tiene un sabor que no existe en ningún otro lugar del mundo. Es identidad pura.',
+//     datos: ['Plato bandera de la región Piura', 'Cocinado con chicha de jora real', 'Acompañado de frijoles y arroz', 'Receta transmitida de generación en generación'],
+//   },
+// ]
+
+
+
+
 
 const PIURANADAS_RAPIDAS = [
   { frase: '¡Tá peludera la cosa!', significado: 'Está muy difícil la situación' },
@@ -240,14 +245,44 @@ export default function HistoriaPage() {
   const [showPiuranadas, setShowPiuranadas] = useState(false)
   const [selectedItem, setSelectedItem] = useState<HistoriaItem | null>(null)
   const [aiOpen, setAiOpen] = useState(false)
+  const [data, setData] = useState<HistoriaItem[]>([])
+  const [loadingData, setLoadingData] = useState(true)
+
+  useEffect(() => {
+    supabase
+      .from('historia_piura')
+      .select('*')
+      .eq('activo', true)
+      .order('orden', { ascending: true })
+      .then(({ data: rows }) => {
+        const mapped = (rows ?? []).map(r => ({
+          id: r.id,
+          cat: r.cat,
+          año: r.año,
+          emoji: r.emoji,
+          titulo: r.titulo,
+          resumen: r.resumen,
+          datos: r.datos ?? [],
+          imagenes: r.imagenes ?? [],
+          descripcionLarga: r.descripcion_larga,
+          sabiasQue: r.sabias_que ?? [],
+          lugaresRelacionados: r.lugares_relacionados ?? [],
+          horario: r.horario,
+          entrada: r.entrada,
+          rating: r.rating,
+        }))
+        setData(mapped)
+        setLoadingData(false)
+      })
+  }, [])
 
   const filtered = useMemo(() => {
-    return DATA.filter(d => {
+    return data.filter(d => {
       const matchCat = catActiva === 'all' || d.cat === catActiva
       const matchQ = !query || d.titulo.toLowerCase().includes(query.toLowerCase()) || d.resumen.toLowerCase().includes(query.toLowerCase())
       return matchCat && matchQ
     })
-  }, [query, catActiva])
+  }, [query, catActiva, data])
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '120px' }}>
@@ -268,7 +303,7 @@ export default function HistoriaPage() {
             La Biblioteca<br /><span style={{ color: 'var(--orange)' }}>del Churre</span>
           </h1>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--muted)', lineHeight: 1.5 }}>
-            Historia, tradiciones y piuranadas de nuestra tierra. Porque ser de aquí es saber de dónde venimos.
+            Historia, tradiciones y piuranadas de nuestra tierra. Porque ser de aquí es saber de dónde venimos. (Pronto tendremos curador de datos históricos) 😉
           </p>
         </motion.div>
 
@@ -294,7 +329,7 @@ export default function HistoriaPage() {
               Pregúntale al Burrito Sabio
             </div>
             <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--muted)' }}>
-              IA conversacional sobre historia piurana — <span style={{ color: '#22c55e' }}>Activo</span>
+              IA conversacional sobre historia piurana — <span style={{ color: '#e6ff02ff' }}>Pronto</span>
             </div>
           </div>
           <MessageCircle size={18} color="var(--orange)" />

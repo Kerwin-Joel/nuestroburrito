@@ -96,7 +96,7 @@ export default function HistoriaDetailModal({ item, onClose }: Props) {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        style={{ width: '100%', maxHeight: '92vh', background: 'var(--bg)', borderRadius: '28px 28px 0 0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        style={{ width: '100%', maxHeight: '85vh', background: 'var(--bg)', borderRadius: '28px 28px 0 0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
       >
         {/* Drag handle */}
         <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 0', flexShrink: 0 }}>
