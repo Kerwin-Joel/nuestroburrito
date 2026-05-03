@@ -116,12 +116,24 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
   const [newBenefit, setNewBenefit] = useState<Partial<Benefit>>({ type: 'discount', active: true })
   const [socialLinks, setSocialLinks] = useState<SpotSocialLinks>({})
   const [saving, setSaving] = useState(false)
+  const [spotFolder, setSpotFolder] = useState<string>('')
   // Estado local para price_range y category — independiente del form
   const [selectedPrice, setSelectedPrice] = useState<PriceRange | undefined>(undefined)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-
+  const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const nameVal = watch('name')
+
+  const toFolderName = (name: string): string => {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // quita tildes
+      .replace(/[^a-z0-9\s-]/g, '')    // solo letras, números, guiones
+      .trim()
+      .replace(/\s+/g, '-')            // espacios → guiones
+      .slice(0, 40)                    // máximo 40 chars
+  }
 
   useEffect(() => {
     if (!isOpen) return
@@ -173,6 +185,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
       const enabled: Record<string, boolean> = {}
       DAYS.forEach(d => { enabled[d.key] = !!sched[d.key] })
       setEnabledDays(enabled)
+      setSpotFolder(initialData.id)
     } else {
       reset({ name: '', category: '', description: '', localTip: '', address: '', lat: -5.1945, lng: -80.6328, price_range: undefined, rating: undefined, review_count: undefined, event_date: '', event_date_end: '', })
       setSelectedPrice(undefined)
@@ -180,19 +193,55 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
       setPhotos([])
       setSocialLinks({})
       setPreview(null); setDescLen(0); setTipLen(0); setSchedule({}); setEnabledDays({})
+      setSpotFolder(`new-${Date.now()}`)
     }
   }, [isOpen, initialData, reset])
 
-  const handleFile = (file: File) => {
-    if (!file.type.startsWith('image/')) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      const dataUrl = ev.target?.result as string
-      // First photo also sets preview
-      if (!preview) setPreview(dataUrl)
-      setPhotos(p => [...p, dataUrl])
+  useEffect(() => {
+    if (!initialData?.id && nameVal && nameVal.length >= 3) {
+      const sanitized = toFolderName(nameVal)
+      if (sanitized) setSpotFolder(`${sanitized}-${Date.now().toString().slice(-6)}`)
     }
-    reader.readAsDataURL(file)
+  }, [nameVal, initialData])
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    setUploading(true)
+
+    // Preview local inmediato
+    const localUrl = URL.createObjectURL(file)
+    if (!preview) setPreview(localUrl)
+    setPhotos(p => [...p, localUrl])
+
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const folder = spotFolder || `spot-${Date.now()}`
+      const path = `${folder}/${fileName}`
+
+      const { error } = await supabase.storage
+        .from('spot-photos')
+        .upload(path, file, { contentType: file.type, upsert: false })
+
+      if (error) throw error
+
+      const { data: urlData } = supabase.storage
+        .from('spot-photos')
+        .getPublicUrl(path)
+
+      const publicUrl = urlData.publicUrl
+
+      // Reemplaza placeholder con URL real
+      setPhotos(p => p.map(u => u === localUrl ? publicUrl : u))
+      setPreview(prev => prev === localUrl ? publicUrl : prev)
+
+    } catch (e: any) {
+      setPhotos(p => p.filter(u => u !== localUrl))
+      setPreview(prev => prev === localUrl ? null : prev)
+      console.error('Error subiendo foto:', e.message)
+    } finally {
+      setUploading(false)
+    }
   }
 
   const removePhoto = (i: number) => {
@@ -352,7 +401,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <input ref={fileRef} type="file" accept="image/*" multiple onChange={e => {
                   const files = Array.from(e.target.files ?? [])
-                  files.forEach(f => handleFile(f))
+                  files.forEach(f => handleFile(f)) // handleFile ya es async, se ejecutan en paralelo
                   if (fileRef.current) fileRef.current.value = ''
                 }} style={{ display: 'none' }} />
 
@@ -361,7 +410,11 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                   onClick={() => fileRef.current?.click()}
                   onDragOver={e => { e.preventDefault(); setDragOver(true) }}
                   onDragLeave={() => setDragOver(false)}
-                  onDrop={e => { e.preventDefault(); setDragOver(false); Array.from(e.dataTransfer.files).forEach(f => handleFile(f)) }}
+                  onDrop={e => {
+                    e.preventDefault()
+                    setDragOver(false)
+                    Array.from(e.dataTransfer.files).forEach(f => handleFile(f))
+                  }}
                   style={{
                     height: '120px', borderRadius: '14px', cursor: 'pointer',
                     border: `2px dashed ${dragOver ? 'var(--orange)' : 'rgba(255,85,0,0.25)'}`,
@@ -606,9 +659,17 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
               Cancelar
             </button>
             {activeSection !== 'benefits' ? (
-              <button type="button" onClick={goNext}
-                style={{ flex: 2, padding: '12px', borderRadius: '10px', background: 'rgba(255,85,0,0.12)', border: '1px solid rgba(255,85,0,0.3)', color: 'var(--orange)', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                Siguiente <ChevronRight size={16} />
+              <button type="button" onClick={goNext} disabled={uploading}
+                style={{
+                  flex: 2, padding: '12px', borderRadius: '10px',
+                  background: 'rgba(255,85,0,0.12)', border: '1px solid rgba(255,85,0,0.3)',
+                  color: uploading ? 'var(--muted)' : 'var(--orange)',
+                  fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700,
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                  opacity: uploading ? 0.6 : 1,
+                }}>
+                {uploading ? '⏳ Subiendo foto...' : <>Siguiente <ChevronRight size={16} /></>}
               </button>
             ) : (
               <button
