@@ -67,5 +67,40 @@ export const useItinerary = () => {
     }
   }, [current, user, clear, addToast])
 
-  return { current, isGenerating, generate, save, loadDemo }
+  const generateFromSpots = useCallback(async (
+    prefs: ItineraryPreferences,
+    realStops: any[]
+  ) => {
+    setGenerating(true)
+    try {
+      const timeMap: Record<string, string> = {
+        '4h': 'Tarde rápida', '6h': 'Medio día',
+        'full': 'Día completo', 'wknd': 'Fin de semana',
+      }
+      const groupMap: Record<string, string> = {
+        solo: 'en solitario', couple: 'en pareja',
+        family: 'en familia', friends: 'con amigos',
+      }
+      const title = `${timeMap[prefs.time] ?? 'Mi día'} ${groupMap[prefs.group] ?? ''} en Piura`.trim()
+
+      const itinerary = {
+        id: `new-${Date.now()}`,
+        userId: user?.id ?? 'anonymous',  // ← agrega esto
+        title,
+        preferences: prefs,
+        stops: realStops,
+        generatedBy: 'ai' as const,
+        isSaved: false,
+        status: 'draft' as const,
+        createdAt: new Date().toISOString(),
+      }
+      setCurrent(itinerary)
+    } catch (e) {
+      addToast({ type: 'error', message: 'No se pudo generar el itinerario.' })
+    } finally {
+      setGenerating(false)
+    }
+  }, [setGenerating, setCurrent, addToast, user])
+
+  return { current, isGenerating, generate, generateFromSpots, save, loadDemo }
 }

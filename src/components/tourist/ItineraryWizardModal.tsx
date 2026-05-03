@@ -7,11 +7,13 @@ import { useItineraryStore } from '../../stores/useItineraryStore'
 import { useItinerary } from '../../hooks/useItinerary'
 import type { ItineraryPreferences } from '../../types/itinerary'
 import BurritoDonkey from '../shared/Burritodonkey'
+import { generateItineraryFromSpots } from '../../services/itineraryWizardService'
+import { useGeolocation } from '../../hooks/useGeolocation'
 
 const WHO_OPT = [
-  { id: 'tourist', emoji: '🧳', label: 'Turista',       sub: 'De otra ciudad' },
-  { id: 'local',   emoji: '🏠', label: 'Soy de Piura',  sub: 'Conozco la región' },
-  { id: 'transit', emoji: '✈️', label: 'De paso',       sub: 'Pocas horas' },
+  { id: 'tourist', emoji: '🧳', label: 'Turista', sub: 'De otra ciudad' },
+  { id: 'local', emoji: '🏠', label: 'Soy de Piura', sub: 'Conozco la región' },
+  { id: 'transit', emoji: '✈️', label: 'De paso', sub: 'Pocas horas' },
 ]
 
 const STEP_LABELS = ['Tú', 'Tiempo', 'Intereses', 'Generando', 'Listo']
@@ -31,16 +33,16 @@ interface Props {
 export default function ItineraryWizardModal({ isOpen, onClose }: Props) {
   const navigate = useNavigate()
   const { setPreferences } = useItineraryStore()
-  const { generate, isGenerating } = useItinerary()
-
+  const { generate, generateFromSpots, isGenerating } = useItinerary()
+  const { lat: userLat, lng: userLng } = useGeolocation()
   const [step, setStep] = useState(0)
-  const [who, setWho]         = useState('')
-  const [group, setGroup]     = useState('')
-  const [time, setTime]       = useState('')
-  const [budget, setBudget]   = useState('')
+  const [who, setWho] = useState('')
+  const [group, setGroup] = useState('')
+  const [time, setTime] = useState('')
+  const [budget, setBudget] = useState('')
   const [interests, setInterests] = useState<string[]>([])
-  const [genPct, setGenPct]   = useState(0)
-  const [genMsg, setGenMsg]   = useState(0)
+  const [genPct, setGenPct] = useState(0)
+  const [genMsg, setGenMsg] = useState(0)
 
   // Reset on open
   useEffect(() => {
@@ -74,7 +76,43 @@ export default function ItineraryWizardModal({ isOpen, onClose }: Props) {
         budget: budget as ItineraryPreferences['budget'],
       }
       setPreferences(prefs)
-      await generate(prefs)
+
+      try {
+        // Intenta generar con spots reales de Supabase
+        const stops = await generateItineraryFromSpots({
+          who,
+          group,
+          time,
+          budget,
+          interests,
+          userLat: userLat ?? undefined,
+          userLng: userLng ?? undefined,
+        })
+
+        if (stops.length > 0) {
+          await generateFromSpots(prefs, stops.map((s, i) => ({
+            id: `stop-${Date.now()}-${i}`,
+            spotId: s.spotId ?? '',
+            spotName: s.place,
+            time: s.time,
+            description: s.desc,
+            localTip: s.tip,
+            travelToNext: s.travelToNext ?? '',
+            photoUrl: '',
+            lat: 0,
+            lng: 0,
+            visited: false,
+          })))
+        } else {
+          // Fallback a Claude si no hay spots disponibles
+          await generate(prefs)
+        }
+      } catch (e) {
+        console.error('Error generando desde spots:', e)
+        // Fallback a Claude
+        await generate(prefs)
+      }
+
       onClose()
       navigate('/app/itinerario')
     }, 400)

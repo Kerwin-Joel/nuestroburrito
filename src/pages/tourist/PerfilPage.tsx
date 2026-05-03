@@ -17,14 +17,12 @@ import ThemeSwitcher from '../../components/shared/ThemeSwitcher'
 export default function PerfilTouristPage() {
   const { user } = useAuthStore()
   const { addToast } = useUIStore()
-  const { setCurrent } = useItineraryStore()
+  const { setCurrent, clear, current } = useItineraryStore()
   const navigate = useNavigate()
 
   const { itineraries, lastFetchAt, setItineraries, removeItinerary } = useProfileStore()
   const [loading, setLoading] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [editingName, setEditingName] = useState(false)
-  const [nameInput, setNameInput] = useState(user?.profile?.name || '')
 
   const [refreshKey, setRefreshKey] = useState(0)
   const CACHE_TTL = 5 * 1000 // 5 segundos
@@ -82,6 +80,9 @@ export default function PerfilTouristPage() {
     try {
       await itinerariesService.softDelete(id)
       removeItinerary(id) // ← actualiza el store directamente
+      if (current?.id === id) {
+        clear()
+      }
       addToast({ type: 'success', message: 'Itinerario eliminado' })
     } catch (err: any) {
       addToast({ type: 'error', message: err.message ?? 'Error' })

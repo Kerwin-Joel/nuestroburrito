@@ -118,10 +118,34 @@ export default function ItinerarioPage() {
     if (!current) return
     setCompleting(true)
     try {
-      if (current.id && current.id !== 'itinerary-demo') {
-        await itinerariesService.updateStatus(current.id, 'in_progress')
+      let itineraryId = current.id
+
+      // Si es nuevo (no tiene UUID real), guárdalo primero
+      if (!itineraryId ||
+        itineraryId === 'itinerary-demo' ||
+        itineraryId.startsWith('new-')) {
+
+        if (!user) throw new Error('Usuario no autenticado')
+
+        const saved = await itinerariesService.save({
+          userId: user.id,
+          title: current.title,
+          preferences: current.preferences,
+          stops: current.stops,
+          generatedBy: current.generatedBy,
+          isSaved: false,
+          status: 'in_progress',
+        })
+
+        itineraryId = saved.id
+        // Actualiza el store con el id real de Supabase
+        setCurrent({ ...current, id: saved.id, status: 'in_progress' })
+      } else {
+        // Ya tiene UUID real, solo actualiza el status
+        await itinerariesService.updateStatus(itineraryId, 'in_progress')
+        setCurrent({ ...current, status: 'in_progress' })
       }
-      setCurrent({ ...current, status: 'in_progress' })
+
       addToast({ type: 'success', message: '🫏 ¡A recorrer Piura!' })
     } catch (err: any) {
       addToast({ type: 'error', message: err.message ?? 'Error' })

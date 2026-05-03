@@ -35,7 +35,7 @@ export interface Itinerary {
   title: string
   preferences: ItineraryPreferences
   stops: ItineraryStop[]
-  generatedBy: 'ai' | 'manual'
+  generatedBy: 'ai' | 'manual' | 'wizard'
   isSaved: boolean
   status: ItineraryStatus
   createdAt: string
