@@ -37,7 +37,6 @@ function PhotoCarousel({ photos, name }: { photos: string[]; name: string }) {
 
   return (
     <div style={{ position: 'relative', overflow: 'hidden' }}>
-      {/* Image strip */}
       <div style={{
         display: 'flex',
         transform: `translateX(-${idx * 100}%)`,
@@ -54,60 +53,44 @@ function PhotoCarousel({ photos, name }: { photos: string[]; name: string }) {
         ))}
       </div>
 
-      {/* Gradient overlay */}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(17,16,9,0.75) 0%, transparent 55%)', pointerEvents: 'none' }} />
 
-      {/* Arrows — only if more than 1 photo */}
       {photos.length > 1 && (
         <>
-          <button
-            onClick={prev}
-            aria-label="Foto anterior"
-            style={{
-              position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)',
-              background: 'rgba(8,7,5,0.65)', border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: '50%', width: '34px', height: '34px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: '#fff',
-            }}
-          >
+          <button onClick={prev} aria-label="Foto anterior" style={{
+            position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)',
+            background: 'rgba(8,7,5,0.65)', border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '50%', width: '34px', height: '34px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: '#fff',
+          }}>
             <ChevronLeft size={16} />
           </button>
-          <button
-            onClick={next}
-            aria-label="Foto siguiente"
-            style={{
-              position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-              background: 'rgba(8,7,5,0.65)', border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: '50%', width: '34px', height: '34px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: '#fff',
-            }}
-          >
+          <button onClick={next} aria-label="Foto siguiente" style={{
+            position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+            background: 'rgba(8,7,5,0.65)', border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '50%', width: '34px', height: '34px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: '#fff',
+          }}>
             <ChevronRight size={16} />
           </button>
 
-          {/* Dot indicators */}
           <div style={{
             position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)',
             display: 'flex', gap: '5px',
           }}>
             {photos.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setIdx(i)}
-                style={{
-                  width: i === idx ? '18px' : '6px', height: '6px',
-                  borderRadius: '99px',
-                  background: i === idx ? 'var(--orange)' : 'rgba(255,255,255,0.45)',
-                  border: 'none', cursor: 'pointer', padding: 0,
-                  transition: 'all 0.25s',
-                }}
-              />
+              <button key={i} onClick={() => setIdx(i)} style={{
+                width: i === idx ? '18px' : '6px', height: '6px',
+                borderRadius: '99px',
+                background: i === idx ? 'var(--orange)' : 'rgba(255,255,255,0.45)',
+                border: 'none', cursor: 'pointer', padding: 0,
+                transition: 'all 0.25s',
+              }} />
             ))}
           </div>
 
-          {/* Counter */}
           <div style={{
             position: 'absolute', top: '12px', right: '52px',
             background: 'rgba(8,7,5,0.65)', borderRadius: '99px',
@@ -126,7 +109,7 @@ function PhotoCarousel({ photos, name }: { photos: string[]; name: string }) {
 const SOCIAL_CONFIG: { key: keyof SpotSocialLinks; Icon: any; label: string; color: string; prefix: string }[] = [
   { key: 'instagram', Icon: InstagramIcon, label: 'Instagram', color: '#E1306C', prefix: 'https://instagram.com/' },
   {
-    key: 'tiktok', Icon: () => (           // TikTok icon via SVG
+    key: 'tiktok', Icon: () => (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
         <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.79a4.85 4.85 0 01-1.01-.1z" />
       </svg>
@@ -161,6 +144,7 @@ function SocialLinksSection({ links }: { links: SpotSocialLinks }) {
               href={href}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '6px',
                 padding: '7px 14px', borderRadius: '99px',
@@ -170,7 +154,7 @@ function SocialLinksSection({ links }: { links: SpotSocialLinks }) {
                 fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600,
                 textDecoration: 'none',
                 transition: 'border-color 0.15s, background 0.15s',
-                WebkitTapHighlightColor: 'transparent',  // ← móvil
+                WebkitTapHighlightColor: 'transparent',
                 touchAction: 'manipulation',
               }}
             >
@@ -230,12 +214,9 @@ export default function SpotBottomSheet() {
   const cat = CATEGORY_LABELS[selectedSpot.category]
   const mapsUrl = `https://maps.google.com/?q=${selectedSpot.lat},${selectedSpot.lng}`
 
-  // Build photos array: prefer photos[] from DB, fall back to photoUrl
   const photos: string[] = (() => {
     const raw = selectedSpot.photos ?? []
-    // If we have the array, use it (it already includes the main photo)
     if (raw.length > 0) return raw.filter(Boolean)
-    // Fall back to single photoUrl
     return selectedSpot.photoUrl ? [selectedSpot.photoUrl] : []
   })()
 
@@ -269,9 +250,39 @@ export default function SpotBottomSheet() {
           overflowY: 'auto',
         }}
       >
-        {/* Handle */}
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
+        {/* Handle + Close + Category — sticky */}
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px 8px',
+          background: 'var(--card)',
+        }}>
+          {/* Category badge — izquierda */}
+          <span className="badge badge-orange">
+            {cat?.emoji} {cat?.label}
+          </span>
+
+          {/* Handle — centro */}
           <div style={{ width: '36px', height: '4px', background: 'var(--dim)', borderRadius: '2px' }} />
+
+          {/* Close — derecha */}
+          <button
+            onClick={close}
+            aria-label="Cerrar"
+            style={{
+              background: 'rgba(255,170,0,0.85)',
+              border: 'none', borderRadius: '50%',
+              width: '36px', height: '36px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <X size={20} strokeWidth={3} color="white" />
+          </button>
         </div>
 
         {/* Photo carousel */}
@@ -282,20 +293,6 @@ export default function SpotBottomSheet() {
           <span className="badge badge-orange" style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 2 }}>
             {cat?.emoji} {cat?.label}
           </span>
-
-          {/* Close button */}
-          <button
-            onClick={close}
-            aria-label="Cerrar"
-            style={{
-              position: 'absolute', top: '12px', right: '12px', zIndex: 2,
-              background: 'rgba(255, 170, 0, 0.7)', border: 'none', borderRadius: '50%',
-              width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'var(--white)',
-            }}
-          >
-            <X size={23} strokeWidth={3} color="white" />
-          </button>
         </div>
 
         {/* Content */}
@@ -330,6 +327,7 @@ export default function SpotBottomSheet() {
               {selectedSpot.localTip}
             </p>
           </div>
+
           {/* Fecha del evento */}
           {selectedSpot.eventDate && (
             <div style={{
@@ -384,7 +382,7 @@ export default function SpotBottomSheet() {
             </>
           )}
 
-          {/* Social links — always visible when available */}
+          {/* Social links */}
           {selectedSpot.socialLinks && Object.values(selectedSpot.socialLinks).some(Boolean) && (
             <SocialLinksSection links={selectedSpot.socialLinks} />
           )}
@@ -399,7 +397,7 @@ export default function SpotBottomSheet() {
             {sheetExpanded ? 'Ver menos' : 'Ver detalles completos'}
           </button>
 
-          {/* TikTok Section */}
+          {/* Videos Section */}
           <SpotTiktokSection spot={selectedSpot} />
 
           {/* Actions */}
