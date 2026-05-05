@@ -34,6 +34,15 @@ export default function ExplorarPage() {
   const { addToast } = useUIStore()
   const navigate = useNavigate()
 
+  const sortedSpots = [...filtered].sort((a, b) => {
+    const dateA = a.eventDate ? new Date(a.eventDate + 'T00:00:00').getTime() : null
+    const dateB = b.eventDate ? new Date(b.eventDate + 'T00:00:00').getTime() : null
+    if (dateA && dateB) return dateA - dateB
+    if (dateA && !dateB) return -1
+    if (!dateA && dateB) return 1
+    return 0
+  })
+
   useEffect(() => { load(true) }, [load])
 
   const handleAddSpot = async (spot: Spot) => {
@@ -248,7 +257,7 @@ export default function ExplorarPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {filtered.map(spot => {
+                {sortedSpots.map(spot => {
                   const dist = getDistance(spot, userLat ?? undefined, userLng ?? undefined)
                   return (
                     <SpotCard
