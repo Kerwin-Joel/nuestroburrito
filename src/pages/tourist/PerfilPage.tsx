@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Share2, Eye, Trash2, BookOpen, Bell, X, Loader2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -15,6 +15,7 @@ import ThemeSwitcher from '../../components/shared/ThemeSwitcher'
 
 
 export default function PerfilTouristPage() {
+
   const { user } = useAuthStore()
   const { addToast } = useUIStore()
   const { setCurrent, clear, current } = useItineraryStore()
@@ -24,36 +25,36 @@ export default function PerfilTouristPage() {
   const [loading, setLoading] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
-  const [refreshKey, setRefreshKey] = useState(0)
   const CACHE_TTL = 5 * 1000 // 5 segundos
   const { reminders, load: loadReminders, cancel } = useReminders(
     user?.id || 'tourist-demo'
   )
 
+  const userIdRef = useRef(user?.id)
+  const lastFetchAtRef = useRef(lastFetchAt)
+  const itinerariesRef = useRef(itineraries)
+
+  useEffect(() => { userIdRef.current = user?.id }, [user?.id])
+  useEffect(() => { lastFetchAtRef.current = lastFetchAt }, [lastFetchAt])
+  useEffect(() => { itinerariesRef.current = itineraries }, [itineraries])
+
   // Carga itinerarios desde Supabase
+  // DESPUÉS — usa una ref para acceder a itineraries sin ponerlo en deps:
+  useEffect(() => { itinerariesRef.current = itineraries }, [itineraries])
+
   const loadItineraries = useCallback(async (force = false) => {
-    if (!user?.id) return
-
-    const isStale = !lastFetchAt || (Date.now() - lastFetchAt) > CACHE_TTL
-
-    // Si hay datos frescos y no se fuerza → no fetch
-    if (!force && !isStale && itineraries.length > 0) return
-
-    // Solo muestra spinner si no hay datos previos
-    if (itineraries.length === 0) setLoading(true)
-
+    if (!userIdRef.current) return
+    const isStale = !lastFetchAtRef.current || (Date.now() - lastFetchAtRef.current) > CACHE_TTL
+    if (!force && !isStale && itinerariesRef.current.length > 0) return
+    if (itinerariesRef.current.length === 0) setLoading(true)
     try {
-      const data = await itinerariesService.getByUser(user.id)
+      const data = await itinerariesService.getByUser(userIdRef.current)
       setItineraries(data)
     } catch {
       addToast({ type: 'error', message: 'Error cargando itinerarios' })
     } finally {
       setLoading(false)
     }
-  }, [user?.id, lastFetchAt, itineraries.length])
-
-  useEffect(() => {
-    loadItineraries()
   }, [])
 
   useEffect(() => {
@@ -67,12 +68,6 @@ export default function PerfilTouristPage() {
   useEffect(() => {
     loadItineraries()
     loadReminders()
-  }, [loadItineraries, loadReminders, refreshKey])
-
-  useEffect(() => {
-    const onFocus = () => setRefreshKey(k => k + 1)
-    window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
   }, [])
 
   // Soft delete

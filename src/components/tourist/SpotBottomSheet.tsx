@@ -48,7 +48,7 @@ function PhotoCarousel({ photos, name }: { photos: string[]; name: string }) {
             key={i}
             src={url}
             alt={`${name} — foto ${i + 1}`}
-            style={{ width: '100%', height: '220px', objectFit: 'cover', flexShrink: 0 }}
+            style={{ width: '100%', objectFit: 'cover', flexShrink: 0 }}
             loading={i === 0 ? 'eager' : 'lazy'}
           />
         ))}
@@ -289,12 +289,12 @@ export default function SpotBottomSheet() {
             aria-label="Cerrar"
             style={{
               position: 'absolute', top: '12px', right: '12px', zIndex: 2,
-              background: 'rgba(8,7,5,0.7)', border: 'none', borderRadius: '50%',
-              width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(255, 170, 0, 0.7)', border: 'none', borderRadius: '50%',
+              width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', color: 'var(--white)',
             }}
           >
-            <X size={16} />
+            <X size={23} strokeWidth={3} color="white" />
           </button>
         </div>
 
