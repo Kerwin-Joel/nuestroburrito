@@ -30,6 +30,7 @@ interface SpotDetail {
     rating?: number
     review_count?: number
     event_date: string | null
+    event_date_end?: string | null
 }
 
 interface Props {
@@ -218,11 +219,16 @@ export default function SpotDrawer({ stop, onClose }: Props) {
 
                                 {/* Fecha del evento */}
                                 {spot?.event_date && (
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', gap: '10px',
-                                        background: 'rgba(255,85,0,0.08)', border: '1px solid rgba(255,85,0,0.2)',
-                                        borderRadius: '12px', padding: '12px 14px',
-                                    }}>
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '10px',
+                                            background: 'rgba(255,85,0,0.08)', border: '1px solid rgba(255,85,0,0.2)',
+                                            borderRadius: '12px', padding: '12px 14px',
+                                        }}
+                                    >
                                         <span style={{ fontSize: '18px', flexShrink: 0 }}>📅</span>
                                         <div>
                                             <div style={{
@@ -230,18 +236,31 @@ export default function SpotDrawer({ stop, onClose }: Props) {
                                                 color: 'var(--orange)', letterSpacing: '1.5px',
                                                 textTransform: 'uppercase', marginBottom: '2px',
                                             }}>
-                                                Fecha del evento
+                                                {spot.event_date_end && spot.event_date_end !== spot.event_date
+                                                    ? 'Fechas del evento'
+                                                    : 'Fecha del evento'}
                                             </div>
                                             <div style={{
                                                 fontFamily: 'var(--font-body)', fontSize: '14px',
                                                 color: 'var(--white)', fontWeight: 600,
                                             }}>
-                                                {new Date(spot.event_date + 'T00:00:00').toLocaleDateString('es-PE', {
-                                                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-                                                })}
+                                                {(() => {
+                                                    const startStr = new Date(spot.event_date + 'T00:00:00').toLocaleDateString('es-PE', {
+                                                        weekday: 'long', day: 'numeric', month: 'long',
+                                                    })
+                                                    if (spot.event_date_end && spot.event_date_end !== spot.event_date) {
+                                                        const endStr = new Date(spot.event_date_end + 'T00:00:00').toLocaleDateString('es-PE', {
+                                                            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                                                        })
+                                                        return `${startStr} hasta ${endStr}`
+                                                    }
+                                                    return new Date(spot.event_date + 'T00:00:00').toLocaleDateString('es-PE', {
+                                                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                                                    })
+                                                })()}
                                             </div>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 )}
 
                                 {/* Descripción */}

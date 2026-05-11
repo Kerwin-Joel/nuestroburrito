@@ -18,6 +18,8 @@ export interface ItineraryStop {
   lng: number
   visited: boolean
   review?: StopReview
+  eventDate?: string | null
+  eventDateEnd?: string | null
 }
 
 export interface ItineraryPreferences {

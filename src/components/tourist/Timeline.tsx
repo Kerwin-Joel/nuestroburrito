@@ -210,6 +210,52 @@ export default function Timeline({ readOnly = false,
                   )}
                 </div>
 
+                {/* Event date badge — same style as SpotDrawer */}
+                {stop.eventDate && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      background: 'rgba(255,85,0,0.08)', border: '1px solid rgba(255,85,0,0.2)',
+                      borderRadius: '8px', padding: '8px 10px', marginBottom: '8px',
+                    }}
+                  >
+                    <span style={{ fontSize: '14px', flexShrink: 0 }}>📅</span>
+                    <div>
+                      <div style={{
+                        fontFamily: 'var(--font-mono)', fontSize: '9px', fontWeight: 700,
+                        color: 'var(--orange)', letterSpacing: '1.5px',
+                        textTransform: 'uppercase', marginBottom: '1px',
+                      }}>
+                        {stop.eventDateEnd && stop.eventDateEnd !== stop.eventDate
+                          ? 'Fechas del evento'
+                          : 'Fecha del evento'}
+                      </div>
+                      <div style={{
+                        fontFamily: 'var(--font-body)', fontSize: '12px',
+                        color: 'var(--white)', fontWeight: 600,
+                      }}>
+                        {(() => {
+                          const startStr = new Date(stop.eventDate + 'T00:00:00').toLocaleDateString('es-PE', {
+                            weekday: 'long', day: 'numeric', month: 'long',
+                          })
+                          if (stop.eventDateEnd && stop.eventDateEnd !== stop.eventDate) {
+                            const endStr = new Date(stop.eventDateEnd + 'T00:00:00').toLocaleDateString('es-PE', {
+                              weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                            })
+                            return `${startStr} hasta ${endStr}`
+                          }
+                          return new Date(stop.eventDate + 'T00:00:00').toLocaleDateString('es-PE', {
+                            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                          })
+                        })()}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 {stop.description && (
                   <p style={{
                     fontFamily: 'var(--font-body)', fontSize: '14px',

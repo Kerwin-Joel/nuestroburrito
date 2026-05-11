@@ -19,6 +19,8 @@ export interface AuthUser {
   id: string
   email: string
   profile: Profile
+  emailConfirmedAt?: string
+  appMetadata?: { provider?: string }
 }
 
 export interface LoginCredentials {

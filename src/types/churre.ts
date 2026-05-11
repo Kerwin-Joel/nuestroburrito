@@ -7,12 +7,19 @@ export interface ChurreProfile {
   bio: string
   avatarUrl: string
   avatarColor: string
-  university: 'UDEP' | 'UNP' | 'UCV' | null
+  university: 'UDEP' | 'UNP' | 'UCV' | 'Independiente' | null
   zones: string[]
   specialties: SpotCategory[]
   rating: number
   toursCount: number
   isVerified: boolean
+  phrase?: string
+  availableToday?: boolean
+  whatsapp?: string
+  pricePerDay?: number
+  pricePerTour?: number
+  galleryPhotos?: string[]
+  favoriteSpotIds?: string[]
 }
 
 export interface Review {
