@@ -154,25 +154,13 @@ const PrintCard = ({ entry, variant, qrSize = 190, width = 300, innerRef }: Prin
                             value={qrUrl}
                             size={qrSize}
                             bgColor="#faf8f6"
-                            fgColor="#1a1208"
+                            fgColor={variant === 'premium' ? '#FF5500' : '#1a1208'}
                             level="H"
                             imageSettings={{
                                 src: "/logo burrito.png",
-                                height: 34, width: 34, excavate: true,
+                                height: 30, width: 30, excavate: true,
                             }}
                         />
-                        {/* Finder corners naranjas en premium */}
-                        {variant === 'premium' && (
-                            <svg style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }} width={qrSize} height={qrSize} viewBox={`0 0 ${qrSize} ${qrSize}`}>
-                                {[{ x: 4, y: 4 }, { x: qrSize - 48, y: 4 }, { x: 4, y: qrSize - 48 }].map(({ x, y }, i) => (
-                                    <g key={i}>
-                                        <rect x={x} y={y} width="44" height="44" rx="6" fill="#FF5500" />
-                                        <rect x={x + 6} y={y + 6} width="32" height="32" rx="4" fill="#faf8f6" />
-                                        <rect x={x + 11} y={y + 11} width="22" height="22" rx="3" fill="#FF5500" />
-                                    </g>
-                                ))}
-                            </svg>
-                        )}
                     </div>
                 </div>
 

@@ -132,8 +132,8 @@ export default function VerifyPage() {
                         <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 800, color: 'var(--white)', letterSpacing: '-1px', margin: '0 0 8px' }}>
                             ¡Visita verificada!
                         </h2>
-                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: 'var(--muted)', margin: 0 }}>
-                            {spotName} marcado como visitado 🫏
+                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '16px', color: 'var(--muted)', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            {spotName} marcado como visitado <img src="/logo burrito.png" alt="Logo" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
                         </p>
                     </div>
                     <div style={{
@@ -168,7 +168,9 @@ export default function VerifyPage() {
             {state === 'no_itinerary' && (
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-                    <div style={{ fontSize: '64px' }}>🫏</div>
+                    <div style={{ width: '64px', height: '64px' }}>
+                        <img src="/logo burrito.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    </div>
                     <div>
                         <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 800, color: 'var(--white)', letterSpacing: '-1px', margin: '0 0 8px' }}>
                             Sin itinerario activo
