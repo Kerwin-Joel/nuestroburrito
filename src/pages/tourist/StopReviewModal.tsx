@@ -53,7 +53,7 @@ export default function StopReviewModal({ stop, onClose, onSave }: Props) {
                     {/* Panel */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        animate={{ opacity: 1, scale: .85, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 28 }}
                         style={{
