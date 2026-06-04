@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import {
   X, Star, Plus, ExternalLink, ChevronUp, Lightbulb,
-  Globe, MessageCircle, ChevronLeft, ChevronRight
+  Globe, MessageCircle, ChevronLeft, ChevronRight, Share2, Loader2
 } from 'lucide-react'
+import { shareSpot } from '../../lib/shareSpot'
 import { useSpotsStore } from '../../stores/useSpotsStore'
 import { useItineraryStore } from '../../stores/useItineraryStore'
 import { useUIStore } from '../../stores/useUIStore'
@@ -174,6 +175,8 @@ export default function SpotBottomSheet() {
   const { addStop } = useItineraryStore()
   const { addToast } = useUIStore()
   const sheetRef = useRef<HTMLDivElement>(null)
+  const [shareLoading, setShareLoading] = useState(false)
+  const [sharePulse, setSharePulse] = useState(false)
 
   useEffect(() => {
     if (!sheetRef.current) return
@@ -207,6 +210,29 @@ export default function SpotBottomSheet() {
     addStop(stop)
     addToast({ type: 'success', message: `${selectedSpot.name} añadido a tu día` })
     close()
+  }
+
+  const handleShare = async () => {
+    if (!selectedSpot || shareLoading) return
+    setShareLoading(true)
+    const result = await shareSpot({
+      id: selectedSpot.id,
+      name: selectedSpot.name,
+      localTip: selectedSpot.localTip,
+      category: selectedSpot.category,
+      photoUrl: photos[0] ?? selectedSpot.photoUrl,   // foto principal del spot
+    })
+    setShareLoading(false)
+    if (result === 'shared' || result === 'copied') {
+      // Animación de pulso de confirmación
+      setSharePulse(true)
+      setTimeout(() => setSharePulse(false), 600)
+    }
+    if (result === 'copied') {
+      addToast({ type: 'success', message: '🔗 Enlace copiado al portapapeles' })
+    } else if (result === 'unsupported') {
+      addToast({ type: 'error', message: 'No se pudo compartir en este dispositivo' })
+    }
   }
 
   if (!selectedSpot) return null
@@ -250,7 +276,7 @@ export default function SpotBottomSheet() {
           overflowY: 'auto',
         }}
       >
-        {/* Handle + Close + Category — sticky */}
+        {/* Handle + Share + Close — sticky, siempre visible */}
         <div style={{
           position: 'sticky',
           top: 0,
@@ -269,20 +295,47 @@ export default function SpotBottomSheet() {
           {/* Handle — centro */}
           <div style={{ width: '36px', height: '4px', background: 'var(--dim)', borderRadius: '2px' }} />
 
-          {/* Close — derecha */}
-          <button
-            onClick={close}
-            aria-label="Cerrar"
-            style={{
-              background: 'rgba(255,170,0,0.85)',
-              border: 'none', borderRadius: '50%',
-              width: '36px', height: '36px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer',
-            }}
-          >
-            <X size={20} strokeWidth={3} color="white" />
-          </button>
+          {/* Acciones rápidas — derecha */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+            {/* Botón Compartir — siempre visible, posición premium */}
+            <button
+              onClick={handleShare}
+              disabled={shareLoading}
+              aria-label="Compartir spot"
+              style={{
+                background: sharePulse ? 'rgba(255,85,0,0.18)' : 'var(--card2)',
+                border: `1.5px solid ${sharePulse ? 'var(--orange)' : 'var(--border)'}`,
+                borderRadius: '50%',
+                width: '36px', height: '36px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: shareLoading ? 'wait' : 'pointer',
+                transition: 'all 0.2s cubic-bezier(0.34,1.56,0.64,1)',
+                transform: sharePulse ? 'scale(1.15)' : 'scale(1)',
+                flexShrink: 0,
+              }}
+            >
+              {shareLoading
+                ? <Loader2 size={16} color="var(--orange)" className="animate-spin" />
+                : <Share2 size={16} color={sharePulse ? 'var(--orange)' : 'var(--muted)'} />
+              }
+            </button>
+
+            {/* Botón Cerrar */}
+            <button
+              onClick={close}
+              aria-label="Cerrar"
+              style={{
+                background: 'rgba(255,170,0,0.85)',
+                border: 'none', borderRadius: '50%',
+                width: '36px', height: '36px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <X size={20} strokeWidth={3} color="white" />
+            </button>
+          </div>
         </div>
 
         {/* Photo carousel */}
@@ -401,7 +454,7 @@ export default function SpotBottomSheet() {
           <SpotTiktokSection spot={selectedSpot} />
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
             {sheetExpanded && (
               <a
                 href={mapsUrl}

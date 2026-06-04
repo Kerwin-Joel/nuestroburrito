@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Map, List, X, Plus } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import MapView from '../../components/shared/MapView'
 import SpotCard from '../../components/tourist/SpotCard'
 import SpotBottomSheet from '../../components/tourist/SpotBottomSheet'
@@ -33,6 +33,7 @@ export default function ExplorarPage() {
   const { current, isSelectingSpot, setSelectingSpot, addStop } = useItineraryStore()
   const { addToast } = useUIStore()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const sortedSpots = [...filtered].sort((a, b) => {
     const dateA = a.eventDate ? new Date(a.eventDate + 'T00:00:00').getTime() : null
@@ -43,7 +44,27 @@ export default function ExplorarPage() {
     return 0
   })
 
+  const { spots } = useSpotsStore()
+
   useEffect(() => { load(true) }, [load])
+
+  // ── Deep-link: ?spot=<id> ──
+  // Abre automáticamente el BottomSheet del spot cuando se llega desde un link compartido.
+  // Espera a que los spots estén cargados antes de buscar.
+  useEffect(() => {
+    const spotId = searchParams.get('spot')
+    if (!spotId || spots.length === 0) return
+
+    const target = spots.find(s => s.id === spotId)
+    if (target) {
+      selectSpot(target)
+      // Limpiar el param de la URL para no re-abrir si el usuario cierra y navega
+      setSearchParams(prev => {
+        prev.delete('spot')
+        return prev
+      }, { replace: true })
+    }
+  }, [searchParams, spots, selectSpot, setSearchParams])
 
   const handleAddSpot = async (spot: Spot) => {
     if (!current) return

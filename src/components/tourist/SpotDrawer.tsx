@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MapPin, Clock, DollarSign, Star, ExternalLink, Tag, Gift, Percent, Zap, Upload, Camera, ChevronRight, Plus } from 'lucide-react'
+import { X, MapPin, Clock, DollarSign, Star, ExternalLink, Tag, Gift, Percent, Zap, Upload, Camera, ChevronRight, Plus, Share2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { shareSpot } from '../../lib/shareSpot'
+import { useUIStore } from '../../stores/useUIStore'
 import type { ItineraryStop } from '../../types/itinerary'
 
 interface SpotBenefit {
@@ -63,6 +65,8 @@ export default function SpotDrawer({ stop, onClose }: Props) {
     const [benefits, setBenefits] = useState<SpotBenefit[]>([])
     const [loading, setLoading] = useState(false)
     const [copied, setCopied] = useState<string | null>(null)
+    const [shareLoading, setShareLoading] = useState(false)
+    const { addToast } = useUIStore()
 
     useEffect(() => {
         console.log('spotId:', stop?.spotId)  // ← agrega esto temporalmente
@@ -86,6 +90,22 @@ export default function SpotDrawer({ stop, onClose }: Props) {
         navigator.clipboard.writeText(code)
         setCopied(code)
         setTimeout(() => setCopied(null), 2000)
+    }
+
+    const handleShare = async () => {
+        if (!stop || shareLoading) return
+        setShareLoading(true)
+        const result = await shareSpot({
+            id: stop.spotId,
+            name: stop.spotName,
+            localTip: spot?.local_tip ?? stop.localTip,
+        })
+        setShareLoading(false)
+        if (result === 'copied') {
+            addToast({ type: 'success', message: '🔗 Enlace copiado al portapapeles' })
+        } else if (result === 'unsupported') {
+            addToast({ type: 'error', message: 'No se pudo compartir en este dispositivo' })
+        }
     }
 
     const mapsUrl = spot
@@ -459,18 +479,46 @@ export default function SpotDrawer({ stop, onClose }: Props) {
                                                 {spot.address}
                                             </div>
                                         </div>
-                                        <a
-                                            href={mapsUrl} target="_blank" rel="noopener noreferrer"
-                                            style={{
-                                                display: 'inline-flex', alignItems: 'center', gap: '4px',
-                                                padding: '8px 12px', borderRadius: '8px',
-                                                background: 'var(--orange)', color: 'var(--bg)',
-                                                fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700,
-                                                textDecoration: 'none', flexShrink: 0,
-                                            }}
-                                        >
-                                            Ir <ExternalLink size={11} />
-                                        </a>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+                                            <a
+                                                href={mapsUrl} target="_blank" rel="noopener noreferrer"
+                                                style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                                    padding: '8px 12px', borderRadius: '8px',
+                                                    background: 'var(--orange)', color: 'var(--bg)',
+                                                    fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700,
+                                                    textDecoration: 'none',
+                                                }}
+                                            >
+                                                Ir <ExternalLink size={11} />
+                                            </a>
+                                            <button
+                                                onClick={handleShare}
+                                                disabled={shareLoading}
+                                                style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                                    padding: '8px 12px', borderRadius: '8px',
+                                                    background: 'var(--card)', border: '1px solid var(--border)',
+                                                    color: 'var(--muted)',
+                                                    fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600,
+                                                    cursor: shareLoading ? 'not-allowed' : 'pointer',
+                                                    transition: 'all 0.15s',
+                                                }}
+                                                onMouseEnter={e => {
+                                                    if (!shareLoading) {
+                                                        e.currentTarget.style.borderColor = 'var(--orange)'
+                                                        e.currentTarget.style.color = 'var(--orange)'
+                                                    }
+                                                }}
+                                                onMouseLeave={e => {
+                                                    e.currentTarget.style.borderColor = 'var(--border)'
+                                                    e.currentTarget.style.color = 'var(--muted)'
+                                                }}
+                                            >
+                                                <Share2 size={11} />
+                                                {shareLoading ? '...' : 'Compartir'}
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
 
