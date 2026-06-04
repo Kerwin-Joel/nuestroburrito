@@ -30,7 +30,9 @@ export const authService = {
     const authUser: AuthUser = {
       id: data.user.id,
       email: data.user.email!,
-      profile: profile as Profile
+      profile: profile as Profile,
+      emailConfirmedAt: data.user.email_confirmed_at,
+      appMetadata: data.user.app_metadata,
     }
 
     return authUser
@@ -56,31 +58,28 @@ export const authService = {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
-      options: {
-        data: {
-          full_name: data.name,
-          role: 'tourist'
-        }
-      }
+      options: { data: { full_name: data.name, role: 'tourist' } }
     })
 
     if (authError) throw authError
     if (!authData.user) throw new Error('Error al crear usuario')
 
-    // Profile creation is usually handled by a Supabase trigger, 
-    // but we'll fetch it here to confirm
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', authData.user.id)
-      .single()
-
-    if (profileError) throw profileError
+    // ✅ Construir el perfil localmente sin hacer SELECT
+    const profile: Profile = {
+      id: authData.user.id,
+      name: data.name,
+      role: 'tourist',
+      status: 'active',
+      avatarUrl: null,
+      createdAt: new Date().toISOString()
+    }
 
     return {
       id: authData.user.id,
       email: authData.user.email!,
-      profile: profile as Profile
+      emailConfirmedAt: authData.user.email_confirmed_at,
+      appMetadata: authData.user.app_metadata,
+      profile
     }
   },
 
@@ -168,7 +167,9 @@ export const authService = {
     return {
       id: session.user.id,
       email: session.user.email!,
-      profile: profile as Profile
+      profile: profile as Profile,
+      emailConfirmedAt: session.user.email_confirmed_at,
+      appMetadata: session.user.app_metadata,
     }
   },
 
@@ -177,5 +178,26 @@ export const authService = {
       redirectTo: `${window.location.origin}/reset-password`,
     })
     if (error) throw error
+  },
+
+  refreshSession: async (): Promise<AuthUser | null> => {
+    const { data, error } = await supabase.auth.refreshSession()
+    if (error || !data.session) return null
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.session.user.id)
+      .single()
+
+    if (!profile) return null
+
+    return {
+      id: data.session.user.id,
+      email: data.session.user.email!,
+      emailConfirmedAt: data.session.user.email_confirmed_at,
+      appMetadata: data.session.user.app_metadata,
+      profile: profile as Profile
+    }
   },
 }

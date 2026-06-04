@@ -24,6 +24,7 @@ interface AuthActions {
   registerTourist: (data: RegisterTouristData) => Promise<void>
   registerChurre: (data: RegisterChurreData) => Promise<void>
   resetPassword: (email: string) => Promise<void>
+  refreshSession: () => Promise<void>
   clearError: () => void
 }
 let isLoggingOut = false
@@ -152,6 +153,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           set({ error: err.message, isLoading: false })
           throw err
         }
+      },
+      refreshSession: async () => {
+        const user = await authService.refreshSession()
+        if (user) set({ user, isAuthenticated: true })
       },
 
       clearError: () => set({ error: null }),

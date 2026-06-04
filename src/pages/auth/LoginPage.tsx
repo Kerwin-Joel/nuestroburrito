@@ -1,22 +1,13 @@
 import { useState, type ReactNode } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, ChevronRight } from 'lucide-react'
+import { ChevronRight, Loader2 } from 'lucide-react'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { UserRole, LoginCredentials } from '../../types/auth'
-
-const loginSchema = z.object({
-  email: z.string().email('Email no válido'),
-  password: z.string().min(1, 'La contraseña es requerida'),
-})
+import { UserRole } from '../../types/auth'
 
 const ROLES: { role: UserRole; icon: ReactNode; title: string; sub: string; color: string }[] = [
   {
     role: 'tourist',
-    icon: <span style={{ fontSize: '28px', lineHeight: 1 }}> 🏇</span>,
+    icon: <span style={{ fontSize: '28px', lineHeight: 1 }}>🏇</span>,
     title: 'Turista',
     sub: 'Explora Piura como local',
     color: '#FF5500',
@@ -37,24 +28,27 @@ const ROLES: { role: UserRole; icon: ReactNode; title: string; sub: string; colo
   },
 ]
 
+// SVG oficial de Google
+const GoogleIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+  </svg>
+)
+
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null)
-  const [showPassword, setShowPassword] = useState(false)
-  const { login, loginWithGoogle, error, clearError, isLoading } = useAuthStore()
-  const navigate = useNavigate()
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const { loginWithGoogle, error, clearError } = useAuthStore()
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<LoginCredentials>({
-    resolver: zodResolver(loginSchema),
-  })
-
-  const onSubmit = async (data: LoginCredentials) => {
+  const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true)
     try {
-      const role = await login(data)
-      if (role === 'tourist') navigate('/app')
-      else if (role === 'churre') navigate('/churres')
-      else if (role === 'admin') navigate('/admin/dashboard')
+      await loginWithGoogle()
     } catch {
-      // Error handled by store
+      setIsGoogleLoading(false)
     }
   }
 
@@ -144,9 +138,9 @@ export default function LoginPage() {
             </div>
           </motion.div>
         ) : (
-          /* ── LOGIN FORM ── */
+          /* ── GOOGLE LOGIN ── */
           <motion.div
-            key="login-form"
+            key="google-login"
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -14 }}
@@ -188,143 +182,90 @@ export default function LoginPage() {
               {selectedRole === 'churre' && 'Hola, Churre 🤝'}
               {selectedRole === 'admin' && 'Acceso Admin 🔐'}
             </h2>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--muted)', marginBottom: '28px' }}>
-              {selectedRole === 'tourist' && '¿Listo para explorar Piura?'}
-              {selectedRole === 'churre' && 'Accede a tu panel de guía local'}
-              {selectedRole === 'admin' && 'Panel de administración Burrito'}
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--muted)', marginBottom: '36px' }}>
+              {selectedRole === 'tourist' && 'Inicia sesión con tu cuenta de Google para explorar Piura'}
+              {selectedRole === 'churre' && 'Accede a tu panel de guía local con Google'}
+              {selectedRole === 'admin' && 'Acceso exclusivo para el equipo de Burrito'}
             </p>
 
-            <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Email */}
-              <div>
-                <label style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, color: 'var(--white)', marginBottom: '7px' }}>
-                  Email
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Mail size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }} />
-                  <input {...register('email')} type="email" placeholder="tu@email.com" className="auth-input" />
-                </div>
-                {errors.email && <p className="error-msg">{errors.email.message}</p>}
-              </div>
-
-              {/* Password */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
-                  <label style={{ fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, color: 'var(--white)' }}>
-                    Contraseña
-                  </label>
-                  <Link to="/forgot-password" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--orange)', textDecoration: 'none' }}>
-                    ¿Olvidaste tu contraseña?
-                  </Link>
-                </div>
-                <div style={{ position: 'relative' }}>
-                  <Lock size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }} />
-                  <input {...register('password')} type={showPassword ? 'text' : 'password'} placeholder="••••••••" className="auth-input" />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(s => !s)}
-                    style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', padding: 0, display: 'flex' }}
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-                {errors.password && <p className="error-msg">{errors.password.message}</p>}
-              </div>
-
-              {/* Error */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ x: -8, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    style={{
-                      background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
-                      borderRadius: '12px', padding: '10px 14px', color: '#ef4444',
-                      fontSize: '13px', fontFamily: 'var(--font-body)', display: 'flex', alignItems: 'center', gap: '8px',
-                    }}
-                  >
-                    ❌ {error}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Submit */}
-              <motion.button
-                type="submit"
-                disabled={isLoading}
-                whileTap={{ scale: 0.98 }}
-                className="btn btn-primary"
-                style={{ width: '100%', height: '50px', fontSize: '15px', justifyContent: 'center', borderRadius: '14px', marginTop: '4px' }}
-              >
-                {isLoading ? (
-                  <><Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} /> Ingresando...</>
-                ) : (
-                  <>Iniciar sesión <ArrowRight size={16} style={{ marginLeft: '8px' }} /></>
-                )}
-              </motion.button>
-
-              {/* Divider */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--muted)' }}>o continúa con</span>
-                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-              </div>
-
-              {/* Google */}
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.98 }}
-                onClick={() => loginWithGoogle()}
-                style={{
-                  width: '100%', height: '50px', background: '#fff', border: '1.5px solid #e5e7eb',
-                  borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                  fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, color: '#111',
-                  cursor: 'pointer', transition: 'all 0.2s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-              >
-                <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: '16px', height: '16px' }} />
-                Continuar con Google
-              </motion.button>
-            </form>
-
-            {/* Register link */}
-            <div style={{ marginTop: '24px', textAlign: 'center' }}>
-              {selectedRole !== 'admin' ? (
-                <>
-                  <p style={{ fontFamily: 'var(--font-body)', color: 'var(--muted)', fontSize: '13px', marginBottom: '10px' }}>
-                    ¿No tienes cuenta?
-                  </p>
-                  <Link
-                    to={selectedRole === 'tourist' ? '/register' : '/register/churre'}
-                    className="btn btn-ghost"
-                    style={{ width: '100%', padding: '11px', borderRadius: '14px' }}
-                  >
-                    Crear cuenta gratis
-                  </Link>
-                </>
-              ) : (
-                <p style={{ fontFamily: 'var(--font-body)', color: 'var(--muted)', fontSize: '13px' }}>
-                  Contacta al equipo de Burrito para acceso admin
-                </p>
+            {/* Error */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ x: -8, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  style={{
+                    background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
+                    borderRadius: '12px', padding: '10px 14px', color: '#ef4444',
+                    fontSize: '13px', fontFamily: 'var(--font-body)', display: 'flex', alignItems: 'center', gap: '8px',
+                    marginBottom: '16px',
+                  }}
+                >
+                  ❌ {error}
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
+
+            {/* Google Button */}
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.98 }}
+              disabled={isGoogleLoading}
+              onClick={handleGoogleLogin}
+              style={{
+                width: '100%', height: '56px',
+                background: '#fff',
+                border: '1.5px solid #e5e7eb',
+                borderRadius: '16px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+                fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 600, color: '#111',
+                cursor: isGoogleLoading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s',
+                opacity: isGoogleLoading ? 0.7 : 1,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              }}
+              onMouseEnter={e => {
+                if (!isGoogleLoading) {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.14)'
+                }
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'
+              }}
+            >
+              {isGoogleLoading ? (
+                <Loader2 size={20} className="animate-spin" style={{ color: '#666' }} />
+              ) : (
+                <GoogleIcon />
+              )}
+              {isGoogleLoading ? 'Conectando...' : 'Continuar con Google'}
+            </motion.button>
+
+            {/* Info text */}
+            <p style={{
+              fontFamily: 'var(--font-body)', fontSize: '12px',
+              color: 'var(--muted)', textAlign: 'center', marginTop: '20px', lineHeight: 1.6,
+            }}>
+              Al continuar aceptas nuestros{' '}
+              <span style={{ color: 'var(--orange)', cursor: 'pointer' }}>Términos de servicio</span>
+              {' '}y{' '}
+              <span style={{ color: 'var(--orange)', cursor: 'pointer' }}>Política de privacidad</span>
+            </p>
+
+            {/* Register link for non-admin */}
+            {selectedRole !== 'admin' && (
+              <div style={{ marginTop: '24px', textAlign: 'center' }}>
+                <p style={{ fontFamily: 'var(--font-body)', color: 'var(--muted)', fontSize: '13px' }}>
+                  ¿Primera vez en Burrito? Simplemente inicia sesión con Google y te registramos automáticamente 🚀
+                </p>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  )
-}
-
-function _DevRow({ role, email, pass, onClick }: { role: string; email: string; pass: string; onClick: () => void }) {
-  return (
-    <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '7px 10px', borderRadius: '8px', cursor: 'pointer' }}>
-      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', fontWeight: 700, background: 'rgba(255,85,0,0.15)', color: 'var(--orange)', padding: '2px 6px', borderRadius: '4px' }}>
-        {role}
-      </span>
-      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--muted)' }}>{email} · {pass}</span>
     </div>
   )
 }
