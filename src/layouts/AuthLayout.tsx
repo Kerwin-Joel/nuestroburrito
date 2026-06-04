@@ -101,7 +101,7 @@ export default function AuthLayout() {
         {/* Mobile-only top bar */}
         <div className="auth-mobile-topbar">
           <Link to="/" className="auth-mobile-logo">
-            <img src="/imagotipo.png" alt="Burrito" style={{ height: 'auto', width: '30vw' }} />
+            <img src="/imagotipo.png" alt="Burrito" style={{ height: 'auto', width: '40vw' }} />
           </Link>
         </div>
 
