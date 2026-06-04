@@ -14,6 +14,12 @@ const BLOBS = [
   { size: 140, top: '40%', left: '55%', opacity: 0.05 },
 ]
 
+const MOBILE_FEATURES = [
+  { icon: '⚡', text: '60 seg' },
+  { icon: '📍', text: 'Spots locales' },
+  { icon: '🤝', text: 'Guías reales' },
+]
+
 export default function AuthLayout() {
   const { isAuthenticated, user, isLoading } = useAuthStore()
 
@@ -29,7 +35,7 @@ export default function AuthLayout() {
 
   return (
     <div className="auth-root">
-      {/* ── LEFT PANEL (desktop) ── */}
+      {/* ── LEFT PANEL (desktop + tablet) ── */}
       <div className="auth-left">
         {/* Blobs decorativos */}
         {BLOBS.map((b, i) => (
@@ -103,8 +109,31 @@ export default function AuthLayout() {
         {/* Mobile header */}
         <div className="auth-mobile-header">
           <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/imagotipo.png" alt="Burrito" style={{ height: '15vw', width: 'auto' }} />
+            <img src="/imagotipo.png" alt="Burrito" style={{ height: '36px', width: 'auto' }} />
+            <span style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 800,
+              fontSize: '22px',
+              letterSpacing: '-0.5px',
+              color: 'var(--white)',
+            }}>burri<span style={{ color: 'var(--orange)' }}>to</span></span>
           </Link>
+        </div>
+
+        {/* Mobile features strip */}
+        <div className="auth-mobile-strip">
+          {MOBILE_FEATURES.map((f, i) => (
+            <motion.div
+              key={i}
+              className="auth-mobile-chip"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + i * 0.08 }}
+            >
+              <span>{f.icon}</span>
+              <span>{f.text}</span>
+            </motion.div>
+          ))}
         </div>
 
         {/* Decoration ring (mobile) */}
@@ -230,8 +259,29 @@ export default function AuthLayout() {
         .auth-mobile-header {
           display: none;
           width: 100%;
-          max-width: 420px;
-          padding-bottom: 28px;
+          max-width: 440px;
+          padding-bottom: 20px;
+        }
+        .auth-mobile-strip {
+          display: none;
+          gap: 8px;
+          width: 100%;
+          max-width: 440px;
+          padding-bottom: 24px;
+        }
+        .auth-mobile-chip {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 100px;
+          padding: 6px 14px;
+          font-family: var(--font-body);
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--muted);
+          white-space: nowrap;
         }
         .auth-mobile-ring {
           display: none;
@@ -285,19 +335,64 @@ export default function AuthLayout() {
           to   { transform: rotate(360deg); }
         }
 
-        /* ── RESPONSIVE ── */
+        /* ── TABLET (900px–1100px): left panel shrinks but stays ── */
+        @media (max-width: 1100px) and (min-width: 901px) {
+          .auth-left {
+            width: 38%;
+            padding: 40px 36px 36px;
+          }
+          .auth-headline {
+            font-size: clamp(36px, 3.8vw, 56px);
+          }
+          .auth-testimonial {
+            max-width: 100%;
+          }
+        }
+
+        /* ── MOBILE (<= 900px): hide left, show mobile header ── */
         @media (max-width: 900px) {
           .auth-left { display: none; }
-          .auth-mobile-header { display: flex; }
+          .auth-mobile-header {
+            display: flex;
+            align-items: center;
+          }
+          .auth-mobile-strip {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          .auth-mobile-strip::-webkit-scrollbar { display: none; }
           .auth-mobile-ring { display: block; }
           .auth-right {
             justify-content: flex-start;
-            padding-top: 32px;
+            padding-top: 28px;
+            min-height: 100dvh;
           }
         }
+
+        /* ── SMALL MOBILE (<= 480px) ── */
         @media (max-width: 480px) {
-          .auth-right { padding: 24px 16px 80px; }
-          .auth-form-wrapper { max-width: 100%; }
+          .auth-right {
+            padding: 20px 16px 80px;
+          }
+          .auth-form-wrapper {
+            max-width: 100%;
+          }
+          .auth-mobile-header {
+            padding-bottom: 16px;
+          }
+        }
+
+        /* ── VERY SMALL (<= 360px) ── */
+        @media (max-width: 360px) {
+          .auth-right {
+            padding: 16px 12px 80px;
+          }
+          .auth-mobile-chip {
+            font-size: 11px;
+            padding: 5px 10px;
+          }
         }
       `}</style>
     </div>
