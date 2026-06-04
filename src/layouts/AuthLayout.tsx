@@ -101,7 +101,7 @@ export default function AuthLayout() {
         {/* Mobile-only top bar */}
         <div className="auth-mobile-topbar">
           <Link to="/" className="auth-mobile-logo">
-            <img src="/imagotipo.png" alt="Burrito" style={{ height: '32px', width: 'auto' }} />
+            <img src="/imagotipo.png" alt="Burrito" style={{ height: '15vw', width: 'auto' }} />
           </Link>
         </div>
 
@@ -232,12 +232,13 @@ export default function AuthLayout() {
         }
         .auth-right-glow {
           position: absolute;
-          top: -120px;
-          right: -120px;
+          top: -200px;
+          left: 50%;
+          transform: translateX(-50%);
           width: 400px;
           height: 400px;
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(255,85,0,0.39) 0%, transparent 65%);
+          background: radial-gradient(circle, rgba(255,85,0,0.35) 0%, transparent 65%);
           pointer-events: none;
           z-index: 0;
         }
