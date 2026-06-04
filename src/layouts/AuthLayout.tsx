@@ -14,12 +14,6 @@ const BLOBS = [
   { size: 140, top: '40%', left: '55%', opacity: 0.05 },
 ]
 
-const MOBILE_FEATURES = [
-  { icon: '⚡', text: '60 seg' },
-  { icon: '📍', text: 'Spots locales' },
-  { icon: '🤝', text: 'Guías reales' },
-]
-
 export default function AuthLayout() {
   const { isAuthenticated, user, isLoading } = useAuthStore()
 
@@ -35,9 +29,9 @@ export default function AuthLayout() {
 
   return (
     <div className="auth-root">
+
       {/* ── LEFT PANEL (desktop + tablet) ── */}
       <div className="auth-left">
-        {/* Blobs decorativos */}
         {BLOBS.map((b, i) => (
           <div key={i} className="auth-blob" style={{
             width: b.size, height: b.size,
@@ -47,20 +41,17 @@ export default function AuthLayout() {
           }} />
         ))}
 
-        {/* Logo */}
         <Link to="/" className="auth-logo-link">
           <img src="/imagotipo.png" alt="Burrito" style={{ height: '42px', width: 'auto' }} />
           <span className="auth-logo-text">burri<span style={{ color: 'var(--orange)' }}>to</span></span>
         </Link>
 
-        {/* Hero content */}
         <div className="auth-left-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Burrito visual */}
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -69,10 +60,8 @@ export default function AuthLayout() {
               <img src="/imagotipo.png" alt="Burrito" style={{ height: '120px', width: 'auto', filter: 'drop-shadow(0 20px 40px rgba(255,85,0,0.3))' }} />
             </motion.div>
 
-            <h1 className="auth-headline">
-              Piura de<br />verdad.
-            </h1>
-            <div style={{ width: '36px', height: '4px', background: 'var(--orange)', margin: '28px 0' }} />
+            <h1 className="auth-headline">Piura de<br />verdad.</h1>
+            <div style={{ width: '36px', height: '4px', background: 'var(--orange)', margin: '24px 0' }} />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {STATS.map(({ value, label }, i) => (
@@ -91,7 +80,6 @@ export default function AuthLayout() {
           </motion.div>
         </div>
 
-        {/* Testimonial */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -104,61 +92,45 @@ export default function AuthLayout() {
         </motion.div>
       </div>
 
-      {/* ── RIGHT PANEL (form) ── */}
+      {/* ── RIGHT PANEL ── */}
       <div className="auth-right">
-        {/* Mobile header */}
-        <div className="auth-mobile-header">
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/imagotipo.png" alt="Burrito" style={{ height: '36px', width: 'auto' }} />
-            <span style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 800,
-              fontSize: '22px',
-              letterSpacing: '-0.5px',
-              color: 'var(--white)',
-            }}>burri<span style={{ color: 'var(--orange)' }}>to</span></span>
+
+        {/* Subtle background glow — decorativo, no distrae */}
+        <div className="auth-right-glow" />
+
+        {/* Mobile-only top bar */}
+        <div className="auth-mobile-topbar">
+          <Link to="/" className="auth-mobile-logo">
+            <img src="/imagotipo.png" alt="Burrito" style={{ height: '32px', width: 'auto' }} />
           </Link>
         </div>
 
-        {/* Mobile features strip */}
-        <div className="auth-mobile-strip">
-          {MOBILE_FEATURES.map((f, i) => (
-            <motion.div
-              key={i}
-              className="auth-mobile-chip"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.08 }}
-            >
-              <span>{f.icon}</span>
-              <span>{f.text}</span>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Decoration ring (mobile) */}
-        <div className="auth-mobile-ring" />
-
+        {/* Centered form */}
         <div className="auth-form-wrapper">
           <Outlet />
         </div>
+
       </div>
 
       <style>{`
-        /* ── Root layout ── */
+        /* ══════════════════════════════
+           ROOT
+        ══════════════════════════════ */
         .auth-root {
           min-height: 100vh;
+          min-height: 100dvh;
           display: flex;
           flex-direction: row;
           background: var(--bg);
           overflow-x: hidden;
-          position: relative;
         }
 
-        /* ── LEFT PANEL ── */
+        /* ══════════════════════════════
+           LEFT PANEL
+        ══════════════════════════════ */
         .auth-left {
           width: 44%;
-          max-width: 560px;
+          max-width: 540px;
           flex-shrink: 0;
           background: var(--card);
           border-right: 1px solid var(--border);
@@ -227,7 +199,6 @@ export default function AuthLayout() {
           padding: 20px 22px;
           position: relative;
           z-index: 2;
-          max-width: 320px;
         }
         .auth-testimonial-text {
           font-family: var(--font-body);
@@ -244,64 +215,52 @@ export default function AuthLayout() {
           margin: 0;
         }
 
-        /* ── RIGHT PANEL ── */
+        /* ══════════════════════════════
+           RIGHT PANEL
+        ══════════════════════════════ */
         .auth-right {
           flex: 1;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 40px 24px 60px;
-          position: relative;
-          overflow-y: auto;
           min-height: 100vh;
+          min-height: 100dvh;
+          padding: 40px 32px;
+          position: relative;
+          overflow-x: hidden;
         }
-        .auth-mobile-header {
-          display: none;
-          width: 100%;
-          max-width: 440px;
-          padding-bottom: 20px;
-        }
-        .auth-mobile-strip {
-          display: none;
-          gap: 8px;
-          width: 100%;
-          max-width: 440px;
-          padding-bottom: 24px;
-        }
-        .auth-mobile-chip {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: 100px;
-          padding: 6px 14px;
-          font-family: var(--font-body);
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--muted);
-          white-space: nowrap;
-        }
-        .auth-mobile-ring {
-          display: none;
+        .auth-right-glow {
           position: absolute;
-          top: -100px;
-          right: -100px;
-          width: 280px;
-          height: 280px;
+          top: -120px;
+          right: -120px;
+          width: 400px;
+          height: 400px;
           border-radius: 50%;
-          border: 1px solid rgba(255,85,0,0.12);
+          background: radial-gradient(circle, rgba(255,85,0,0.39) 0%, transparent 65%);
           pointer-events: none;
+          z-index: 0;
         }
         .auth-form-wrapper {
           width: 100%;
-          max-width: 420px;
+          max-width: 400px;
           position: relative;
-          z-index: 2;
+          z-index: 1;
         }
 
-        /* ── Auth inputs (theme-aware) ── */
+        .auth-mobile-logo {
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: var(--font-display);
+          font-weight: 800;
+          font-size: 20px;
+          letter-spacing: -0.5px;
+          color: var(--white);
+        }
+
+        /* ── Auth inputs ── */
         .auth-input {
           width: 100%;
           background: var(--card2);
@@ -335,63 +294,51 @@ export default function AuthLayout() {
           to   { transform: rotate(360deg); }
         }
 
-        /* ── TABLET (900px–1100px): left panel shrinks but stays ── */
+        /* ══════════════════════════════
+           TABLET  901–1100px
+        ══════════════════════════════ */
         @media (max-width: 1100px) and (min-width: 901px) {
           .auth-left {
-            width: 38%;
+            width: 40%;
             padding: 40px 36px 36px;
           }
           .auth-headline {
-            font-size: clamp(36px, 3.8vw, 56px);
-          }
-          .auth-testimonial {
-            max-width: 100%;
+            font-size: clamp(36px, 3.8vw, 54px);
           }
         }
 
-        /* ── MOBILE (<= 900px): hide left, show mobile header ── */
+        /* ══════════════════════════════
+           MOBILE  ≤ 900px
+        ══════════════════════════════ */
         @media (max-width: 900px) {
           .auth-left { display: none; }
-          .auth-mobile-header {
+
+          .auth-mobile-topbar {
             display: flex;
-            align-items: center;
+            position: relative;
+            top: -7vh;
+            
           }
-          .auth-mobile-strip {
-            display: flex;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-          }
-          .auth-mobile-strip::-webkit-scrollbar { display: none; }
-          .auth-mobile-ring { display: block; }
+
           .auth-right {
-            justify-content: flex-start;
-            padding-top: 28px;
-            min-height: 100dvh;
+            justify-content: center;
+            padding: 80px 24px 40px; /* 80px top = topbar height */
+          }
+          .auth-form-wrapper {
+            max-width: 440px;
+            width: 100%;
           }
         }
 
-        /* ── SMALL MOBILE (<= 480px) ── */
+        /* ══════════════════════════════
+           SMALL MOBILE  ≤ 480px
+        ══════════════════════════════ */
         @media (max-width: 480px) {
           .auth-right {
-            padding: 20px 16px 80px;
+            padding: 72px 16px 32px;
           }
           .auth-form-wrapper {
             max-width: 100%;
-          }
-          .auth-mobile-header {
-            padding-bottom: 16px;
-          }
-        }
-
-        /* ── VERY SMALL (<= 360px) ── */
-        @media (max-width: 360px) {
-          .auth-right {
-            padding: 16px 12px 80px;
-          }
-          .auth-mobile-chip {
-            font-size: 11px;
-            padding: 5px 10px;
           }
         }
       `}</style>
