@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { X, Upload, MapPin, Clock, Camera, Star, DollarSign, ChevronRight, Plus, Percent, Gift, Zap, Globe, MessageCircle, Trash2 } from 'lucide-react'
 import { createPortal } from 'react-dom'
-import { CATEGORY_LABELS } from '../../lib/constants'
+import { categoriesService, type Category } from '../../services/categories'
 import { supabase } from '../../lib/supabase'
 import type { SpotSocialLinks } from '../../types/spot'
 
@@ -116,6 +116,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
   const [newBenefit, setNewBenefit] = useState<Partial<Benefit>>({ type: 'discount', active: true })
   const [socialLinks, setSocialLinks] = useState<SpotSocialLinks>({})
   const [saving, setSaving] = useState(false)
+  const [dynamicCategories, setDynamicCategories] = useState<Category[]>([])
   const [spotFolder, setSpotFolder] = useState<string>('')
   // Estado local para price_range y category — independiente del form
   const [selectedPrice, setSelectedPrice] = useState<PriceRange | undefined>(undefined)
@@ -134,6 +135,13 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
       .replace(/\s+/g, '-')            // espacios → guiones
       .slice(0, 40)                    // máximo 40 chars
   }
+
+  // Carga categorías desde Supabase cada vez que abre el modal
+  useEffect(() => {
+    categoriesService.getAll()
+      .then(setDynamicCategories)
+      .catch(() => {}) // silencia errores si la tabla no existe aún
+  }, [isOpen])
 
   useEffect(() => {
     if (!isOpen) return
@@ -370,11 +378,11 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                 </Field>
                 <Field label="Categoría" error={errors.category?.message}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                    {Object.entries(CATEGORY_LABELS).map(([id, cat]) => (
-                      <button key={id} type="button" onClick={() => handleCategorySelect(id)}
-                        style={{ padding: '10px 6px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: selectedCategory === id ? 'rgba(255,85,0,0.12)' : 'var(--card2)', outline: selectedCategory === id ? '1.5px solid rgba(255,85,0,0.6)' : '1.5px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.15s' }}>
-                        <span style={{ fontSize: '20px' }}>{(cat as any).emoji}</span>
-                        <span style={{ fontFamily: 'var(--font-body)', fontSize: '10px', fontWeight: 600, color: selectedCategory === id ? 'var(--orange)' : 'var(--muted)' }}>{(cat as any).label}</span>
+                    {dynamicCategories.map((cat) => (
+                      <button key={cat.id} type="button" onClick={() => handleCategorySelect(cat.id)}
+                        style={{ padding: '10px 6px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: selectedCategory === cat.id ? 'rgba(255,85,0,0.12)' : 'var(--card2)', outline: selectedCategory === cat.id ? '1.5px solid rgba(255,85,0,0.6)' : '1.5px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.15s' }}>
+                        <span style={{ fontSize: '20px' }}>{cat.emoji}</span>
+                        <span style={{ fontFamily: 'var(--font-body)', fontSize: '10px', fontWeight: 600, color: selectedCategory === cat.id ? 'var(--orange)' : 'var(--muted)' }}>{cat.label}</span>
                       </button>
                     ))}
                   </div>
