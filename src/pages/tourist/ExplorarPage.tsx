@@ -11,20 +11,13 @@ import { useSpotsStore } from '../../stores/useSpotsStore'
 import { useItineraryStore } from '../../stores/useItineraryStore'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useUIStore } from '../../stores/useUIStore'
-import { CATEGORY_LABELS } from '../../lib/constants'
+import { categoriesService } from '../../services/categories'
 import type { SpotCategory } from '../../types/spot'
 import type { Spot } from '../../types/spot'
 import type { ItineraryStop } from '../../types/itinerary'
 import { itinerariesService } from '../../services/itineraries'
 
-const CATEGORIES = [
-  { id: null, label: 'Todos', emoji: '✨' },
-  ...Object.entries(CATEGORY_LABELS).map(([id, c]) => ({
-    id: id as SpotCategory,
-    label: (c as any).label,
-    emoji: (c as any).emoji,
-  })),
-]
+// CATEGORIES se construye dinámicamente desde Supabase (ver useEffect abajo)
 
 export default function ExplorarPage() {
   const { load, filtered, setCategory, activeCategory, selectSpot, getDistance, loading } = useSpots()
@@ -34,6 +27,18 @@ export default function ExplorarPage() {
   const { addToast } = useUIStore()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [dbCategories, setDbCategories] = useState<{ id: SpotCategory | null; label: string; emoji: string }[]>([
+    { id: null, label: 'Todos', emoji: '✨' },
+  ])
+
+  useEffect(() => {
+    categoriesService.getAll().then(cats => {
+      setDbCategories([
+        { id: null, label: 'Todos', emoji: '✨' },
+        ...cats.map(c => ({ id: c.id as SpotCategory, label: c.label, emoji: c.emoji })),
+      ])
+    }).catch(() => {})
+  }, [])
 
   const sortedSpots = [...filtered].sort((a, b) => {
     const dateA = a.eventDate ? new Date(a.eventDate + 'T00:00:00').getTime() : null
@@ -185,7 +190,7 @@ export default function ExplorarPage() {
               scrollbarWidth: 'none', msOverflowStyle: 'none',
               paddingBottom: '2px',
             }}>
-              {CATEGORIES.map(({ id, label, emoji }) => {
+              {dbCategories.map(({ id, label, emoji }) => {
                 const isActive = activeCategory === id
                 return (
                   <button
