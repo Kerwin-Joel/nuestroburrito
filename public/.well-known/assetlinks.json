@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.burrito.piura",
+      "sha256_cert_fingerprints": [
+        "F8:5C:E9:01:6B:96:28:ED:91:9D:8C:5B:D1:B1:AC:FB:F2:97:9B:88:C9:09:B7:80:CF:F3:4D:7C:AD:1D:A7:47"
+      ]
+    }
+  }
+]
