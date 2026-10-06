@@ -34,32 +34,25 @@ export default function PerfilTouristPage() {
   const { setCurrent, clear, current } = useItineraryStore()
   const navigate = useNavigate()
 
-  const { itineraries, lastFetchAt, setItineraries, removeItinerary } = useProfileStore()
+  const { itineraries, setItineraries, removeItinerary } = useProfileStore()
   const [loading, setLoading] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [visitedCount, setVisitedCount] = useState<number | null>(null)
 
-  const CACHE_TTL = 5 * 1000 // 5 segundos
   const { reminders, load: loadReminders, cancel } = useReminders(
     user?.id || 'tourist-demo'
   )
 
   const userIdRef = useRef(user?.id)
-  const lastFetchAtRef = useRef(lastFetchAt)
   const itinerariesRef = useRef(itineraries)
 
   useEffect(() => { userIdRef.current = user?.id }, [user?.id])
-  useEffect(() => { lastFetchAtRef.current = lastFetchAt }, [lastFetchAt])
   useEffect(() => { itinerariesRef.current = itineraries }, [itineraries])
 
-  // Carga itinerarios desde Supabase
-  // DESPUÉS — usa una ref para acceder a itineraries sin ponerlo en deps:
-  useEffect(() => { itinerariesRef.current = itineraries }, [itineraries])
-
-  const loadItineraries = useCallback(async (force = false) => {
+  // itinerariesService.getByUser ya tiene su propia caché de sesión (ver
+  // itineraries.ts) — acá solo queda pedirlo, sin manejar TTL a mano.
+  const loadItineraries = useCallback(async () => {
     if (!userIdRef.current) return
-    const isStale = !lastFetchAtRef.current || (Date.now() - lastFetchAtRef.current) > CACHE_TTL
-    if (!force && !isStale && itinerariesRef.current.length > 0) return
     if (itinerariesRef.current.length === 0) setLoading(true)
     try {
       const data = await itinerariesService.getByUser(userIdRef.current)

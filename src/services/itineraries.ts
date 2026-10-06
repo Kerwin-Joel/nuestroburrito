@@ -1,9 +1,14 @@
 import { supabase } from '../lib/supabase'
 import { FEATURES } from '../lib/constants'
+import { cachedFetch, invalidateCache } from '../lib/sessionCache'
 import type { Itinerary } from '../types/itinerary'
 
 // Mock storage en memoria
 const mockItineraries: Itinerary[] = []
+
+// Una sola key fija: en una pestaña solo hay un usuario logueado a la vez,
+// así que no hace falta meter el userId en la key.
+const MINE_CACHE_KEY = 'itineraries:mine'
 
 const mapItinerary = (row: any): Itinerary => ({
     id: row.id,
@@ -19,19 +24,25 @@ const mapItinerary = (row: any): Itinerary => ({
 
 export const itinerariesService = {
 
+    // Perfil, ItinerarioPage y CreateRouteSheet piden esto cada uno por su
+    // lado — Perfil tenía su propio TTL de 5s nada más, así que igual volvía
+    // a pedirlo en cuanto pasaban esos 5s. En caché de sesión acá, invalidada
+    // en cada mutación de abajo (save/update/updateStatus/softDelete).
     async getByUser(userId: string): Promise<Itinerary[]> {
         if (!FEATURES.REAL_AUTH) {
             return mockItineraries.filter(i => i.userId === userId)
         }
-        const { data, error } = await supabase
-            .from('itineraries')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('is_active', true)
-            .order('created_at', { ascending: false })
+        return cachedFetch(MINE_CACHE_KEY, async () => {
+            const { data, error } = await supabase
+                .from('itineraries')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('is_active', true)
+                .order('created_at', { ascending: false })
 
-        if (error) throw error
-        return (data ?? []).map(mapItinerary)
+            if (error) throw error
+            return (data ?? []).map(mapItinerary)
+        })
     },
 
     async save(itinerary: Omit<Itinerary, 'id' | 'createdAt'>):
@@ -63,6 +74,7 @@ export const itinerariesService = {
             .single()
 
         if (error) throw error
+        invalidateCache(MINE_CACHE_KEY)
         return mapItinerary(data)
     },
 
@@ -79,6 +91,7 @@ export const itinerariesService = {
             .eq('id', id)
 
         if (error) throw error
+        invalidateCache(MINE_CACHE_KEY)
     },
 
     async updateStatus(id: string, status: 'draft' | 'in_progress' | 'completed'): Promise<void> {
@@ -93,6 +106,7 @@ export const itinerariesService = {
             .eq('id', id)
 
         if (error) throw error
+        invalidateCache(MINE_CACHE_KEY)
     },
 
     // Soft delete — para auditoría
@@ -103,6 +117,7 @@ export const itinerariesService = {
             .rpc('soft_delete_itinerary', { itinerary_id: id })
 
         if (error) throw error
+        invalidateCache(MINE_CACHE_KEY)
     },
 
     async update(id: string, data: Partial<Itinerary>): Promise<void> {
@@ -119,6 +134,7 @@ export const itinerariesService = {
             .eq('id', id)
 
         if (error) throw error
+        invalidateCache(MINE_CACHE_KEY)
     },
 
     async getById(id: string): Promise<Itinerary> {
