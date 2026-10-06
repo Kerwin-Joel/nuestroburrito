@@ -2,6 +2,7 @@ import { Sun, Music, AlertTriangle, Loader2, Calendar } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useWeather } from '../../hooks/useWeather'
 import { supabase } from '../../lib/supabase'
+import { cachedFetch } from '../../lib/sessionCache'
 
 interface HoyItem {
   id: string
@@ -53,33 +54,36 @@ export default function HoyEnPiura() {
 
   useEffect(() => { load() }, [load])
 
-  // Carga items de hoy_en_piura
+  // Carga items de hoy_en_piura — en caché por sesión (vuelve a pedirse al
+  // entrar a Inicio más tarde el mismo día, cuando ya cambió la fecha).
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
-    supabase
-      .from('hoy_en_piura')
-      .select('*')
-      .eq('activo', true)
-      .eq('fecha', today)
-      .order('created_at', { ascending: true })
-      .then(({ data }) => setItems((data ?? []) as HoyItem[]))
+    cachedFetch(`hoy-en-piura:${today}`, async () => {
+      const { data } = await supabase
+        .from('hoy_en_piura')
+        .select('*')
+        .eq('activo', true)
+        .eq('fecha', today)
+        .order('created_at', { ascending: true })
+      return (data ?? []) as HoyItem[]
+    }).then(setItems)
   }, [])
 
   // Carga el evento más cercano de spots
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
-    supabase
-      .from('spots')
-      .select('id, name, event_date, event_date_end, category, address')
-      .eq('status', 'verified')
-      .not('event_date', 'is', null)
-      .gte('event_date', today) // solo eventos futuros o de hoy
-      .order('event_date', { ascending: true })
-      .limit(1)
-      .single()
-      .then(({ data }) => {
-        if (data) setProximoEvento(data as ProximoEvento)
-      })
+    cachedFetch(`proximo-evento:${today}`, async () => {
+      const { data } = await supabase
+        .from('spots')
+        .select('id, name, event_date, event_date_end, category, address')
+        .eq('status', 'verified')
+        .not('event_date', 'is', null)
+        .gte('event_date', today) // solo eventos futuros o de hoy
+        .order('event_date', { ascending: true })
+        .limit(1)
+        .single()
+      return data as ProximoEvento | null
+    }).then(data => { if (data) setProximoEvento(data) })
   }, [])
 
   return (

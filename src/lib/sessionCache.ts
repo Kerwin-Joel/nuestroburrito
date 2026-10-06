@@ -7,18 +7,29 @@
  * recarga de página la vacía), y de paso junta pedidos simultáneos a la
  * misma key en uno solo.
  */
-const store = new Map<string, Promise<unknown>>()
+interface Entry<T> {
+  promise: Promise<T>
+  expiresAt: number
+}
+const store = new Map<string, Entry<unknown>>()
 
-export function cachedFetch<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+/**
+ * `ttlMs` por defecto es "para siempre" (hasta un invalidateCache explícito
+ * o recargar la página) — lo correcto para datos que solo cambia el admin.
+ * Para algo que de verdad se desactualiza solo con el tiempo (el clima),
+ * se le pasa un `ttlMs` finito y, pasado ese tiempo, el siguiente pedido
+ * vuelve a ir a la red.
+ */
+export function cachedFetch<T>(key: string, fetcher: () => Promise<T>, ttlMs = Infinity): Promise<T> {
   const cached = store.get(key)
-  if (cached) return cached as Promise<T>
+  if (cached && cached.expiresAt > Date.now()) return cached.promise as Promise<T>
 
   const promise = fetcher().catch(err => {
     // Un pedido fallido no debe quedar cacheado como si hubiera funcionado.
     store.delete(key)
     throw err
   })
-  store.set(key, promise)
+  store.set(key, { promise, expiresAt: Date.now() + ttlMs })
   return promise
 }
 

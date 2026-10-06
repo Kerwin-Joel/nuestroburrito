@@ -9,7 +9,6 @@ export const useWeather = () => {
     setLoading(true)
     try {
       const data = await weatherService.getPiuraWeather()
-      console.log(data)
       setWeather(data)
     } finally {
       setLoading(false)

@@ -1,5 +1,6 @@
 import { FEATURES, MOCK_DELAY_MS } from '../lib/constants'
 import { MOCK_WEATHER } from '../lib/mockData'
+import { cachedFetch } from '../lib/sessionCache'
 
 const delay = () => new Promise((r) => setTimeout(r, MOCK_DELAY_MS))
 
@@ -26,29 +27,34 @@ function parseWeather(code: number, isDay: boolean): { condition: string; emoji:
   return { condition: 'Tormenta', emoji: '🌩️', tip: 'Evita salir — buen momento para un cebiche' }
 }
 
+const WEATHER_TTL_MS = 10 * 60 * 1000 // el clima real no cambia de un minuto a otro
+
 export const weatherService = {
   async getPiuraWeather(): Promise<WeatherData> {
-    await delay();
-    try {
-      const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${PIURA_LAT}&longitude=${PIURA_LNG}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,is_day&wind_speed_unit=kmh&forecast_days=1`
-      )
-      const data = await res.json()
-      console.log(data)
-      const c = data.current
-      const { condition, emoji, tip } = parseWeather(c.weather_code, c.is_day === 1)
+    // HoyEnPiura (en Inicio) lo vuelve a pedir cada vez que se vuelve a esa
+    // pantalla — de más para un dato que tarda minutos en cambiar.
+    return cachedFetch('weather:piura', async () => {
+      await delay();
+      try {
+        const res = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${PIURA_LAT}&longitude=${PIURA_LNG}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,is_day&wind_speed_unit=kmh&forecast_days=1`
+        )
+        const data = await res.json()
+        const c = data.current
+        const { condition, emoji, tip } = parseWeather(c.weather_code, c.is_day === 1)
 
-      return {
-        temp: Math.round(c.temperature_2m),
-        condition,
-        emoji,
-        humidity: c.relative_humidity_2m,
-        windSpeed: Math.round(c.wind_speed_10m),
-        tip,
+        return {
+          temp: Math.round(c.temperature_2m),
+          condition,
+          emoji,
+          humidity: c.relative_humidity_2m,
+          windSpeed: Math.round(c.wind_speed_10m),
+          tip,
+        }
+      } catch {
+        await delay()
+        return MOCK_WEATHER
       }
-    } catch {
-      await delay()
-      return MOCK_WEATHER
-    }
+    }, WEATHER_TTL_MS)
   },
 }
