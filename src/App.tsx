@@ -1,9 +1,9 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import ToastContainer from './components/shared/ToastContainer'
 import { useAuthStore } from './stores/useAuthStore'
 import ProtectedRoute from './components/auth/ProtectedRoute'
-import SolBurrito from './components/shared/SolBurrito'
+import AppSplash from './components/shared/AppSplash'
 import { useThemeStore } from './stores/useThemeStore'
 
 // Auth pages (lazy)
@@ -21,6 +21,12 @@ const ItinerarioPage = lazy(() => import('./pages/tourist/ItinerarioPage'))
 const ExplorarPage = lazy(() => import('./pages/tourist/ExplorarPage'))
 const PerfilTourist = lazy(() => import('./pages/tourist/PerfilPage'))
 const HistoriaPage = lazy(() => import('./pages/tourist/HistoriaPage'))
+const ServiciosPage = lazy(() => import('./pages/tourist/ServiciosPage'))
+const HotelesPage = lazy(() => import('./pages/tourist/HotelesPage'))
+const TiendaPage = lazy(() => import('./pages/tourist/TiendaPage'))
+const PasaportePage = lazy(() => import('./pages/tourist/PasaportePage'))
+const BeneficiosPage = lazy(() => import('./pages/tourist/BeneficiosPage'))
+const FavoritosPage = lazy(() => import('./pages/tourist/FavoritosPage'))
 
 // Churre pages (lazy)
 const ChurreLayout = lazy(() => import('./layouts/ChurreLayout'))
@@ -51,38 +57,28 @@ const AdminHistoriaPage = lazy(() => import('./pages/admin/AdminHistoriaPage'))
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 
 
-function PageLoader() {
-  const [progress, setProgress] = useState(0)
-
-  useEffect(() => {
-    const iv = setInterval(() => {
-      setProgress(p => {
-        if (p >= 95) { clearInterval(iv); return 95 }
-        return p + (p < 60 ? 3 : p < 85 ? 1.5 : 0.5)
-      })
-    }, 80)
-    return () => clearInterval(iv)
-  }, [])
-
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--bg)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-      <SolBurrito progress={progress} message="Armando tu día..." size={200} />
-    </div>
-  )
-}
-
 export default function App() {
   const initializeAuth = useAuthStore(state => state.initialize)
   const { computedTheme, updateComputedTheme } = useThemeStore()
 
   useEffect(() => {
     initializeAuth()
+    // La apertura (AppSplash) se ve ~1.3s mientras isLoading se resuelve, pero
+    // el layout/página de destino son lazy — sin esto, recién empiezan a
+    // pedirse por red cuando la apertura ya terminó, y ese hueco es la
+    // pantalla en blanco antes de que aparezca el contenido. Precargando acá
+    // en paralelo con la apertura, para cuando termina ya están en caché.
+    const path = window.location.pathname
+    if (path.startsWith('/churres')) {
+      import('./layouts/ChurreLayout')
+      import('./pages/churre/DashboardPage')
+    } else if (path.startsWith('/admin')) {
+      import('./layouts/AdminLayout')
+      import('./pages/admin/AdminDashboardPage')
+    } else {
+      import('./layouts/TouristLayout')
+      import('./pages/tourist/HomePage')
+    }
   }, [])
 
   // Setup theme
@@ -132,6 +128,12 @@ export default function App() {
             <Route path="itinerario" element={<ItinerarioPage />} />
             <Route path="explorar" element={<ExplorarPage />} />
             <Route path="historia" element={<HistoriaPage />} />
+            <Route path="servicios" element={<ServiciosPage />} />
+            <Route path="hoteles" element={<HotelesPage />} />
+            <Route path="tienda" element={<TiendaPage />} />
+            <Route path="pasaporte" element={<PasaportePage />} />
+            <Route path="beneficios" element={<BeneficiosPage />} />
+            <Route path="favoritos" element={<FavoritosPage />} />
             <Route path="perfil" element={<PerfilTourist />} />
             <Route path="verify" element={<VerifyPage />} />
           </Route>

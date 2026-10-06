@@ -26,7 +26,15 @@ const mapSpot = (row: any): Spot => ({
   createdAt: row.created_at,
   eventDate: row.event_date ?? null,
   eventDateEnd: row.event_date_end ?? null,
+  brandName: row.brand_name ?? null,
+  paymentQrUrl: row.payment_qr_url ?? null,
+  paymentNote: row.payment_note ?? null,
+  checkinTime: row.checkin_time ?? null,
+  checkoutTime: row.checkout_time ?? null,
 })
+
+/** Categoría reservada para hoteles: viven fuera de Explorar, en su propia pantalla. */
+const HOTELS_CATEGORY = 'hoteles'
 
 // Convierte camelCase a snake_case para Supabase
 const mapToRow = (data: Partial<Spot> & { price_range?: string; rating?: number; review_count?: number; schedule?: any; photos?: string[]; socialLinks?: any }) => ({
@@ -57,10 +65,14 @@ export const spotsService = {
   async getSpots(): Promise<Spot[]> {
     if (!FEATURES.REAL_AUTH) return MOCK_SPOTS
 
+    // Los hoteles quedan afuera a propósito: tienen su propia pantalla y su
+    // propio flujo de reserva (ver getHotels), no son un spot que se agregue
+    // a un itinerario ni que aparezca en el mapa de Explorar.
     const { data, error } = await supabase
       .from('spots')
       .select('*')
       .eq('status', 'verified')
+      .neq('category', HOTELS_CATEGORY)
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -73,6 +85,21 @@ export const spotsService = {
     )
 
     return allSpots
+  },
+
+  /** Los hoteles verificados, para la pantalla dedicada de Hoteles. */
+  async getHotels(): Promise<Spot[]> {
+    if (!FEATURES.REAL_AUTH) return []
+
+    const { data, error } = await supabase
+      .from('spots')
+      .select('*')
+      .eq('status', 'verified')
+      .eq('category', HOTELS_CATEGORY)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return (data ?? []).map(mapSpot)
   },
 
   // Para admin — lee TODOS los spots (cualquier status)

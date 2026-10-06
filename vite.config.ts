@@ -15,7 +15,10 @@ export default defineConfig({
   },
   server: {
     host: true,
-    allowedHosts: ['shrink-blimp-poser.ngrok-free.dev']
+    // ngrok (free) da un subdominio nuevo cada vez que se reinicia el túnel,
+    // así que fijar uno solo se rompe la próxima vez. Esto es solo para el
+    // servidor de desarrollo local, nunca para el build de producción.
+    allowedHosts: true,
   },
   build: {
     rollupOptions: {

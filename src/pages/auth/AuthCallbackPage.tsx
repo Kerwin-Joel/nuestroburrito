@@ -1,74 +1,78 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useAuthStore } from '../../stores/useAuthStore'
 
 export default function AuthCallbackPage() {
-    const navigate = useNavigate()
-    const { user, isLoading, initialize } = useAuthStore()
+  const navigate = useNavigate()
+  const { initialize } = useAuthStore()
 
-    useEffect(() => {
-        const redirect = async () => {
-            // Espera que initialize termine
-            await initialize()
+  useEffect(() => {
+    const redirect = async () => {
+      await initialize()
 
-            const currentUser = useAuthStore.getState().user
+      const currentUser = useAuthStore.getState().user
 
-            if (!currentUser) {
-                navigate('/login', { replace: true })
-                return
-            }
+      if (!currentUser) {
+        navigate('/login', { replace: true })
+        return
+      }
 
-            const role = currentUser.profile.role
-            const status = currentUser.profile.status
+      const role = currentUser.profile.role
+      const status = currentUser.profile.status
 
-            if (role === 'admin') {
-                navigate('/admin/dashboard', { replace: true })
-            } else if (role === 'churre') {
-                if (status === 'pending') {
-                    navigate('/waiting-approval', { replace: true })
-                } else {
-                    navigate('/churres', { replace: true })
-                }
-            } else {
-                navigate('/app', { replace: true })
-            }
-        }
+      if (role === 'admin') {
+        navigate('/admin/dashboard', { replace: true })
+      } else if (role === 'churre') {
+        navigate(status === 'pending' ? '/waiting-approval' : '/churres', { replace: true })
+      } else {
+        navigate('/app', { replace: true })
+      }
+    }
 
-        redirect()
-    }, [])
+    redirect()
+  }, [])
 
-    return (
-        <div style={{
-            minHeight: '100vh',
-            background: '#080705',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '20px'
-        }}>
-            <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: '#FF5500',
-                boxShadow: '0 0 24px rgba(255,85,0,0.4)',
-                animation: 'pulse 1s ease-in-out infinite'
-            }} />
-            <p style={{
-                fontFamily: 'IBM Plex Mono, monospace',
-                fontSize: '13px',
-                color: '#6b6055',
-                letterSpacing: '1px'
-            }}>
-                Verificando acceso...
-            </p>
-            <style>{`
-        @keyframes pulse {
-          0%,100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.3); opacity: 0.5; }
-        }
-      `}</style>
-        </div>
-    )
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      style={{
+        minHeight: '100vh',
+        background: 'var(--bg)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '24px',
+      }}
+    >
+      <motion.img
+        src="/imagotipo.png"
+        alt="Burrito"
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ height: '64px', width: 'auto', filter: 'drop-shadow(0 12px 24px rgba(255,85,0,0.3))' }}
+      />
+      <div style={{ display: 'flex', gap: '6px' }}>
+        {[0, 1, 2].map(i => (
+          <motion.div
+            key={i}
+            animate={{ opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
+            style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--orange)' }}
+          />
+        ))}
+      </div>
+      <p style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: '13px',
+        color: 'var(--muted)',
+        letterSpacing: '1px',
+      }}>
+        Verificando acceso...
+      </p>
+    </motion.div>
+  )
 }

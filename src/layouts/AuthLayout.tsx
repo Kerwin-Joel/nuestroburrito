@@ -1,6 +1,6 @@
-import { Outlet, Link, Navigate } from 'react-router-dom'
+import { Outlet, Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../stores/useAuthStore'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const STATS = [
   { value: '60s', label: 'para tu itinerario' },
@@ -16,6 +16,7 @@ const BLOBS = [
 
 export default function AuthLayout() {
   const { isAuthenticated, user, isLoading } = useAuthStore()
+  const location = useLocation()
 
   if (!isLoading && isAuthenticated && user) {
     const role = user.profile.role
@@ -105,9 +106,19 @@ export default function AuthLayout() {
           </Link>
         </div>
 
-        {/* Centered form */}
+        {/* Centered form — cross-fade when navigating between auth pages */}
         <div className="auth-form-wrapper">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </div>
 
       </div>
@@ -293,6 +304,237 @@ export default function AuthLayout() {
         @keyframes auth-spin {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
+        }
+
+        /* ══════════════════════════════
+           SHARED AUTH SYSTEM
+           (Login, Register, ChurreRegister, ForgotPassword)
+        ══════════════════════════════ */
+
+        .auth-heading-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .auth-accent-bar {
+          width: 3px; height: 28px; border-radius: 100px; flex-shrink: 0;
+          background: linear-gradient(to bottom, var(--orange), var(--hot));
+        }
+        .auth-title {
+          font-family: var(--font-display);
+          font-size: clamp(26px, 5vw, 34px);
+          font-weight: 900;
+          color: var(--white);
+          margin: 0;
+          letter-spacing: -1.2px;
+          line-height: 1.1;
+        }
+        .auth-subtitle {
+          font-family: var(--font-body);
+          font-size: 14px;
+          color: var(--muted);
+          margin: 8px 0 0;
+          padding-left: 13px;
+          line-height: 1.5;
+        }
+
+        .auth-field { display: flex; flex-direction: column; }
+        .auth-field-label {
+          display: block;
+          font-family: var(--font-body);
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--white);
+          margin-bottom: 8px;
+          letter-spacing: 0.1px;
+        }
+        .auth-field-wrap { position: relative; display: flex; align-items: center; }
+        .auth-field-icon {
+          position: absolute;
+          left: 14px;
+          color: var(--muted);
+          display: flex;
+          pointer-events: none;
+        }
+        .auth-field-right {
+          position: absolute;
+          right: 14px;
+          display: flex;
+          color: var(--muted);
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+        }
+
+        .auth-back-btn {
+          background: none;
+          border: none;
+          color: var(--muted);
+          font-family: var(--font-body);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 0 0 24px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          transition: color 0.15s;
+        }
+        .auth-back-btn:hover { color: var(--white); }
+
+        .auth-google-btn {
+          width: 100%;
+          height: 54px;
+          background: #ffffff;
+          border: 1.5px solid #e2e2e2;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          font-family: var(--font-body);
+          font-size: 15px;
+          font-weight: 600;
+          color: #1a1a1a;
+          cursor: pointer;
+          transition: transform 0.18s var(--ease-smooth), box-shadow 0.18s var(--ease-smooth);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .auth-google-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+        }
+        .auth-google-btn:disabled { opacity: 0.75; cursor: not-allowed; }
+
+        .auth-btn-primary {
+          width: 100%;
+          height: 54px;
+          background: var(--orange);
+          border: none;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          font-family: var(--font-body);
+          font-size: 15.5px;
+          font-weight: 700;
+          color: #fff;
+          cursor: pointer;
+          transition: transform 0.18s var(--ease-smooth), box-shadow 0.18s var(--ease-smooth), background 0.18s;
+        }
+        .auth-btn-primary:hover:not(:disabled) {
+          background: var(--hot);
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-glow);
+        }
+        .auth-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .auth-btn-ghost {
+          width: 100%;
+          height: 50px;
+          background: transparent;
+          border: 1.5px solid var(--border);
+          border-radius: 14px;
+          color: var(--muted);
+          font-family: var(--font-body);
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: border-color 0.18s, color 0.18s, background 0.18s;
+        }
+        .auth-btn-ghost:hover:not(:disabled) {
+          border-color: var(--amber);
+          color: var(--white);
+          background: var(--border);
+        }
+        .auth-btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .auth-divider { display: flex; align-items: center; gap: 16px; margin: 6px 0; }
+        .auth-divider-line { flex: 1; height: 1px; background: var(--border); }
+        .auth-divider-text { font-family: var(--font-body); font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+        .auth-error-banner {
+          background: rgba(239,68,68,0.08);
+          border: 1px solid rgba(239,68,68,0.22);
+          border-radius: 12px;
+          padding: 10px 14px;
+          color: #ef4444;
+          font-size: 13px;
+          font-family: var(--font-body);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .auth-legal {
+          font-family: var(--font-body);
+          font-size: 11px;
+          color: var(--muted);
+          text-align: center;
+          line-height: 1.6;
+        }
+        .auth-link { color: var(--orange); cursor: pointer; text-decoration: none; }
+        .auth-link-muted { color: var(--white); opacity: 0.7; text-decoration: none; font-weight: 600; }
+        .auth-link-muted:hover { opacity: 1; }
+
+        .auth-role-card {
+          --role-color: var(--orange);
+          background: var(--card);
+          border: 1.5px solid var(--border);
+          border-radius: 16px;
+          padding: 18px 20px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          width: 100%;
+          text-align: left;
+          transition: border-color 0.18s, background 0.18s, box-shadow 0.18s, transform 0.18s;
+          position: relative;
+          overflow: hidden;
+        }
+        .auth-role-card:hover, .auth-role-card:focus-visible {
+          border-color: var(--role-color);
+          background: color-mix(in srgb, var(--role-color) 6%, transparent);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px color-mix(in srgb, var(--role-color) 12%, transparent);
+        }
+        .auth-role-card:active { transform: translateY(0) scale(0.99); }
+        .auth-role-card:focus-visible { outline: 2px solid var(--role-color); outline-offset: 2px; }
+        .auth-role-card-bar {
+          position: absolute;
+          left: 0; top: 20%; bottom: 20%;
+          width: 3px;
+          border-radius: 0 4px 4px 0;
+          background: var(--role-color);
+          opacity: 0.6;
+        }
+        .auth-role-card-icon {
+          width: 48px; height: 48px;
+          border-radius: 12px;
+          background: color-mix(in srgb, var(--role-color) 12%, transparent);
+          border: 1px solid color-mix(in srgb, var(--role-color) 22%, transparent);
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+          color: var(--role-color);
+        }
+
+        .auth-role-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 4px 10px 4px 7px;
+          background: color-mix(in srgb, var(--role-color) 10%, transparent);
+          border: 1px solid color-mix(in srgb, var(--role-color) 25%, transparent);
+          border-radius: 100px;
+          color: var(--role-color);
+          font-family: var(--font-body);
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.2px;
+        }
+
+        button:focus-visible, a:focus-visible {
+          outline: 2px solid var(--orange);
+          outline-offset: 2px;
         }
 
         /* ══════════════════════════════

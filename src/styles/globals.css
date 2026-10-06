@@ -320,13 +320,29 @@ textarea.input {
   100% { background-position: -200% 0; }
 }
 
-/* ─── Leaflet overrides ─── */
+/* ─── Leaflet overrides ───
+   Esto es lo que realmente causaba el mapa roto reportado: un fondo negro
+   casi puro con !important (pensado para un mapa oscuro que nunca se llegó
+   a usar) tapaba cualquier intento de aclararlo desde MapView.tsx, y como
+   los mosaicos de OSM tardan un cuadro en llegar al mover el mapa, cada
+   hueco se veía como un parpadeo negro — fácil de leer como "no se mueve".
+   Mismo espíritu que mutedTileFilter en SpotsMapView.kt (desaturado, claro,
+   crema de marca), pero consolidado en un solo lugar en vez de pelear con
+   un override en el componente. */
 .leaflet-container {
-  background: #0a0907 !important;
+  background: #FDF8EF !important;
   font-family: var(--font-body) !important;
 }
 .leaflet-tile-pane {
-  filter: brightness(0.85) saturate(0.8);
+  filter: grayscale(100%);
+}
+/* Pines del mapa: su propia capa de composición. El agrupado animado (ver
+   ClusteredSpotMarkers en MapView.tsx) mueve varios pines por cuadro con
+   requestAnimationFrame — sin esto, cada cuadro repinta también los
+   mosaicos de debajo, y en un celular real eso se sentía como un
+   agrupado/desagrupado brusco en vez de fluido. */
+.burrito-pin {
+  will-change: transform, opacity;
 }
 
 /* ─── Scrollable row ─── */

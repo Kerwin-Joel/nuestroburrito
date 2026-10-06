@@ -1,51 +1,36 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowRight, CheckCircle2, Circle } from 'lucide-react'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { RegisterTouristData } from '../../types/auth'
-import PasswordStrengthBar from '../../components/auth/PasswordStrengthBar'
+import { AuthHeading, FieldInput, ErrorBanner, authStepMotion } from '../../components/auth/AuthUI'
 
-const registerSchema = z.object({
-  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  email: z.string().email('Email no válido'),
-  password: z.string()
-    .min(8, 'Mínimo 8 caracteres')
-    .regex(/[A-Z]/, 'Debe incluir una mayúscula')
-    .regex(/[0-9]/, 'Debe incluir un número'),
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Las contraseñas no coinciden",
-  path: ["confirmPassword"],
-})
-
-type FormFields = RegisterTouristData & { confirmPassword: string }
-
+/**
+ * Mismo registro que la app nativa: nombre, correo y contraseña — sin
+ * confirmar contraseña, sin Google (ver ui/auth/RegisterScreen.kt). La
+ * validación también es la misma: mínimo 6 caracteres, con un check en
+ * vivo en vez de esperar a que falle el envío.
+ */
 export default function RegisterPage() {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [countdown, setCountdown] = useState(2)
-  const { registerTourist, loginWithGoogle, isLoading, error } = useAuthStore()
+  const { registerTourist, isLoading, error, clearError } = useAuthStore()
   const navigate = useNavigate()
 
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormFields>({
-    resolver: zodResolver(registerSchema),
-  })
+  const passwordOk = password.length >= 6
+  const canSubmit = name.trim() !== '' && email.trim() !== '' && passwordOk && !isLoading
 
-  const passwordValue = watch('password')
-
-  const onSubmit = async (data: FormFields) => {
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!canSubmit) return
     try {
-      await registerTourist({
-        name: data.name,
-        email: data.email,
-        password: data.password
-      })
+      await registerTourist({ name: name.trim(), email: email.trim(), password })
       setIsSuccess(true)
-    } catch (err) {
+    } catch {
       // Error handled by store
     }
   }
@@ -63,183 +48,102 @@ export default function RegisterPage() {
     <div style={{ width: '100%' }}>
       <AnimatePresence mode="wait">
         {!isSuccess ? (
-          <motion.div
-            key="register-form"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-          >
-            <h2 style={{ 
-              fontFamily: 'var(--font-display)', 
-              fontSize: '32px', 
-              fontWeight: 800, 
-              color: 'var(--white)',
-              margin: '0 0 8px 0'
-            }}>
-              Únete a Burrito <img src="/imagotipo.png" alt="burrito" style={{ height: '32px', width: 'auto', verticalAlign: 'middle', display: 'inline-block' }} />
-            </h2>
-            <p style={{ fontFamily: 'var(--font-body)', color: 'var(--gray)', fontSize: '15px', marginBottom: '32px' }}>
-              Empieza a descubrir Piura de verdad
-            </p>
+          <motion.div key="register-form" {...authStepMotion}>
+            <AuthHeading title="Crea tu cuenta" subtitle="Es gratis, y en menos de un minuto estás listo para armar tu primer día en Piura." />
 
-            <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="form-group">
-                <label style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--white)', marginBottom: '8px', fontWeight: 600 }}>
-                  Nombre completo
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <User size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--gray)' }} />
-                  <input 
-                    {...register('name')}
-                    type="text"
-                    placeholder="¿Cómo te llamas?"
-                    className="auth-input"
-                  />
+            <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <FieldInput
+                label="Nombre"
+                icon={<User size={18} />}
+                value={name}
+                onChange={e => { setName(e.target.value); if (error) clearError() }}
+                placeholder="¿Cómo te llamas?"
+              />
+
+              <FieldInput
+                label="Correo"
+                icon={<Mail size={18} />}
+                type="email"
+                value={email}
+                onChange={e => { setEmail(e.target.value); if (error) clearError() }}
+                placeholder="tu@email.com"
+              />
+
+              <div className="auth-field">
+                <FieldInput
+                  label="Contraseña"
+                  icon={<Lock size={18} />}
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); if (error) clearError() }}
+                  placeholder="Tu contraseña"
+                  rightSlot={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="auth-field-right"
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  }
+                />
+                {/* Se confirma en vivo, no recién al fallar el envío. */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', paddingLeft: '4px' }}>
+                  {passwordOk ? <CheckCircle2 size={14} color="#22c55e" /> : <Circle size={14} color="var(--muted)" />}
+                  <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: passwordOk ? '#22c55e' : 'var(--muted)' }}>
+                    Mínimo 6 caracteres
+                  </span>
                 </div>
-                {errors.name && <p className="error-msg">{errors.name.message}</p>}
               </div>
 
-              <div className="form-group">
-                <label style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--white)', marginBottom: '8px', fontWeight: 600 }}>
-                  Email
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--gray)' }} />
-                  <input 
-                    {...register('email')}
-                    type="email"
-                    placeholder="tu@email.com"
-                    className="auth-input"
-                  />
-                </div>
-                {errors.email && <p className="error-msg">{errors.email.message}</p>}
-              </div>
+              {error && <ErrorBanner>{error}</ErrorBanner>}
 
-              <div className="form-group">
-                <label style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--white)', marginBottom: '8px', fontWeight: 600 }}>
-                  Contraseña
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--gray)' }} />
-                  <input 
-                    {...register('password')}
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Mínimo 8 caracteres"
-                    className="auth-input"
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--gray)', cursor: 'pointer', padding: 0 }}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                <PasswordStrengthBar password={passwordValue} />
-                {errors.password && <p className="error-msg">{errors.password.message}</p>}
-              </div>
-
-              <div className="form-group">
-                <label style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--white)', marginBottom: '8px', fontWeight: 600 }}>
-                  Confirmar contraseña
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--gray)' }} />
-                  <input 
-                    {...register('confirmPassword')}
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Repite tu contraseña"
-                    className="auth-input"
-                  />
-                </div>
-                {errors.confirmPassword && <p className="error-msg">{errors.confirmPassword.message}</p>}
-              </div>
-
-              {error && <div className="error-banner">❌ {error}</div>}
-
-              <button 
-                type="submit" 
-                disabled={isLoading}
-                className="btn btn-primary"
-                style={{ width: '100%', height: '52px', fontSize: '16px', justifyContent: 'center', marginTop: '12px' }}
-              >
+              <button type="submit" disabled={!canSubmit} className="auth-btn-primary" style={{ marginTop: '4px' }}>
                 {isLoading ? (
                   <>
-                    <Loader2 size={20} className="animate-spin" style={{ marginRight: '10px' }} />
+                    <Loader2 size={20} className="animate-spin" />
                     Creando tu cuenta...
                   </>
                 ) : (
-                  <>Crear mi cuenta <ArrowRight size={18} style={{ marginLeft: '10px' }} /></>
+                  <>Crear cuenta <ArrowRight size={18} /></>
                 )}
-              </button>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '8px 0' }}>
-                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--gray)' }}>o únete con</span>
-                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-              </div>
-
-              <button 
-                type="button"
-                onClick={() => loginWithGoogle()}
-                style={{
-                  width: '100%', height: '52px', background: 'white', border: 'none', borderRadius: '14px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
-                  fontFamily: 'var(--font-body)', fontSize: '15px', fontWeight: 600, color: '#000',
-                  cursor: 'pointer', transition: 'all 0.3s'
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
-              >
-                <img src="https://www.google.com/favicon.ico" alt="Google" style={{ width: '18px', height: '18px' }} />
-                Continuar con Google
               </button>
             </form>
 
-            <div style={{ marginTop: '32px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <p style={{ fontFamily: 'var(--font-body)', color: 'var(--gray)', fontSize: '14px', marginBottom: '8px' }}>
-                  ¿Eres guía local de Piura?
-                </p>
-                <Link to="/register/churre" style={{ fontFamily: 'var(--font-body)', color: 'var(--amber)', fontSize: '14px', fontWeight: 600, textDecoration: 'none' }}>
-                  Regístrate como Churre →
+            <div style={{ marginTop: '28px', textAlign: 'center' }}>
+              <p style={{ fontFamily: 'var(--font-body)', color: 'var(--muted)', fontSize: '14px' }}>
+                ¿Ya tienes cuenta?{' '}
+                <Link to="/login" className="auth-link" style={{ fontWeight: 600 }}>
+                  Inicia sesión →
                 </Link>
-              </div>
-
-              <div>
-                <p style={{ fontFamily: 'var(--font-body)', color: 'var(--gray)', fontSize: '14px', marginBottom: '8px' }}>
-                  ¿Ya tienes cuenta?
-                </p>
-                <Link to="/login" style={{ fontFamily: 'var(--font-body)', color: 'var(--white)', fontSize: '14px', fontWeight: 600, textDecoration: 'none', opacity: 0.7 }}>
-                  Iniciar sesión →
-                </Link>
-              </div>
+              </p>
             </div>
           </motion.div>
         ) : (
           <motion.div
             key="success-state"
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', damping: 15 }}
+            transition={{ type: 'spring', damping: 16, stiffness: 220 }}
             style={{ textAlign: 'center' }}
           >
-            <div style={{ 
+            <div style={{
               width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(34,197,94,0.1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px',
               border: '2px solid #22c55e'
             }}>
               <CheckCircle2 size={40} color="#22c55e" />
             </div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '32px', fontWeight: 800, color: 'var(--white)', margin: '0 0 12px 0' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 5vw, 32px)', fontWeight: 900, color: 'var(--white)', margin: '0 0 12px 0', letterSpacing: '-1px' }}>
               ¡Cuenta creada! 🎉
             </h2>
-            <p style={{ fontFamily: 'var(--font-body)', color: 'var(--gray)', fontSize: '16px', marginBottom: '32px' }}>
+            <p style={{ fontFamily: 'var(--font-body)', color: 'var(--muted)', fontSize: '15px', marginBottom: '32px' }}>
               Bienvenido/a a Burrito. Serás redirigido en unos segundos.
             </p>
-            
-            <div style={{ width: '100%', height: '4px', background: '#111009', borderRadius: '2px', overflow: 'hidden' }}>
-              <motion.div 
+
+            <div style={{ width: '100%', height: '4px', background: 'var(--dim)', borderRadius: '2px', overflow: 'hidden' }}>
+              <motion.div
                 initial={{ width: '100%' }}
                 animate={{ width: '0%' }}
                 transition={{ duration: 2, ease: 'linear' }}
@@ -249,47 +153,6 @@ export default function RegisterPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <style>{`
-        .auth-input {
-          width: 100%;
-          background: #111009;
-          border: 1px solid var(--border);
-          border-radius: 12px;
-          height: 48px;
-          padding: 0 16px 0 46px;
-          color: white;
-          font-family: var(--font-body);
-          font-size: 15px;
-          transition: all 0.3s;
-        }
-        .auth-input:focus {
-          outline: none;
-          border-color: var(--orange);
-          box-shadow: 0 0 0 2px rgba(255,85,0,0.1);
-        }
-        .error-msg {
-          color: #ef4444;
-          font-size: 12px;
-          margin-top: 6px;
-          font-family: var(--font-body);
-        }
-        .error-banner {
-          background: rgba(255,85,0,0.08);
-          border: 1px solid rgba(255,85,0,0.3);
-          border-radius: 12px;
-          padding: 12px 16px;
-          color: 'var(--orange)';
-          font-size: 14px;
-        }
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }

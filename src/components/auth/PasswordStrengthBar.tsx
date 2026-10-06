@@ -17,7 +17,7 @@ export default function PasswordStrengthBar({ password = '' }: Props) {
   }, [password])
 
   const config = useMemo(() => {
-    if (!password) return { segments: 0, color: '#2a2318', label: '' }
+    if (!password) return { segments: 0, color: 'var(--dim)', label: '' }
     if (strength <= 3) return { segments: 1, color: '#ef4444', label: 'Débil' }
     if (strength <= 6) return { segments: 2, color: '#FFAA3B', label: 'Regular' }
     if (strength <= 9) return { segments: 3, color: '#22c55e', label: 'Buena' }
@@ -34,7 +34,7 @@ export default function PasswordStrengthBar({ password = '' }: Props) {
               style={{
                 flex: 1,
                 height: '4px',
-                background: '#2a2318',
+                background: 'var(--dim)',
                 borderRadius: '2px',
                 overflow: 'hidden',
                 position: 'relative'
@@ -57,7 +57,7 @@ export default function PasswordStrengthBar({ password = '' }: Props) {
         <span style={{ 
           fontFamily: 'var(--font-mono)', 
           fontSize: '11px', 
-          color: config.segments > 0 ? config.color : 'var(--gray)',
+          color: config.segments > 0 ? config.color : 'var(--muted)',
           whiteSpace: 'nowrap'
         }}>
           {config.label}

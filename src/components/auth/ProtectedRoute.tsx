@@ -1,45 +1,27 @@
 import { Navigate, useLocation } from 'react-router-dom'
+import { useState } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { UserRole } from '../../types/auth'
-import { ReactNode, useState, useEffect } from 'react'
-import SolBurrito from '../shared/SolBurrito'
+import { ReactNode } from 'react'
+import AppSplash from '../shared/AppSplash'
 
 interface Props {
   allowedRoles: UserRole[]
   children: ReactNode
 }
 
-function FullPageLoader() {
-  const [progress, setProgress] = useState(0)
-
-  useEffect(() => {
-    const iv = setInterval(() => {
-      setProgress(p => {
-        if (p >= 95) { clearInterval(iv); return 95 }
-        return p + (p < 60 ? 3 : p < 85 ? 1.5 : 0.5)
-      })
-    }, 80)
-    return () => clearInterval(iv)
-  }, [])
-
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--bg)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-      <SolBurrito progress={progress} message="Armando tu día..." size={200} />
-    </div>
-  )
-}
-
 export default function ProtectedRoute({ allowedRoles, children }: Props) {
   const { user, isAuthenticated, isLoading } = useAuthStore()
   const location = useLocation()
+  // Una vez que la apertura termina de desvanecerse (onDone), ya no se vuelve
+  // a montar aunque isLoading vuelva a ponerse en true en esta misma vista:
+  // la apertura de la app se ve una vez por arranque, no cada vez que se
+  // revalida la sesión.
+  const [splashDone, setSplashDone] = useState(false)
 
-  if (isLoading) return <FullPageLoader />
+  if (isLoading || !splashDone) {
+    return <AppSplash waitFor={isLoading} onDone={() => setSplashDone(true)} />
+  }
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" state={{ from: location }} replace />

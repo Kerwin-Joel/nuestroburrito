@@ -1,17 +1,29 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Share2, Eye, Trash2, BookOpen, Bell, X, Loader2 } from 'lucide-react'
+import { Share2, Eye, Trash2, BookOpen, X, Loader2, BookMarked, Store, Ticket, Heart, Luggage, Hotel, ChevronRight } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useProfileStore } from '../../stores/useProfileStore'
 import { useReminders } from '../../hooks/useReminders'
 import { itinerariesService } from '../../services/itineraries'
+import { benefitsService } from '../../services/benefits'
 import { useUIStore } from '../../stores/useUIStore'
 import { useItineraryStore } from '../../stores/useItineraryStore'
 import { formatDate, timeUntil, initials } from '../../lib/formatters'
 import type { Itinerary } from '../../types/itinerary'
 import { supabase } from '../../lib/supabase'
 import ThemeSwitcher from '../../components/shared/ThemeSwitcher'
+
+/** "Tu menú": mismo abanico de opciones que CustomTab.kt en la app nativa. */
+const MENU_OPTIONS = [
+  { to: '/app/historia', icon: BookOpen, title: 'Historia de Piura', sub: 'Relatos y lugares con historia' },
+  { to: '/app/tienda', icon: Store, title: 'Tienda Burrito', sub: 'Merch, tours y hecho en Piura' },
+  { to: '/app/pasaporte', icon: BookMarked, title: 'Pasaporte', sub: 'Tus sellos de spots visitados' },
+  { to: '/app/beneficios', icon: Ticket, title: 'Mis beneficios', sub: 'Descuentos que desbloqueas' },
+  { to: '/app/servicios', icon: Luggage, title: 'Servicios turísticos', sub: 'Transporte, dinero, salud y guías' },
+  { to: '/app/hoteles', icon: Hotel, title: 'Hoteles en Piura', sub: 'Reserva tu habitación' },
+  { to: '/app/favoritos', icon: Heart, title: 'Favoritos', sub: 'Los spots que guardaste' },
+]
 
 
 export default function PerfilTouristPage() {
@@ -24,6 +36,7 @@ export default function PerfilTouristPage() {
   const { itineraries, lastFetchAt, setItineraries, removeItinerary } = useProfileStore()
   const [loading, setLoading] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [visitedCount, setVisitedCount] = useState<number | null>(null)
 
   const CACHE_TTL = 5 * 1000 // 5 segundos
   const { reminders, load: loadReminders, cancel } = useReminders(
@@ -69,6 +82,10 @@ export default function PerfilTouristPage() {
     loadItineraries()
     loadReminders()
   }, [])
+
+  useEffect(() => {
+    if (user) benefitsService.getVisitedSpotIds(user.id).then(ids => setVisitedCount(ids.size))
+  }, [user])
 
   // Soft delete
   const handleDelete = async (id: string) => {
@@ -142,11 +159,10 @@ export default function PerfilTouristPage() {
         </div>
 
         {/* Stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '40px' }}>
           {[
             { label: 'Itinerarios', value: itineraries.length, emoji: '🗓️' },
-            { label: 'Spots visitados', value: 12, emoji: '📍' },
-            { label: 'Ciudad favorita', value: 'Piura', emoji: '🌊' },
+            { label: 'Spots visitados', value: visitedCount ?? '—', emoji: '📍' },
           ].map(s => (
             <div key={s.label} className="card" style={{ padding: '16px', textAlign: 'center' }}>
               <p style={{ fontSize: '24px', marginBottom: '6px' }}>{s.emoji}</p>
@@ -154,6 +170,25 @@ export default function PerfilTouristPage() {
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{s.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Tu menú — mismo abanico de opciones que en la app nativa */}
+        <div style={{ marginBottom: '40px' }}>
+          <p className="section-label" style={{ marginBottom: '14px' }}>TU MENÚ</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+            {MENU_OPTIONS.map(({ to, icon: Icon, title, sub }) => (
+              <Link key={to} to={to} className="card" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', textDecoration: 'none' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,85,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon size={18} color="var(--orange)" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13.5px', color: 'var(--white)' }}>{title}</div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '11.5px', color: 'var(--muted)' }}>{sub}</div>
+                </div>
+                <ChevronRight size={15} color="var(--muted)" />
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* Theme settings */}

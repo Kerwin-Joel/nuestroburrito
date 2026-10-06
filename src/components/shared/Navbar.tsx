@@ -1,18 +1,15 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Menu, X, ArrowRight, Heart, LogOut } from 'lucide-react'
+import { Search, Menu, X, ArrowRight, Heart, LogOut, Luggage, Hotel } from 'lucide-react'
 import UserAvatarMenu, { UserAvatar } from '../auth/UserAvatarMenu'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useThemeStore } from '../../stores/useThemeStore'
 
 export default function Navbar() {
   const { logout } = useAuthStore()
   const [scrolled, setScrolled] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
-  const [logoLoaded, setLogoLoaded] = useState(false)
   const location = useLocation()
-  const { computedTheme } = useThemeStore()
 
   useEffect(() => {
     const main = document.querySelector('main')
@@ -32,15 +29,6 @@ export default function Navbar() {
   useEffect(() => {
     setIsOpen(false)
   }, [location.pathname])
-
-  // Reset logo loaded state when theme changes for smooth crossfade
-  useEffect(() => {
-    setLogoLoaded(false)
-    const t = setTimeout(() => setLogoLoaded(true), 50)
-    return () => clearTimeout(t)
-  }, [computedTheme])
-
-  const logoSrc = computedTheme === 'light' ? '/imagotipo_dark.png' : '/imagotipo_white.png'
 
   const staggerContainer = {
     open: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } },
@@ -88,33 +76,22 @@ export default function Navbar() {
 
         <div className="page-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 
-          {/* Logo with crossfade on theme change */}
+          {/* Isotipo + wordmark, igual que BurritoLockup() en la app nativa
+              (un Row con el mismo isotipo_burrito.png y el nombre al lado) —
+              no la imagen "imagotipo_dark/white.png" que traía su propio
+              fondo con viñeta en vez de ser transparente. */}
           <Link to="/app" style={{ textDecoration: 'none', zIndex: 1100, flexShrink: 0 }}>
             <motion.div
-              animate={{
-                scale: scrolled ? 0.88 : 1,
-              }}
+              animate={{ scale: scrolled ? 0.88 : 1 }}
               transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
               whileHover={{ scale: scrolled ? 0.94 : 1.05 }}
               whileTap={{ scale: 0.95 }}
-              style={{ transformOrigin: 'left center' }}
+              style={{ transformOrigin: 'left center', display: 'flex', alignItems: 'center', gap: '9px' }}
             >
-              <motion.img
-                key={logoSrc}
-                src={logoSrc}
-                alt="Burrito"
-                initial={{ opacity: 0, filter: 'blur(4px)' }}
-                animate={{ opacity: logoLoaded ? 1 : 0, filter: logoLoaded ? 'blur(0px)' : 'blur(4px)' }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                onLoad={() => setLogoLoaded(true)}
-                style={{
-                  height: '90px',
-                  width: 'auto',
-                  display: 'block',
-                  objectFit: 'contain',
-                  filter: 'drop-shadow(0 2px 8px rgba(255,85,0,0.15))',
-                }}
-              />
+              <img src="/isotipo_burrito.png" alt="" style={{ height: '38px', width: '38px', borderRadius: '50%', display: 'block' }} />
+              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '22px', letterSpacing: '-0.5px', color: 'var(--white)' }}>
+                burri<span style={{ color: 'var(--orange)' }}>to</span>
+              </span>
             </motion.div>
           </Link>
 
@@ -124,6 +101,8 @@ export default function Navbar() {
             className="hidden-mobile"
           >
             <NavLink to="/app/explorar" label="Explorar" current={location.pathname} />
+            <NavLink to="/app/servicios" label="Servicios" current={location.pathname} />
+            <NavLink to="/app/hoteles" label="Hoteles" current={location.pathname} />
             <UserAvatarMenu />
           </div>
 
@@ -299,6 +278,26 @@ export default function Navbar() {
                     <div className="text-group">
                       <span className="title">Explorar</span>
                       <span className="subtitle">La guía definitiva de Piura</span>
+                    </div>
+                  </Link>
+                </motion.div>
+
+                <motion.div variants={fadeUp} style={{ marginTop: '4px' }}>
+                  <Link to="/app/servicios" className="mobile-premium-link">
+                    <div className="icon-circ"><Luggage size={20} /></div>
+                    <div className="text-group">
+                      <span className="title">Servicios</span>
+                      <span className="subtitle">Transporte, dinero, salud y más</span>
+                    </div>
+                  </Link>
+                </motion.div>
+
+                <motion.div variants={fadeUp} style={{ marginTop: '4px' }}>
+                  <Link to="/app/hoteles" className="mobile-premium-link">
+                    <div className="icon-circ"><Hotel size={20} /></div>
+                    <div className="text-group">
+                      <span className="title">Hoteles</span>
+                      <span className="subtitle">Reserva tu habitación</span>
                     </div>
                   </Link>
                 </motion.div>

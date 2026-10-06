@@ -2,15 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import {
   X, Star, Plus, ExternalLink, ChevronUp, Lightbulb,
-  Globe, MessageCircle, ChevronLeft, ChevronRight, Share2, Loader2
+  Globe, MessageCircle, ChevronLeft, ChevronRight, Share2, Loader2, Heart
 } from 'lucide-react'
 import { shareSpot } from '../../lib/shareSpot'
 import { useSpotsStore } from '../../stores/useSpotsStore'
 import { useItineraryStore } from '../../stores/useItineraryStore'
+import { useFavoritesStore } from '../../stores/useFavoritesStore'
 import { useUIStore } from '../../stores/useUIStore'
 import { CATEGORY_LABELS } from '../../lib/constants'
 import SpotTiktokSection from '../shared/SpotTiktokSection'
-import type { ItineraryStop } from '../../types/itinerary'
+import CatalogSection from './CatalogSection'
+import { spotToStop } from '../../lib/itineraryStops'
 import type { SpotSocialLinks } from '../../types/spot'
 
 const FacebookIcon = () => (
@@ -172,8 +174,10 @@ function SocialLinksSection({ links }: { links: SpotSocialLinks }) {
 /* ─── Main Component ─── */
 export default function SpotBottomSheet() {
   const { selectedSpot, sheetOpen, sheetExpanded, setSheetOpen, setSheetExpanded, selectSpot } = useSpotsStore()
-  const { addStop } = useItineraryStore()
+  const { requestAddStop } = useItineraryStore()
   const { addToast } = useUIStore()
+  const { isFavorite: checkFavorite, toggle: toggleFavorite } = useFavoritesStore()
+  const isFavorite = selectedSpot ? checkFavorite(selectedSpot.id) : false
   const sheetRef = useRef<HTMLDivElement>(null)
   const [shareLoading, setShareLoading] = useState(false)
   const [sharePulse, setSharePulse] = useState(false)
@@ -192,24 +196,13 @@ export default function SpotBottomSheet() {
     setTimeout(() => selectSpot(null), 300)
   }
 
+  // Igual que el detalle nativo: requestAddStop agrega directo si hay ruta
+  // abierta; si no, deja el spot pendiente y se cierra la ficha para que
+  // aparezca el sheet de crear ruta (dos capas abiertas se ven amontonadas).
   const handleAddToItinerary = () => {
     if (!selectedSpot) return
-    const stop: ItineraryStop = {
-      id: `stop-${Date.now()}`,
-      spotId: selectedSpot.id,
-      spotName: selectedSpot.name,
-      time: '12:00',
-      description: selectedSpot.description,
-      localTip: selectedSpot.localTip,
-      travelToNext: '',
-      photoUrl: selectedSpot.photoUrl,
-      lat: selectedSpot.lat,
-      lng: selectedSpot.lng,
-      visited: false,
-    }
-    addStop(stop)
-    addToast({ type: 'success', message: `${selectedSpot.name} añadido a tu día` })
-    close()
+    requestAddStop(spotToStop(selectedSpot))
+    if (useItineraryStore.getState().pendingStop) close()
   }
 
   const handleShare = async () => {
@@ -297,6 +290,21 @@ export default function SpotBottomSheet() {
 
           {/* Acciones rápidas — derecha */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+            {/* Corazón de favorito */}
+            <button
+              onClick={() => toggleFavorite(selectedSpot.id)}
+              aria-label={isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+              style={{
+                background: isFavorite ? 'rgba(255,85,0,0.1)' : 'var(--card2)',
+                border: `1.5px solid ${isFavorite ? 'transparent' : 'var(--border)'}`,
+                borderRadius: '50%', width: '36px', height: '36px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s cubic-bezier(0.34,1.56,0.64,1)',
+              }}
+            >
+              <Heart size={16} color={isFavorite ? '#E5484D' : 'var(--muted)'} fill={isFavorite ? '#E5484D' : 'none'} />
+            </button>
 
             {/* Botón Compartir — siempre visible, posición premium */}
             <button
@@ -449,6 +457,9 @@ export default function SpotBottomSheet() {
             <ChevronUp size={14} style={{ transform: sheetExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
             {sheetExpanded ? 'Ver menos' : 'Ver detalles completos'}
           </button>
+
+          {/* Catálogo del negocio (si vende algo) */}
+          <CatalogSection spot={selectedSpot} />
 
           {/* Videos Section */}
           <SpotTiktokSection spot={selectedSpot} />

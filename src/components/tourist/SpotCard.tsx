@@ -1,11 +1,10 @@
-import { Star, Lightbulb, Plus, Navigation, Clock } from 'lucide-react'
+import { Star, Lightbulb, Navigation, Clock } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Spot } from '../../types/spot'
 import { CATEGORY_LABELS } from '../../lib/constants'
 import { formatDistance } from '../../lib/formatters'
 import { useItineraryStore } from '../../stores/useItineraryStore'
-import { useUIStore } from '../../stores/useUIStore'
-import type { ItineraryStop } from '../../types/itinerary'
+import { spotToStop } from '../../lib/itineraryStops'
 import { useEffect, useState } from 'react'
 
 interface Props {
@@ -13,6 +12,9 @@ interface Props {
   distanceMeters?: number | null
   onClick?: () => void
   isSelecting?: boolean
+  /** El spot ya está en la ruta abierta: el botón pasa de "+" a "−". */
+  inItinerary?: boolean
+  /** Reemplaza el comportamiento del botón (p. ej. elegir un spot para "Mi día"). */
   onAddToItinerary?: () => void
 }
 
@@ -165,10 +167,10 @@ export default function SpotCard({
   distanceMeters,
   onClick,
   isSelecting = false,
+  inItinerary = false,
   onAddToItinerary,
 }: Props) {
-  const { addStop } = useItineraryStore()
-  const { addToast } = useUIStore()
+  const { requestAddStop, removeSpot } = useItineraryStore()
   const cat = CATEGORY_LABELS[spot.category]
 
   // Re-evalúa cada minuto para que el badge cambie automáticamente
@@ -180,27 +182,14 @@ export default function SpotCard({
     return () => clearInterval(iv)
   }, [spot.id, spot.eventDate, spot.eventDateEnd, JSON.stringify(spot.schedule)])
 
+  // Espejo de toggleInItinerary() en ExploreScreen.kt: si ya está en la ruta
+  // se quita; si no, requestAddStop agrega directo o, sin ruta abierta, abre
+  // el sheet para crear una (antes el "+" no hacía nada en ese caso).
   const handleAddClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (onAddToItinerary) {
-      onAddToItinerary()
-    } else {
-      const stop: ItineraryStop = {
-        id: `stop-${Date.now()}`,
-        spotId: spot.id,
-        spotName: spot.name,
-        time: '12:00',
-        description: spot.description,
-        localTip: spot.localTip,
-        travelToNext: '',
-        photoUrl: spot.photoUrl,
-        lat: spot.lat,
-        lng: spot.lng,
-        visited: false,
-      }
-      addStop(stop)
-      addToast({ type: 'success', message: `${spot.name} añadido a tu itinerario` })
-    }
+    if (onAddToItinerary) onAddToItinerary()
+    else if (inItinerary) removeSpot(spot.id)
+    else requestAddStop(spotToStop(spot))
   }
 
   const borderColor = isSelecting
@@ -328,37 +317,45 @@ export default function SpotCard({
         <EventBadge status={eventStatus} />
       </div>
 
-      {/* ── Botón añadir ── */}
+      {/* ── "+" / "−" ── espejo de AddToggleButton() en ExploreScreen.kt:
+          ya en la ruta → naranja sólido con "−"; eligiendo spot para "Mi
+          día" → resaltado; si no, neutro. El trazo gira media vuelta y el
+          brazo vertical se recoge, así se lee como confirmación. */}
       <motion.button
         onClick={handleAddClick}
-        whileTap={{ scale: 0.82 }}
-        whileHover={{ scale: 1.1 }}
-        aria-label={`Añadir ${spot.name} al itinerario`}
-        className="btn btn-ghost btn-sm"
+        whileTap={{ scale: 0.86 }}
+        aria-label={inItinerary && !isSelecting ? `Quitar ${spot.name} del itinerario` : `Añadir ${spot.name} al itinerario`}
         style={{
-          flexShrink: 0, padding: '8px',
-          display: 'flex', alignItems: 'center', gap: '4px',
-          background: isSelecting ? 'rgba(255,85,0,0.1)' : undefined,
-          borderColor: isSelecting ? 'var(--orange)' : undefined,
-          color: isSelecting ? 'var(--orange)' : undefined,
-          transition: 'all 0.2s ease',
+          flexShrink: 0, width: '32px', height: '32px', borderRadius: '50%',
+          border: 'none', cursor: 'pointer', padding: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: inItinerary && !isSelecting ? 'var(--orange)' : isSelecting ? 'rgba(255,85,0,0.12)' : 'var(--card2)',
+          color: inItinerary && !isSelecting ? '#ffffff' : isSelecting ? 'var(--orange)' : 'var(--muted)',
+          transition: 'background 0.25s ease, color 0.25s ease',
         }}
       >
-        <Plus size={14} />
-        <AnimatePresence>
-          {isSelecting && (
-            <motion.span
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 'auto' }}
-              exit={{ opacity: 0, width: 0 }}
-              transition={{ duration: 0.2 }}
-              style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 700, overflow: 'hidden' }}
-            >
-              Añadir
-            </motion.span>
-          )}
-        </AnimatePresence>
+        <PlusMinus minus={inItinerary && !isSelecting} />
       </motion.button>
     </motion.div>
+  )
+}
+
+/**
+ * Un solo trazo que se transforma — espejo de PlusMinusMorph() en
+ * ExploreScreen.kt: el "+" gira media vuelta mientras su brazo vertical se
+ * recoge hasta quedar en "−", y al revés vuelve a salir.
+ */
+function PlusMinus({ minus }: { minus: boolean }) {
+  const spring = { type: 'spring' as const, stiffness: 380, damping: 20 }
+  return (
+    <motion.svg width="18" height="18" viewBox="0 0 18 18" animate={{ rotate: minus ? 180 : 0 }} transition={spring}>
+      <line x1="3.5" y1="9" x2="14.5" y2="9" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <motion.line
+        x1="9" y1="3.5" x2="9" y2="14.5"
+        stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
+        animate={{ scaleY: minus ? 0 : 1, opacity: minus ? 0 : 1 }}
+        transition={spring}
+      />
+    </motion.svg>
   )
 }

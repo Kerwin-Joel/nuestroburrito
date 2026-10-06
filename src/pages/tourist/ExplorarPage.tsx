@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Map, List, X, Plus } from 'lucide-react'
+import { Map, List, X, Plus, ChevronDown } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import MapView from '../../components/shared/MapView'
 import SpotCard from '../../components/tourist/SpotCard'
@@ -30,15 +30,28 @@ export default function ExplorarPage() {
   const [dbCategories, setDbCategories] = useState<{ id: SpotCategory | null; label: string; emoji: string }[]>([
     { id: null, label: 'Todos', emoji: '✨' },
   ])
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false)
 
   useEffect(() => {
     categoriesService.getAll().then(cats => {
+      // Alfabético, no por sort_order — igual que en la app nativa
+      // (CategoriesRepository.getAll usa Collator es-PE): "Todos" siempre
+      // primero, el resto ordenado como lo vería cualquiera buscando una letra.
+      const sorted = [...cats].sort((a, b) => a.label.localeCompare(b.label, 'es'))
       setDbCategories([
         { id: null, label: 'Todos', emoji: '✨' },
-        ...cats.map(c => ({ id: c.id as SpotCategory, label: c.label, emoji: c.emoji })),
+        ...sorted.map(c => ({ id: c.id as SpotCategory, label: c.label, emoji: c.emoji })),
       ])
     }).catch(() => {})
   }, [])
+
+  const activeCategoryInfo = dbCategories.find(c => c.id === activeCategory) ?? dbCategories[0]
+
+  // Spots que ya están en la ruta abierta: su botón pasa de "+" a "−". Con la
+  // ruta completada vuelven todos a "+" (agregar ahí lleva a crear otra).
+  const addedSpotIds = new Set(
+    current && current.status !== 'completed' ? current.stops.map(s => s.spotId) : [],
+  )
 
   const sortedSpots = [...filtered].sort((a, b) => {
     const dateA = a.eventDate ? new Date(a.eventDate + 'T00:00:00').getTime() : null
@@ -180,83 +193,104 @@ export default function ExplorarPage() {
         borderBottom: '1px solid var(--border)',
         position: 'sticky', top: 0, zIndex: 800,
       }}>
-        {/* Categorías + toggle */}
-        <div style={{ padding: '10px 16px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Categoría (dropdown) + toggle mapa/lista — mismo layout que
+            CategoryDropdown + MapListToggle en ExploreScreen.kt: un botón
+            pastilla con la categoría activa (no todos los chips a la vez), y
+            el toggle como un par de íconos uno al lado del otro. */}
+        <div style={{ padding: '10px 16px 0', display: 'flex', alignItems: 'center', gap: '10px', position: 'relative' }}>
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setCategoryMenuOpen(o => !o)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                padding: '9px 14px', borderRadius: '100px',
+                border: '1px solid var(--border)', background: 'var(--card2)',
+                color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 700,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+              }}
+            >
+              <span style={{ fontSize: '14px' }}>{activeCategoryInfo.emoji}</span>
+              {activeCategoryInfo.label}
+              <ChevronDown size={16} color="var(--muted)" style={{ transform: categoryMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            </button>
 
-          {/* Scroll de chips con fade derecho */}
-          <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-            <div style={{
-              display: 'flex', gap: '6px', overflowX: 'auto',
-              scrollbarWidth: 'none', msOverflowStyle: 'none',
-              paddingBottom: '2px',
-            }}>
-              {dbCategories.map(({ id, label, emoji }) => {
-                const isActive = activeCategory === id
-                return (
-                  <button
-                    key={String(id)}
-                    onClick={() => setCategory(id as SpotCategory | null)}
+            <AnimatePresence>
+              {categoryMenuOpen && (
+                <>
+                  <div onClick={() => setCategoryMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 850 }} />
+                  <motion.div
+                    // Espejo (simplificado) de CategoryDropdown.kt: ahí el
+                    // propio botón CRECE hasta volverse el menú. Acá no se
+                    // replica la morfosis superficie-a-superficie exacta,
+                    // pero sí su sensación — nace anclado en la esquina del
+                    // botón y se despliega hacia abajo con un resorte con
+                    // leve rebote, no un fade plano.
+                    initial={{ opacity: 0, scaleX: 0.7, scaleY: 0.35, y: -8 }}
+                    animate={{ opacity: 1, scaleX: 1, scaleY: 1, y: 0 }}
+                    exit={{ opacity: 0, scaleX: 0.85, scaleY: 0.5, y: -6, transition: { duration: 0.13 } }}
+                    transition={{ type: 'spring', stiffness: 360, damping: 24 }}
                     style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '5px',
-                      padding: '7px 14px', borderRadius: '100px',
-                      border: isActive ? '1px solid var(--border-hover)' : '1px solid var(--border)',
-                      background: isActive ? 'var(--border)' : 'transparent',
-                      color: isActive ? 'var(--orange)' : 'var(--muted)',
-                      fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: isActive ? 700 : 500,
-                      cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-                      transition: 'all 0.2s',
+                      position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 851,
+                      width: '228px', maxHeight: '290px', overflowY: 'auto',
+                      background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '20px',
+                      boxShadow: '0 12px 32px rgba(0,0,0,0.25)', padding: '6px',
+                      transformOrigin: 'top left',
                     }}
                   >
-                    <span style={{ fontSize: '13px' }}>{emoji}</span>
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
-            {/* Fade derecho */}
-            <div style={{
-              position: 'absolute', right: 0, top: 0, bottom: 0, width: '32px',
-              background: 'linear-gradient(to right, transparent, var(--card))',
-              pointerEvents: 'none',
-            }} />
+                    {dbCategories.filter(c => c.id !== activeCategory).map(({ id, label, emoji }) => (
+                      <button
+                        key={String(id)}
+                        onClick={() => { setCategory(id as SpotCategory | null); setCategoryMenuOpen(false) }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+                          padding: '11px 12px', borderRadius: '12px', border: 'none', background: 'transparent',
+                          color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: '14.5px',
+                          cursor: 'pointer', textAlign: 'left',
+                        }}
+                      >
+                        <span style={{ fontSize: '16px', width: '22px', flexShrink: 0 }}>{emoji}</span>
+                        {label}
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Toggle mapa/lista */}
+          <div style={{ flex: 1 }} />
+
+          {/* Toggle mapa/lista — una pastilla horizontal, igual que
+              MapListToggle() en la app nativa. */}
           <div style={{
             display: 'flex', background: 'var(--card2)',
-            border: '1px solid var(--border)', borderRadius: '10px',
-            overflow: 'hidden', flexShrink: 0, padding: '3px', gap: '2px', flexDirection: 'column'
+            border: '1px solid var(--border)', borderRadius: '12px',
+            overflow: 'hidden', flexShrink: 0, padding: '3px', gap: '2px',
           }}>
             {([['map', Map, 'Mapa'], ['list', List, 'Lista']] as const).map(([mode, Icon, label]) => (
               <button
                 key={mode}
                 onClick={() => viewMode !== mode && toggleView()}
+                aria-label={label}
                 style={{
-                  padding: '6px 10px', borderRadius: '7px', border: 'none', cursor: 'pointer',
+                  padding: '8px', borderRadius: '9px', border: 'none', cursor: 'pointer',
                   background: viewMode === mode ? 'var(--orange)' : 'transparent',
                   color: viewMode === mode ? 'white' : 'var(--muted)',
-                  fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 700,
-                  display: 'flex', alignItems: 'center', gap: '4px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.2s',
                 }}
               >
-                <Icon size={12} />
-                {label}
+                <Icon size={18} />
               </button>
             ))}
           </div>
         </div>
 
-        {/* Contador de resultados */}
-        <div style={{ padding: '6px 16px 8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <div style={{
-            width: '6px', height: '6px', borderRadius: '50%',
-            background: filtered.length > 0 ? 'var(--orange)' : 'var(--muted)',
-            boxShadow: filtered.length > 0 ? '0 0 6px var(--orange)' : 'none',
-          }} />
+        {/* Contador de resultados — mismo texto que ExploreScreen.kt: siempre
+            termina en "· PIURA", sin importar la categoría elegida. */}
+        <div style={{ padding: '8px 16px 8px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--muted)', letterSpacing: '1px' }}>
-            {filtered.length} SPOT{filtered.length !== 1 ? 'S' : ''}
-            {activeCategory ? ` · ${activeCategory.toUpperCase()}` : ' · PIURA'}
+            {filtered.length} SPOT{filtered.length !== 1 ? 'S' : ''} · PIURA
           </span>
         </div>
       </div>
@@ -283,17 +317,30 @@ export default function ExplorarPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {sortedSpots.map(spot => {
+                {sortedSpots.map((spot, index) => {
                   const dist = getDistance(spot, userLat ?? undefined, userLng ?? undefined)
                   return (
-                    <SpotCard
+                    <motion.div
                       key={spot.id}
-                      spot={spot}
-                      distanceMeters={dist ?? undefined}
-                      onClick={() => isSelectingSpot ? handleAddSpot(spot) : selectSpot(spot)}
-                      isSelecting={isSelectingSpot}
-                      onAddToItinerary={() => handleAddSpot(spot)}
-                    />
+                      // Espejo de Modifier.dropIn() en ExploreScreen.kt: la
+                      // tarjeta llega "levantada" (más grande, corrida hacia
+                      // abajo-derecha, algo inclinada) y cae en su sitio con
+                      // un resorte que se pasa un poco — como si se soltara.
+                      // Solo las primeras 8 (las que entran con la lista; el
+                      // resto, al hacer scroll, no debe "caer").
+                      initial={index < 8 ? { opacity: 0, x: 22, y: 64, rotate: -3, scale: 1.06 } : false}
+                      animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
+                      transition={index < 8 ? { delay: 0.09 + index * 0.055, type: 'spring', stiffness: 260, damping: 19 } : { duration: 0 }}
+                    >
+                      <SpotCard
+                        spot={spot}
+                        distanceMeters={dist ?? undefined}
+                        onClick={() => isSelectingSpot ? handleAddSpot(spot) : selectSpot(spot)}
+                        isSelecting={isSelectingSpot}
+                        inItinerary={addedSpotIds.has(spot.id)}
+                        onAddToItinerary={isSelectingSpot ? () => handleAddSpot(spot) : undefined}
+                      />
+                    </motion.div>
                   )
                 })}
               </div>
