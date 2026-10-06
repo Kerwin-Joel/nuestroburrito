@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { cachedFetch, invalidateCache } from '../lib/sessionCache'
 
 // ─── Types ───────────────────────────────────────────────
 export interface Category {
@@ -40,13 +41,17 @@ export const categoriesService = {
   // ── Categories ──────────────────────────────────────────
 
   async getAll(): Promise<Category[]> {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('sort_order', { ascending: true })
+    // Casi no cambian (las administra el admin) — Explorar, el formulario
+    // de spot, etc. pedían esta misma lista cada vez que se montaban.
+    return cachedFetch('categories', async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('sort_order', { ascending: true })
 
-    if (error) throw error
-    return (data ?? []).map(mapCategory)
+      if (error) throw error
+      return (data ?? []).map(mapCategory)
+    })
   },
 
   async create(cat: Omit<Category, 'createdAt' | 'sortOrder'> & { sortOrder?: number }): Promise<Category> {
@@ -63,6 +68,7 @@ export const categoriesService = {
       .single()
 
     if (error) throw error
+    invalidateCache('categories')
     return mapCategory(data)
   },
 
@@ -81,6 +87,7 @@ export const categoriesService = {
       .single()
 
     if (error) throw error
+    invalidateCache('categories')
     return mapCategory(data)
   },
 
@@ -91,6 +98,7 @@ export const categoriesService = {
       .eq('id', id)
 
     if (error) throw error
+    invalidateCache('categories')
   },
 
   // ── Zones ───────────────────────────────────────────────

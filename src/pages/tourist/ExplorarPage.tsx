@@ -64,7 +64,10 @@ export default function ExplorarPage() {
 
   const { spots } = useSpotsStore()
 
-  useEffect(() => { load(true) }, [load])
+  // Sin forzar: si el store ya tiene los spots (de Inicio, o de una visita
+  // anterior a Explorar), los reusa en vez de volver a pedirlos — la
+  // suscripción en tiempo real de useSpots los mantiene al día.
+  useEffect(() => { load() }, [load])
 
   // ── Deep-link: ?spot=<id> ──
   // Abre automáticamente el BottomSheet del spot cuando se llega desde un link compartido.

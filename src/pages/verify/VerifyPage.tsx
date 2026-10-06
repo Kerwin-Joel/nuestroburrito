@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useItineraryStore } from '../../stores/useItineraryStore'
 import { itinerariesService } from '../../services/itineraries'
+import { benefitsService } from '../../services/benefits'
 import { Loader2, CheckCircle, XCircle } from 'lucide-react'
 
 type State = 'loading' | 'success' | 'error' | 'no_itinerary' | 'already_visited'
@@ -77,6 +78,8 @@ export default function VerifyPage() {
                 qr_code: code,
                 itinerary_id: active.id,
             })
+            // La caché de "spots visitados" (Beneficios/Pasaporte/Perfil) ya no vale.
+            benefitsService.invalidateVisited(user.id)
 
             // 5. Guarda en Supabase
             await itinerariesService.update(active.id, { stops: updatedStops })

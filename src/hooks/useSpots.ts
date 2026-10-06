@@ -9,8 +9,16 @@ export const useSpots = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // `spots` vive en un store global (useSpotsStore), no en este componente:
+  // ya sobrevive a navegar entre Inicio/Explorar/Beneficios/Pasaporte. El
+  // problema era que cada uno de ellos igual pedía los spots de nuevo al
+  // montarse, sin fijarse si el store ya los tenía — de ahí el pedido HTTP
+  // de más en cada ida y vuelta entre secciones. La suscripción en tiempo
+  // real (más abajo) ya se encarga de mantenerlos al día sin volver a
+  // pedirlos; `force` sigue disponible para cuando sí hace falta refrescar
+  // a propósito (p. ej. un pull-to-refresh).
   const load = useCallback(async (force = false) => {
-    // ← quita el guard de caché por ahora
+    if (!force && useSpotsStore.getState().spots.length > 0) return
     setLoading(true)
     try {
       const data = await spotsService.getSpots()

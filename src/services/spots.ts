@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { FEATURES } from '../lib/constants'
 import { MOCK_SPOTS } from '../lib/mockData'
+import { cachedFetch, invalidateCache } from '../lib/sessionCache'
 import type { Spot } from '../types/spot'
 
 // Convierte snake_case de Supabase a camelCase
@@ -91,15 +92,17 @@ export const spotsService = {
   async getHotels(): Promise<Spot[]> {
     if (!FEATURES.REAL_AUTH) return []
 
-    const { data, error } = await supabase
-      .from('spots')
-      .select('*')
-      .eq('status', 'verified')
-      .eq('category', HOTELS_CATEGORY)
-      .order('created_at', { ascending: false })
+    return cachedFetch('hotels', async () => {
+      const { data, error } = await supabase
+        .from('spots')
+        .select('*')
+        .eq('status', 'verified')
+        .eq('category', HOTELS_CATEGORY)
+        .order('created_at', { ascending: false })
 
-    if (error) throw error
-    return (data ?? []).map(mapSpot)
+      if (error) throw error
+      return (data ?? []).map(mapSpot)
+    })
   },
 
   // Para admin — lee TODOS los spots (cualquier status)
@@ -159,6 +162,7 @@ export const spotsService = {
       .single()
 
     if (error) throw error
+    invalidateCache('hotels')
     return mapSpot(data)
   },
 
@@ -177,6 +181,7 @@ export const spotsService = {
       .single()
 
     if (error) throw error
+    invalidateCache('hotels')
     return mapSpot(data)
   },
 
@@ -192,6 +197,7 @@ export const spotsService = {
       .eq('id', id)
 
     if (error) throw error
+    invalidateCache('hotels')
   },
 
   async deleteSpot(id: string): Promise<void> {
@@ -203,6 +209,7 @@ export const spotsService = {
       .eq('id', id)
 
     if (error) throw error
+    invalidateCache('hotels')
   },
 
   // Suscripción en tiempo real para turistas
