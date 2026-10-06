@@ -180,6 +180,15 @@ export const authService = {
     if (error) throw error
   },
 
+  /** Espejo de authRepo.updateName() en la app nativa. */
+  updateName: async (userId: string, name: string): Promise<void> => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ name })
+      .eq('id', userId)
+    if (error) throw error
+  },
+
   refreshSession: async (): Promise<AuthUser | null> => {
     const { data, error } = await supabase.auth.refreshSession()
     if (error || !data.session) return null

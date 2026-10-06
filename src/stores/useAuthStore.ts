@@ -26,11 +26,12 @@ interface AuthActions {
   resetPassword: (email: string) => Promise<void>
   refreshSession: () => Promise<void>
   clearError: () => void
+  updateName: (name: string) => Promise<void>
 }
 let isLoggingOut = false
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
       isLoading: true,
@@ -160,6 +161,17 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
 
       clearError: () => set({ error: null }),
+
+      // Se pinta el nombre nuevo de inmediato; esperar a la red para ver tu
+      // propio nombre se siente roto (mismo criterio que la app nativa).
+      updateName: async (name) => {
+        const current = get().user
+        if (!current) return
+        const clean = name.trim()
+        if (!clean) return
+        set({ user: { ...current, profile: { ...current.profile, name: clean } } })
+        await authService.updateName(current.id, clean)
+      },
     }),
     {
       name: 'burrito-auth',
