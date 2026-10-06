@@ -190,13 +190,32 @@ code, kbd, pre, samp {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: all 0.3s var(--ease-smooth);
+  /* "all" hacía que el navegador vigile cada propiedad CSS por si cambia
+     (incluidas cosas caras como background o border-color) en vez de solo
+     las 3 que de verdad animan al pasar el mouse — de más en una lista con
+     muchas tarjetas. */
+  transition: transform 0.3s var(--ease-smooth), box-shadow 0.3s var(--ease-smooth), border-color 0.3s var(--ease-smooth);
   position: relative;
 }
 .card:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow-card);
   border-color: var(--border-hover);
+}
+
+/* Entrada de las tarjetas de Explorar — espejo de Modifier.dropIn() en
+   ExploreScreen.kt, pero en CSS puro (no Framer Motion/JS): una animación
+   por keyframes corre en el compositor y no compite por el hilo principal
+   con la carga/decodificación de las fotos de cada tarjeta, que es lo que
+   se sentía como tirones con la versión animada por JS. */
+@keyframes cardDropIn {
+  from { opacity: 0; transform: translateY(36px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card-drop-in {
+  animation: cardDropIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: var(--drop-delay, 0s);
+  will-change: transform, opacity;
 }
 .card-glow {
   position: absolute;

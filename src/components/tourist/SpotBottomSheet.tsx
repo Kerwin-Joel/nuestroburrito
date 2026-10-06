@@ -179,14 +179,21 @@ export default function SpotBottomSheet() {
   const { isFavorite: checkFavorite, toggle: toggleFavorite } = useFavoritesStore()
   const isFavorite = selectedSpot ? checkFavorite(selectedSpot.id) : false
   const sheetRef = useRef<HTMLDivElement>(null)
+  const backdropRef = useRef<HTMLDivElement>(null)
   const [shareLoading, setShareLoading] = useState(false)
   const [sharePulse, setSharePulse] = useState(false)
 
+  // El fondo aparecía de golpe (sin transición propia) mientras solo la
+  // hoja se animaba — ese contraste (un elemento instantáneo junto a uno
+  // animado) es lo que se leía como "brusco", más allá de que la hoja en
+  // sí se deslizara bien. Ahora los dos se animan juntos.
   useEffect(() => {
     if (!sheetRef.current) return
     if (sheetOpen) {
+      if (backdropRef.current) gsap.fromTo(backdropRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power1.out' })
       gsap.fromTo(sheetRef.current, { y: '100%' }, { y: '0%', duration: 0.4, ease: 'power3.out' })
     } else {
+      if (backdropRef.current) gsap.to(backdropRef.current, { opacity: 0, duration: 0.25, ease: 'power1.in' })
       gsap.to(sheetRef.current, { y: '100%', duration: 0.3, ease: 'power2.in' })
     }
   }, [sheetOpen])
@@ -241,14 +248,19 @@ export default function SpotBottomSheet() {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — sin backdrop-filter: un blur a pantalla completa
+          recalculándose cuadro a cuadro mientras la hoja se desliza encima
+          le robaba presupuesto de cuadro a esa misma animación en un
+          celular real. Un scrim liso es igual de legible y mucho más barato. */}
       {sheetOpen && (
         <div
+          ref={backdropRef}
           onClick={close}
           style={{
             position: 'fixed', inset: 0, zIndex: 4000,
             background: 'rgba(5,4,3,0.6)',
-            backdropFilter: 'blur(4px)',
+            opacity: 0,
+            willChange: 'opacity',
           }}
         />
       )}
@@ -267,6 +279,7 @@ export default function SpotBottomSheet() {
           transform: 'translateY(100%)',
           maxHeight: '88vh',
           overflowY: 'auto',
+          willChange: 'transform',
         }}
       >
         {/* Handle + Share + Close — sticky, siempre visible */}

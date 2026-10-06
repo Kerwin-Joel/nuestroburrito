@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Map, List, X, Plus, ChevronDown } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -320,21 +320,19 @@ export default function ExplorarPage() {
                 {sortedSpots.map((spot, index) => {
                   const dist = getDistance(spot, userLat ?? undefined, userLng ?? undefined)
                   return (
-                    <motion.div
+                    // Espejo de Modifier.dropIn() en ExploreScreen.kt, pero
+                    // en CSS (@keyframes cardDropIn, ver globals.css) en vez
+                    // de Framer Motion: la versión animada por JS competía
+                    // por el hilo principal con la carga/decodificación de
+                    // las fotos de cada tarjeta y se sentía con tirones en
+                    // un celular real — una animación de compositor no
+                    // depende de que el hilo principal esté libre. Solo las
+                    // primeras 8 (las que entran con la lista; el resto, al
+                    // hacer scroll, no debe "caer").
+                    <div
                       key={spot.id}
-                      // Espejo de Modifier.dropIn() en ExploreScreen.kt, pero
-                      // más liviano: la versión original animaba 5
-                      // propiedades (x/y/rotate/scale/opacity) por tarjeta —
-                      // de más en celulares reales, se sentía "trabado" en
-                      // vez de caer suave. Con solo y + opacity (2
-                      // propiedades, ambas baratas de componer) se mantiene
-                      // la sensación de caída sin el costo. Solo las
-                      // primeras 8 (las que entran con la lista; el resto,
-                      // al hacer scroll, no debe "caer").
-                      initial={index < 8 ? { opacity: 0, y: 36 } : false}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={index < 8 ? { delay: 0.07 + index * 0.045, type: 'spring', stiffness: 300, damping: 26 } : { duration: 0 }}
-                      style={index < 8 ? { willChange: 'transform, opacity' } : undefined}
+                      className={index < 8 ? 'card-drop-in' : undefined}
+                      style={index < 8 ? { '--drop-delay': `${0.07 + index * 0.045}s` } as CSSProperties : undefined}
                     >
                       <SpotCard
                         spot={spot}
@@ -344,7 +342,7 @@ export default function ExplorarPage() {
                         inItinerary={addedSpotIds.has(spot.id)}
                         onAddToItinerary={isSelectingSpot ? () => handleAddSpot(spot) : undefined}
                       />
-                    </motion.div>
+                    </div>
                   )
                 })}
               </div>
