@@ -70,16 +70,6 @@ export default function ItinerarioPage() {
     autoComplete()
   }, [current?.stops])
 
-  useEffect(() => {
-    const wasDiscarded = sessionStorage.getItem('burrito-discarded')
-    if (!current && user?.id && !wasDiscarded) {
-      itinerariesService.getByUser(user.id).then(itineraries => {
-        const inProgress = itineraries.find(i => i.status === 'in_progress')
-        if (inProgress) setCurrent(inProgress)
-      })
-    }
-  }, []) // ← solo al montar, sin dependencias
-
   const handleTitleSave = () => {
     if (!current || !titleInput.trim()) return
     setCurrent({ ...current, title: titleInput.trim() })
