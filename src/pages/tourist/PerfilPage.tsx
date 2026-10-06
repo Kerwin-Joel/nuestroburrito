@@ -12,6 +12,7 @@ import { useItineraryStore } from '../../stores/useItineraryStore'
 import { formatDate, timeUntil, initials } from '../../lib/formatters'
 import type { Itinerary } from '../../types/itinerary'
 import { supabase } from '../../lib/supabase'
+import { cachedFetch } from '../../lib/sessionCache'
 import ThemeSwitcher from '../../components/shared/ThemeSwitcher'
 
 /** "Tu menú": mismo abanico de opciones que CustomTab.kt en la app nativa. */
@@ -71,12 +72,15 @@ export default function PerfilTouristPage() {
   }, [])
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    // El avatar de OAuth no cambia a media sesión — se pedía de nuevo cada
+    // vez que se entraba a Perfil.
+    if (!user?.id) return
+    cachedFetch(`auth:avatar:${user.id}`, () => supabase.auth.getUser()).then(({ data }) => {
       const url = data.user?.user_metadata?.avatar_url
         || data.user?.user_metadata?.picture
       if (url) setAvatarUrl(url)
     })
-  }, [])
+  }, [user?.id])
 
   useEffect(() => {
     loadItineraries()

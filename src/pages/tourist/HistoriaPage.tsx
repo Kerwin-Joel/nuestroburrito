@@ -4,6 +4,7 @@ import { Search, Sparkles, ChevronDown, ChevronUp, BookOpen, MessageCircle } fro
 import AIChatModal from '../../components/tourist/AIChatModal'
 import HistoriaDetailModal, { type HistoriaItem } from '../../components/tourist/HistoriaDetailModal'
 import { supabase } from '../../lib/supabase'
+import { cachedFetch } from '../../lib/sessionCache'
 
 /* ─── Mock Data ─── */
 const CATEGORIAS = [
@@ -250,31 +251,34 @@ export default function HistoriaPage() {
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
-    supabase
-      .from('historia_piura')
-      .select('*')
-      .eq('activo', true)
-      .order('orden', { ascending: true })
-      .then(({ data: rows }) => {
-        const mapped = (rows ?? []).map(r => ({
-          id: r.id,
-          cat: r.cat,
-          año: r.año,
-          emoji: r.emoji,
-          titulo: r.titulo,
-          resumen: r.resumen,
-          datos: r.datos ?? [],
-          imagenes: r.imagenes ?? [],
-          descripcionLarga: r.descripcion_larga,
-          sabiasQue: r.sabias_que ?? [],
-          lugaresRelacionados: r.lugares_relacionados ?? [],
-          horario: r.horario,
-          entrada: r.entrada,
-          rating: r.rating,
-        }))
-        setData(mapped)
-        setLoadingData(false)
-      })
+    // Solo el admin la cambia — Historia la volvía a pedir cada vez que se
+    // entraba a esa pantalla.
+    cachedFetch('historia_piura', async () => {
+      const { data: rows } = await supabase
+        .from('historia_piura')
+        .select('*')
+        .eq('activo', true)
+        .order('orden', { ascending: true })
+      return (rows ?? []).map(r => ({
+        id: r.id,
+        cat: r.cat,
+        año: r.año,
+        emoji: r.emoji,
+        titulo: r.titulo,
+        resumen: r.resumen,
+        datos: r.datos ?? [],
+        imagenes: r.imagenes ?? [],
+        descripcionLarga: r.descripcion_larga,
+        sabiasQue: r.sabias_que ?? [],
+        lugaresRelacionados: r.lugares_relacionados ?? [],
+        horario: r.horario,
+        entrada: r.entrada,
+        rating: r.rating,
+      })) as HistoriaItem[]
+    }).then(mapped => {
+      setData(mapped)
+      setLoadingData(false)
+    })
   }, [])
 
   const filtered = useMemo(() => {

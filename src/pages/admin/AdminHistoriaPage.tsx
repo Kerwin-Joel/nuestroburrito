@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Edit, Trash2, Search, Eye, EyeOff, GripVertical } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { invalidateCache } from '../../lib/sessionCache'
 import { useUIStore } from '../../stores/useUIStore'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
@@ -87,6 +88,7 @@ function HistoriaModal({ item, onClose, onSave }: {
         } else {
             await supabase.from('historia_piura').insert(payload)
         }
+        invalidateCache('historia_piura')
         setSaving(false)
         onSave()
         onClose()
@@ -269,12 +271,14 @@ export default function AdminHistoriaPage() {
     const handleDelete = async (id: string) => {
         if (!confirm('¿Eliminar esta entrada?')) return
         await supabase.from('historia_piura').delete().eq('id', id)
+        invalidateCache('historia_piura')
         setItems(p => p.filter(i => i.id !== id))
         addToast({ type: 'info', message: 'Entrada eliminada' })
     }
 
     const handleToggle = async (item: HistoriaItem) => {
         await supabase.from('historia_piura').update({ activo: !item.activo }).eq('id', item.id)
+        invalidateCache('historia_piura')
         setItems(p => p.map(i => i.id === item.id ? { ...i, activo: !i.activo } : i))
         addToast({ type: 'success', message: item.activo ? 'Entrada ocultada' : 'Entrada visible' })
     }
