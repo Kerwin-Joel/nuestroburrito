@@ -322,15 +322,19 @@ export default function ExplorarPage() {
                   return (
                     <motion.div
                       key={spot.id}
-                      // Espejo de Modifier.dropIn() en ExploreScreen.kt: la
-                      // tarjeta llega "levantada" (más grande, corrida hacia
-                      // abajo-derecha, algo inclinada) y cae en su sitio con
-                      // un resorte que se pasa un poco — como si se soltara.
-                      // Solo las primeras 8 (las que entran con la lista; el
-                      // resto, al hacer scroll, no debe "caer").
-                      initial={index < 8 ? { opacity: 0, x: 22, y: 64, rotate: -3, scale: 1.06 } : false}
-                      animate={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
-                      transition={index < 8 ? { delay: 0.09 + index * 0.055, type: 'spring', stiffness: 260, damping: 19 } : { duration: 0 }}
+                      // Espejo de Modifier.dropIn() en ExploreScreen.kt, pero
+                      // más liviano: la versión original animaba 5
+                      // propiedades (x/y/rotate/scale/opacity) por tarjeta —
+                      // de más en celulares reales, se sentía "trabado" en
+                      // vez de caer suave. Con solo y + opacity (2
+                      // propiedades, ambas baratas de componer) se mantiene
+                      // la sensación de caída sin el costo. Solo las
+                      // primeras 8 (las que entran con la lista; el resto,
+                      // al hacer scroll, no debe "caer").
+                      initial={index < 8 ? { opacity: 0, y: 36 } : false}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={index < 8 ? { delay: 0.07 + index * 0.045, type: 'spring', stiffness: 300, damping: 26 } : { duration: 0 }}
+                      style={index < 8 ? { willChange: 'transform, opacity' } : undefined}
                     >
                       <SpotCard
                         spot={spot}

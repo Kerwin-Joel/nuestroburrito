@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { UserRole } from '../../types/auth'
 import { ReactNode } from 'react'
@@ -18,9 +18,12 @@ export default function ProtectedRoute({ allowedRoles, children }: Props) {
   // la apertura de la app se ve una vez por arranque, no cada vez que se
   // revalida la sesión.
   const [splashDone, setSplashDone] = useState(false)
+  // Referencia estable: AppSplash ya se protege de un onDone que cambia en
+  // cada render, pero de paso evita renovar la prop sin necesidad.
+  const handleSplashDone = useCallback(() => setSplashDone(true), [])
 
   if (isLoading || !splashDone) {
-    return <AppSplash waitFor={isLoading} onDone={() => setSplashDone(true)} />
+    return <AppSplash waitFor={isLoading} onDone={handleSplashDone} />
   }
 
   if (!isAuthenticated || !user) {

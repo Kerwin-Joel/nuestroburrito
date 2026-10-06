@@ -271,6 +271,16 @@ export default function AppSplash({ onDone, waitFor = false }: { onDone: () => v
   const doneRef = useRef(false)
   const waitForRef = useRef(waitFor)
   useEffect(() => { waitForRef.current = waitFor }, [waitFor])
+  // ProtectedRoute pasa `onDone={() => setSplashDone(true)}` — una función
+  // nueva en cada render suyo (cada vez que useAuthStore cambia mientras
+  // isLoading sigue true). Si el useEffect de abajo dependiera de `onDone`
+  // directo, cada una de esas renovaciones reiniciaba desde cero el timeline
+  // entero (cancelaba el rAF y volvía a poner `start = performance.now()`):
+  // eso era el "se reproduce a la mitad, parpadea y vuelve a arrancar" que
+  // se vio recién en producción. Con la ref, el efecto principal corre una
+  // sola vez al montar y siempre llama a la versión más nueva de onDone.
+  const onDoneRef = useRef(onDone)
+  useEffect(() => { onDoneRef.current = onDone }, [onDone])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -297,7 +307,7 @@ export default function AppSplash({ onDone, waitFor = false }: { onDone: () => v
     const finish = () => {
       if (doneRef.current) return
       doneRef.current = true
-      onDone()
+      onDoneRef.current()
     }
 
     const loop = (now: number) => {
@@ -368,12 +378,15 @@ export default function AppSplash({ onDone, waitFor = false }: { onDone: () => v
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
     }
-  }, [onDone])
+    // Deliberadamente sin `onDone`: esta animación se arma una sola vez por
+    // arranque, mediante onDoneRef (ver arriba).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div
       ref={rootRef}
-      onClick={() => { if (!doneRef.current) { doneRef.current = true; onDone() } }}
+      onClick={() => { if (!doneRef.current) { doneRef.current = true; onDoneRef.current() } }}
       style={{
         position: 'fixed', inset: 0, zIndex: 99999, background: BG,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
