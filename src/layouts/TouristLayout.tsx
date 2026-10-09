@@ -2,6 +2,8 @@ import { Outlet } from 'react-router-dom'
 import Navbar from '../components/shared/Navbar'
 import { TouristBottomTabBar } from '../components/shared/BottomTabBar'
 import CreateRouteSheet from '../components/tourist/CreateRouteSheet'
+import CustomTabActionModals from '../components/tourist/CustomTabActionModals'
+import FlyToBarOverlay from '../components/tourist/FlyToBarOverlay'
 
 export default function TouristLayout() {
   return (
@@ -16,6 +18,8 @@ export default function TouristLayout() {
       </div>
 
       <CreateRouteSheet />
+      <CustomTabActionModals />
+      <FlyToBarOverlay />
 
       <style>{`
         .show-mobile-nav { display: none; }

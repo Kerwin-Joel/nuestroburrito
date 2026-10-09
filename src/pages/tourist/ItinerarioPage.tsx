@@ -13,7 +13,7 @@ import { useAutoSave } from '../../hooks/useAutoSave'
 import SaveFAB from '../../components/tourist/SaveFAB'
 import CreateItineraryModal from './CreateItineraryModal'
 import { useAuthStore } from '../../stores/useAuthStore'
-import BurritoDonkey from '../../components/shared/Burritodonkey'
+import BurritoCharacter from '../../components/shared/BurritoCharacter'
 
 
 export default function ItinerarioPage() {
@@ -158,9 +158,9 @@ export default function ItinerarioPage() {
         gap: '20px',
         padding: '24px',
       }}>
-        {/* Burrito 3D en vez del emoji */}
+        {/* Burrito Chevy saluda — mismo personaje y animación que en la app nativa */}
         <div style={{ width: '200px', height: '200px' }}>
-          <BurritoDonkey autoRotate />
+          <BurritoCharacter variant="B" action="wave,idle" />
         </div>
 
         <div style={{ textAlign: 'center' }}>

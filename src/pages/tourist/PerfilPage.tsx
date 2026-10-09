@@ -1,33 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Share2, Eye, Trash2, BookOpen, X, Loader2, BookMarked, Store, Ticket, Heart, Luggage, Hotel, ChevronRight,
-  Pencil, Share, LifeBuoy, LogOut,
+  Share2, Eye, Trash2, BookOpen, X, Loader2, ChevronRight, Check,
+  Pencil, Share, LifeBuoy, LogOut, MapPin, Info,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useProfileStore } from '../../stores/useProfileStore'
+import { useNavPreferencesStore } from '../../stores/useNavPreferencesStore'
+import { useFlyToBarStore } from '../../stores/useFlyToBarStore'
 import { useReminders } from '../../hooks/useReminders'
 import { itinerariesService } from '../../services/itineraries'
 import { benefitsService } from '../../services/benefits'
 import { useUIStore } from '../../stores/useUIStore'
 import { useItineraryStore } from '../../stores/useItineraryStore'
 import { formatDate, formatDistance, timeUntil, initials } from '../../lib/formatters'
+import { CUSTOM_TAB_OPTIONS } from '../../lib/customTabs'
 import type { Itinerary } from '../../types/itinerary'
 import { supabase } from '../../lib/supabase'
 import { cachedFetch } from '../../lib/sessionCache'
 import ThemeSwitcher from '../../components/shared/ThemeSwitcher'
-
-/** "Tu menú": mismo abanico de opciones que CustomTab.kt en la app nativa. */
-const MENU_OPTIONS = [
-  { to: '/app/historia', icon: BookOpen, title: 'Historia de Piura', sub: 'Relatos y lugares con historia' },
-  { to: '/app/tienda', icon: Store, title: 'Tienda Burrito', sub: 'Merch, tours y hecho en Piura' },
-  { to: '/app/pasaporte', icon: BookMarked, title: 'Pasaporte', sub: 'Tus sellos de spots visitados' },
-  { to: '/app/beneficios', icon: Ticket, title: 'Mis beneficios', sub: 'Descuentos que desbloqueas' },
-  { to: '/app/servicios', icon: Luggage, title: 'Servicios turísticos', sub: 'Transporte, dinero, salud y guías' },
-  { to: '/app/hoteles', icon: Hotel, title: 'Hoteles en Piura', sub: 'Reserva tu habitación' },
-  { to: '/app/favoritos', icon: Heart, title: 'Favoritos', sub: 'Los spots que guardaste' },
-]
+import BurritoCharacter from '../../components/shared/BurritoCharacter'
 
 /** Espejo de ProfileTabs en ProfileParts.kt: filtra la lista por estado. */
 const STATUS_TABS = [
@@ -57,6 +50,8 @@ export default function PerfilTouristPage() {
   const { user, logout, updateName } = useAuthStore()
   const { addToast } = useUIStore()
   const { setCurrent, clear, current } = useItineraryStore()
+  const { customTab, setCustomTab } = useNavPreferencesStore()
+  const launchFlight = useFlyToBarStore(s => s.launch)
   const navigate = useNavigate()
 
   const { itineraries, setItineraries, removeItinerary } = useProfileStore()
@@ -166,6 +161,20 @@ export default function PerfilTouristPage() {
 
   const handleReport = () => {
     window.location.href = `mailto:hola@burritopiura.com?subject=${encodeURIComponent('Burrito · reporte desde la web')}`
+  }
+
+  // Espejo de "Permisos de ubicación" en ProfileScreen.kt — ahí abre los
+  // ajustes de Android; en el navegador no hay ese atajo, así que esto
+  // dispara el propio permiso del navegador o explica cómo cambiarlo.
+  const handleLocationPermission = () => {
+    if (!navigator.geolocation) {
+      addToast({ type: 'error', message: 'Tu navegador no soporta ubicación' })
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      () => addToast({ type: 'success', message: '📍 Ubicación activada' }),
+      () => addToast({ type: 'error', message: 'Actívala desde el ícono de candado junto a la URL' }),
+    )
   }
 
   const inProgress = itineraries.filter(i => i.status === 'in_progress')
@@ -294,11 +303,26 @@ export default function PerfilTouristPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px' }}>
             <Loader2 size={32} color="var(--orange)" className="animate-spin" />
           </div>
+        ) : shown.length === 0 && statusTab === 'in_progress' ? (
+          // Espejo del estado vacío de "En curso" en ProfileScreen.kt: Burrito
+          // Chevy durmiendo una siesta en vez de la caja genérica.
+          <div style={{ textAlign: 'center', padding: '12px 24px 32px', marginBottom: '8px' }}>
+            <div style={{ width: '210px', height: '210px', margin: '0 auto' }}>
+              <BurritoCharacter variant="B" action="sleep" />
+            </div>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: '17px', color: 'var(--white)', letterSpacing: '-0.5px', marginTop: '4px' }}>
+              Ningún día en curso
+            </p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--muted)', margin: '6px 0 18px', maxWidth: '280px', marginLeft: 'auto', marginRight: 'auto' }}>
+              Burrito Chevy se echó una siesta. Arma tu próxima ruta y lo despiertas.
+            </p>
+            <Link to="/app" className="btn btn-primary">Crear mi itinerario</Link>
+          </div>
         ) : shown.length === 0 ? (
           <div style={{ border: '2px dashed var(--border-hover)', borderRadius: '16px', padding: '40px 24px', textAlign: 'center', marginBottom: '8px' }}>
             <img src="/imagotipo.png" alt="burrito" style={{ height: '70px', width: 'auto', display: 'block', margin: '0 auto 12px' }} />
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '17px', color: 'var(--white)', letterSpacing: '-0.5px' }}>
-              {statusTab === 'in_progress' ? 'Ningún día en curso' : statusTab === 'completed' ? 'Todavía no completas ninguno' : 'Aún no tienes itinerarios'}
+              {statusTab === 'completed' ? 'Todavía no completas ninguno' : 'Aún no tienes itinerarios'}
             </p>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--muted)', margin: '6px 0 18px' }}>
               Crea tu primer día piurano
@@ -392,22 +416,54 @@ export default function PerfilTouristPage() {
           </div>
         )}
 
-        {/* Tu menú — mismo abanico de opciones que en la app nativa */}
+        {/* Tu menú — espejo de CustomTabPicker en ProfileParts.kt: elige qué
+            botón ocupa el 4º lugar junto a Mi día en la barra flotante. */}
         <div style={{ marginTop: '40px', marginBottom: '32px' }}>
-          <p className="section-label" style={{ marginBottom: '14px' }}>TU MENÚ</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
-            {MENU_OPTIONS.map(({ to, icon: Icon, title, sub }) => (
-              <Link key={to} to={to} className="card" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', textDecoration: 'none' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,85,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon size={18} color="var(--orange)" />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13.5px', color: 'var(--white)' }}>{title}</div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: '11.5px', color: 'var(--muted)' }}>{sub}</div>
-                </div>
-                <ChevronRight size={15} color="var(--muted)" />
-              </Link>
-            ))}
+          <p className="section-label" style={{ marginBottom: '6px' }}>TU MENÚ</p>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '12.5px', color: 'var(--muted)', marginBottom: '14px' }}>
+            Elige qué botón aparece junto a Mi día en tu menú flotante.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
+            {CUSTOM_TAB_OPTIONS.map(({ id, icon: Icon, title, sub }) => {
+              const selected = customTab === id
+              return (
+                <button
+                  key={id}
+                  onClick={(e) => {
+                    if (selected) return
+                    // Espejo de FlyToBar.kt: el ícono vuela a la barra y la
+                    // elección se aplica recién cuando "aterriza" (ver launch/commit).
+                    const iconEl = e.currentTarget.querySelector<HTMLElement>('[data-fly-icon]')
+                    const rect = (iconEl ?? e.currentTarget).getBoundingClientRect()
+                    launchFlight(Icon, rect, () => setCustomTab(id))
+                  }}
+                  className="card"
+                  style={{
+                    position: 'relative', textAlign: 'left', cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', gap: '8px', padding: '14px',
+                    border: selected ? '1.5px solid var(--orange)' : '1px solid var(--border)',
+                    background: selected ? 'rgba(255,85,0,0.08)' : 'var(--card)',
+                  }}
+                >
+                  {selected && (
+                    <span style={{
+                      position: 'absolute', top: '8px', right: '8px',
+                      width: '18px', height: '18px', borderRadius: '50%',
+                      background: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Check size={11} color="#fff" strokeWidth={3} />
+                    </span>
+                  )}
+                  <div data-fly-icon style={{ width: '36px', height: '36px', borderRadius: '11px', background: 'rgba(255,85,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon size={17} color="var(--orange)" />
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px', color: 'var(--white)' }}>{title}</div>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{sub}</div>
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -440,9 +496,13 @@ export default function PerfilTouristPage() {
         {/* Ajustes — espejo de SettingsGroup/SettingRow en ProfileParts.kt */}
         <p className="section-label" style={{ marginBottom: '12px' }}>AJUSTES</p>
         <div className="card" style={{ padding: '4px', marginBottom: '10px' }}>
+          <SettingRow icon={MapPin} title="Permisos de ubicación" onClick={handleLocationPermission} />
+          <SettingDivider />
           <SettingRow icon={Share} title="Compartir Burrito" onClick={handleShareApp} />
           <SettingDivider />
           <SettingRow icon={LifeBuoy} title="Reportar un problema" onClick={handleReport} />
+          <SettingDivider />
+          <SettingRow icon={Info} title="Versión" value="Web" />
         </div>
         <div className="card" style={{ padding: '4px' }}>
           <SettingRow icon={LogOut} title="Cerrar sesión" danger onClick={() => logout()} />
@@ -490,12 +550,34 @@ export default function PerfilTouristPage() {
   )
 }
 
-function SettingRow({ icon: Icon, title, danger, onClick }: {
+function SettingRow({ icon: Icon, title, danger, value, onClick }: {
   icon: typeof Share
   title: string
   danger?: boolean
-  onClick: () => void
+  /** Fila solo informativa (ej. "Versión") — muestra este valor en vez de la flecha y no es clickeable. */
+  value?: string
+  onClick?: () => void
 }) {
+  const row = (
+    <>
+      <Icon size={17} color={danger ? '#ff4040' : 'var(--muted)'} />
+      <span style={{ flex: 1, fontFamily: 'var(--font-body)', fontSize: '14px', color: danger ? '#ff4040' : 'var(--white)' }}>{title}</span>
+      {value ? (
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12.5px', color: 'var(--muted)' }}>{value}</span>
+      ) : !danger ? (
+        <ChevronRight size={16} color="var(--muted)" />
+      ) : null}
+    </>
+  )
+
+  if (!onClick) {
+    return (
+      <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 12px' }}>
+        {row}
+      </div>
+    )
+  }
+
   return (
     <button
       onClick={onClick}
@@ -505,9 +587,7 @@ function SettingRow({ icon: Icon, title, danger, onClick }: {
         borderRadius: '12px', textAlign: 'left',
       }}
     >
-      <Icon size={17} color={danger ? '#ff4040' : 'var(--muted)'} />
-      <span style={{ flex: 1, fontFamily: 'var(--font-body)', fontSize: '14px', color: danger ? '#ff4040' : 'var(--white)' }}>{title}</span>
-      {!danger && <ChevronRight size={16} color="var(--muted)" />}
+      {row}
     </button>
   )
 }

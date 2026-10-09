@@ -4,9 +4,11 @@ import * as THREE from "three";
 interface Props {
     autoRotate?: boolean;
     className?: string;
+    /** "sleep" apaga el trote (patas/cola quietas) y agacha la cabeza, para el estado vacío de "En curso". */
+    pose?: "idle" | "sleep";
 }
 
-export default function BurritoDonkey({ autoRotate = true, className = "" }: Props) {
+export default function BurritoDonkey({ autoRotate = true, className = "", pose = "idle" }: Props) {
     const stageRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -296,15 +298,27 @@ export default function BurritoDonkey({ autoRotate = true, className = "" }: Pro
             rafId = requestAnimationFrame(animate);
             tick++;
             if (autoRot) { orb.th += 0.006; updateCam(); }
-            donkey.position.y = Math.sin(tick * 0.28) * 0.022;
-            headG.rotation.x = Math.sin(tick * 0.14) * 0.035;
-            tailG.rotation.x = 0.35 + Math.sin(tick * 0.13) * 0.28;
-            tailG.rotation.z = Math.sin(tick * 0.09) * 0.12;
-            legs.forEach(({ hipG, lowerG, phase }) => {
-                const s = Math.sin(tick * 0.20 + phase);
-                hipG.rotation.x = s * 0.40;
-                lowerG.rotation.x = Math.max(0, -s) * 0.44;
-            });
+            if (pose === "sleep") {
+                // Respira despacio, cabeza agachada, patas y cola quietas.
+                donkey.position.y = Math.sin(tick * 0.05) * 0.01;
+                headG.rotation.x = 0.55 + Math.sin(tick * 0.05) * 0.02;
+                tailG.rotation.x = 0.1;
+                tailG.rotation.z = 0;
+                legs.forEach(({ hipG, lowerG }) => {
+                    hipG.rotation.x = 0;
+                    lowerG.rotation.x = 0;
+                });
+            } else {
+                donkey.position.y = Math.sin(tick * 0.28) * 0.022;
+                headG.rotation.x = Math.sin(tick * 0.14) * 0.035;
+                tailG.rotation.x = 0.35 + Math.sin(tick * 0.13) * 0.28;
+                tailG.rotation.z = Math.sin(tick * 0.09) * 0.12;
+                legs.forEach(({ hipG, lowerG, phase }) => {
+                    const s = Math.sin(tick * 0.20 + phase);
+                    hipG.rotation.x = s * 0.40;
+                    lowerG.rotation.x = Math.max(0, -s) * 0.44;
+                });
+            }
             renderer.render(scene, camera);
         };
         animate();
@@ -329,9 +343,14 @@ export default function BurritoDonkey({ autoRotate = true, className = "" }: Pro
             window.removeEventListener("touchend", onTouchEnd);
             window.removeEventListener("touchmove", onTouchMove);
             renderer.dispose();
+            // dispose() por sí solo no libera el contexto WebGL en todos los
+            // navegadores — sin esto, entrar/salir de esta pantalla muchas
+            // veces agota el límite de contextos (~16) y el burrito deja de
+            // dibujarse (canvas en blanco, sin error visible).
+            renderer.forceContextLoss();
             if (stage.contains(renderer.domElement)) stage.removeChild(renderer.domElement);
         };
-    }, [autoRotate]);
+    }, [autoRotate, pose]);
 
     return (
         <div
