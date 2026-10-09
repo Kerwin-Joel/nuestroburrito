@@ -12,6 +12,7 @@ const LoginPage = lazy(() => import('./pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'))
 const ChurreRegisterPage = lazy(() => import('./pages/auth/ChurreRegisterPage'))
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'))
 const WaitingApprovalPage = lazy(() => import('./pages/auth/WaitingApprovalPage'))
 
 // Tourist pages (lazy)
@@ -112,6 +113,7 @@ export default function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/register/churre" element={<ChurreRegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
           </Route>
           <Route path="/waiting-approval" element={<WaitingApprovalPage />} />
 

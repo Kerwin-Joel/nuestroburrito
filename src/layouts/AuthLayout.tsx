@@ -18,7 +18,11 @@ export default function AuthLayout() {
   const { isAuthenticated, user, isLoading } = useAuthStore()
   const location = useLocation()
 
-  if (!isLoading && isAuthenticated && user) {
+  // El link de recuperación inicia sesión: sin esta excepción, el usuario
+  // rebotaría a su panel antes de poder escribir la contraseña nueva.
+  const isPasswordReset = location.pathname === '/reset-password'
+
+  if (!isLoading && isAuthenticated && user && !isPasswordReset) {
     const role = user.profile.role
     if (role === 'tourist') return <Navigate to="/app" replace />
     if (role === 'churre') {

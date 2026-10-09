@@ -180,6 +180,12 @@ export const authService = {
     if (error) throw error
   },
 
+  /** Cambia la contraseña del usuario con sesión (p. ej. la que abre el link de recuperación). */
+  updatePassword: async (password: string): Promise<void> => {
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) throw error
+  },
+
   /** Espejo de authRepo.updateName() en la app nativa. */
   updateName: async (userId: string, name: string): Promise<void> => {
     const { error } = await supabase

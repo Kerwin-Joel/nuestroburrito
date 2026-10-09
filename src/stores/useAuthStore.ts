@@ -53,6 +53,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             if (event === 'INITIAL_SESSION') return
             if (isLoggingOut) return  // ← ignora eventos durante logout
 
+            // Llegó una sesión de recuperación (link de "olvidé mi contraseña")
+            // a otra ruta: llevar a donde se escribe la contraseña nueva.
+            if (event === 'PASSWORD_RECOVERY' && window.location.pathname !== '/reset-password') {
+              window.location.replace('/reset-password')
+              return
+            }
+
             if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
               authService.getSession().then((user: any) => {
                 if (user) set({ user, isAuthenticated: true, isLoading: false })
