@@ -1,4 +1,11 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>html,body{margin:0;background:transparent;overflow:hidden}canvas{position:fixed;left:0;top:0;display:block}</style>
-</head><body><canvas id="c"></canvas><script type="module" src="burrito.js"></script></body></html>
+</head><body><canvas id="c"></canvas>
+<script>
+  // Espejo del puente @JavascriptInterface de BurritoCharacter.kt (ahí lo da
+  // el WebView; acá se lo avisa a la página que lo embebe por postMessage) —
+  // burrito.js ya llama a esto solo cuando pinta el primer cuadro.
+  window.BurritoBridge = { ready: function () { try { parent.postMessage({ type: 'burrito-ready' }, '*') } catch (e) {} } };
+</script>
+<script type="module" src="burrito.js"></script></body></html>
