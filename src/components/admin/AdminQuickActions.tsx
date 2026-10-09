@@ -17,9 +17,9 @@ export default function AdminQuickActions() {
   }, [isOpen])
 
   const actions = [
-    { label: 'Nuevo Spot', icon: MapPin, path: '/admin/spots', color: 'var(--orange)' },
-    { label: 'Invitar Churre', icon: UserPlus, path: '/admin/churres', color: 'var(--amber)' },
-    { label: 'Nuevo TikTok', icon: Image, path: '/admin/tiktoks', color: '#ff0050' },
+    { label: 'Nuevo spot', icon: MapPin, path: '/admin/spots?nuevo=1', color: 'var(--orange)' },
+    { label: 'Invitar churre', icon: UserPlus, path: '/admin/churres', color: 'var(--amber)' },
+    { label: 'Agregar TikTok', icon: Image, path: '/admin/tiktoks', color: '#ff0050' },
   ]
 
   const handleAction = (path: string) => {
@@ -31,12 +31,12 @@ export default function AdminQuickActions() {
     <div style={{ position: 'relative' }} ref={menuRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="btn btn-primary btn-sm"
-        style={{ gap: '8px', padding: '10px 16px' }}
+        className="btn btn-primary btn-sm adm-new-btn"
+        aria-label="Crear nuevo"
       >
-        <Plus size={16} /> 
-        <span className="hide-mobile">Nuevo registro</span>
-        <ChevronDown size={14} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+        <Plus size={16} />
+        <span className="adm-hide-sm">Nuevo</span>
+        <ChevronDown size={14} className="adm-hide-sm" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
       </button>
 
       <AnimatePresence>
@@ -45,22 +45,14 @@ export default function AdminQuickActions() {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            style={{
-              position: 'absolute', top: '100%', right: 0, marginTop: '12px',
-              width: '200px', background: 'var(--card)', border: '1px solid var(--border)',
-              borderRadius: '16px', padding: '8px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', zIndex: 1000
-            }}
+            className="adm-popover"
+            style={{ width: '210px', padding: '6px' }}
           >
             {actions.map(a => (
               <button
                 key={a.label}
                 onClick={() => handleAction(a.path)}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
-                  padding: '10px 12px', borderRadius: '10px', border: 'none',
-                  background: 'none', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s'
-                }}
-                className="action-item"
+                className="adm-menu-item"
               >
                 <a.icon size={16} color={a.color} />
                 <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--white)', fontWeight: 600 }}>
@@ -68,7 +60,6 @@ export default function AdminQuickActions() {
                 </span>
               </button>
             ))}
-            <style>{`.action-item:hover { background: rgba(255,120,30,0.05); }`}</style>
           </motion.div>
         )}
       </AnimatePresence>

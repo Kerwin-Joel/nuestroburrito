@@ -1,0 +1,170 @@
+/* ===========================
+   BURRITO — ADMIN
+   Piezas compartidas por las páginas de /admin.
+   =========================== */
+
+.adm-page { display: flex; flex-direction: column; gap: 20px; }
+
+.adm-page-header {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap;
+}
+.adm-title {
+  font-family: var(--font-display); font-size: 24px; font-weight: 800;
+  color: var(--white); margin: 0; letter-spacing: -0.5px;
+}
+.adm-subtitle { font-family: var(--font-body); font-size: 14px; color: var(--gray); margin: 2px 0 0; }
+
+.adm-panel {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+}
+
+/* ── Stat tiles (clicables: filtran la lista) ── */
+.adm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.adm-stat {
+  text-align: left; cursor: pointer; padding: 14px 16px; border-radius: 14px;
+  background: var(--card); border: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 4px;
+  transition: border-color .2s, transform .2s, background .2s;
+  font-family: var(--font-body);
+}
+.adm-stat:hover { border-color: var(--border-hover); transform: translateY(-1px); }
+.adm-stat[data-active="true"] { border-color: var(--orange); background: rgba(255,85,0,0.06); }
+.adm-stat-label {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--gray);
+}
+.adm-stat-value { font-family: var(--font-display); font-size: 26px; font-weight: 800; color: var(--white); line-height: 1.1; }
+.adm-stat-hint { font-size: 12px; color: var(--muted); }
+
+/* ── Toolbar ── */
+.adm-toolbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px;
+}
+.adm-search { position: relative; flex: 1 1 240px; min-width: 200px; }
+.adm-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--gray); pointer-events: none; }
+.adm-search kbd {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-mono); font-size: 10px; color: var(--gray);
+  border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px;
+}
+
+.adm-input, .adm-select {
+  width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+  padding: 9px 12px; font-family: var(--font-body); font-size: 13.5px; color: var(--white);
+  outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.adm-search .adm-input { padding-left: 36px; padding-right: 34px; }
+.adm-input:focus, .adm-select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,85,0,0.12); }
+.adm-select { width: auto; cursor: pointer; padding-right: 28px; }
+
+.adm-seg { display: inline-flex; gap: 2px; background: var(--bg); padding: 3px; border-radius: 10px; border: 1px solid var(--border); }
+.adm-seg button {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 8px; border: none; background: transparent;
+  color: var(--gray); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background .2s, color .2s; white-space: nowrap;
+}
+.adm-seg button:hover { color: var(--white); }
+.adm-seg button[aria-pressed="true"] { background: var(--card); color: var(--orange); box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+.adm-seg .adm-count {
+  font-family: var(--font-mono); font-size: 10px; padding: 1px 6px; border-radius: 10px;
+  background: var(--dim); color: var(--muted);
+}
+.adm-seg button[aria-pressed="true"] .adm-count { background: rgba(255,85,0,0.15); color: var(--orange); }
+
+/* ── Botones de icono ── */
+.adm-icon-btn {
+  width: 30px; height: 30px; border-radius: 8px; border: 1px solid transparent;
+  background: transparent; color: var(--gray); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.adm-icon-btn:hover { background: var(--card); border-color: var(--border); color: var(--white); }
+.adm-icon-btn:disabled { opacity: .35; cursor: not-allowed; }
+.adm-icon-btn[data-tone="ok"]:hover { color: #22c55e; }
+.adm-icon-btn[data-tone="danger"]:hover { color: #ef4444; }
+
+/* ── Chips ── */
+.adm-chip {
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  padding: 2px 8px; border-radius: 6px; font-family: var(--font-body); font-size: 11px; font-weight: 600;
+  background: var(--card); border: 1px solid var(--border); color: var(--muted);
+}
+.adm-chip[data-tone="warn"] { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25); color: #d97706; }
+
+/* ── Barra de salud del contenido ── */
+.adm-meter { width: 72px; height: 6px; border-radius: 6px; background: var(--dim); overflow: hidden; }
+.adm-meter > span { display: block; height: 100%; border-radius: 6px; }
+
+/* ── Barra de acciones en lote ── */
+.adm-bulk {
+  position: sticky; top: 72px; z-index: 20;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 14px; border-radius: 12px;
+  background: var(--card); border: 1px solid var(--orange);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-body); font-size: 13px; color: var(--white);
+}
+
+/* ── Tarjetas de spot (vista grilla) ── */
+.adm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.adm-spot-card {
+  position: relative; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+.adm-spot-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: var(--shadow-card); }
+.adm-spot-card[data-selected="true"] { border-color: var(--orange); }
+.adm-spot-cover { position: relative; aspect-ratio: 16 / 10; background: var(--dim); cursor: pointer; }
+.adm-spot-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.adm-spot-cover .adm-check { position: absolute; top: 10px; left: 10px; }
+.adm-spot-cover .adm-cover-badge { position: absolute; top: 10px; right: 10px; }
+.adm-spot-cover .adm-photo-count {
+  position: absolute; bottom: 8px; right: 8px; padding: 2px 7px; border-radius: 6px;
+  background: rgba(0,0,0,0.6); color: #fff; font-family: var(--font-mono); font-size: 10px;
+}
+.adm-spot-actions {
+  display: flex; gap: 2px; padding: 8px 10px; border-top: 1px solid var(--border); margin-top: auto;
+}
+
+.adm-checkbox { width: 16px; height: 16px; accent-color: var(--orange); cursor: pointer; }
+
+/* ── Placeholder de imagen ── */
+.adm-noimg {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  color: var(--gray); font-size: 22px;
+}
+
+/* ── Fila de categoría ── */
+.adm-cat-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  transition: border-color .2s;
+}
+.adm-cat-row:hover { border-color: var(--border-hover); }
+.adm-cat-row .adm-cat-actions { display: flex; gap: 2px; opacity: .55; transition: opacity .2s; }
+.adm-cat-row:hover .adm-cat-actions { opacity: 1; }
+
+.adm-swatch {
+  width: 26px; height: 26px; border-radius: 8px; border: 2px solid transparent; cursor: pointer;
+  transition: transform .15s;
+}
+.adm-swatch:hover { transform: scale(1.1); }
+.adm-swatch[aria-pressed="true"] { border-color: var(--white); }
+
+.adm-emoji-btn {
+  width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--card2);
+  font-size: 18px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.adm-emoji-btn[aria-pressed="true"] { border-color: var(--orange); background: rgba(255,85,0,0.1); }
+
+@keyframes adm-spin { to { transform: rotate(360deg); } }
+.adm-spin { animation: adm-spin 1s linear infinite; }
+
+@media (max-width: 768px) {
+  .adm-toolbar { align-items: stretch; }
+  .adm-toolbar > * { flex: 1 1 100%; }
+  .adm-seg { overflow-x: auto; }
+  .adm-bulk { top: 64px; }
+}

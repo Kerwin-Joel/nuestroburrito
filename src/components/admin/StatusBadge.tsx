@@ -6,7 +6,7 @@ export default function StatusBadge({ status }: Props) {
   const s = status.toLowerCase()
   
   const getStyles = () => {
-    if (['verified', 'confirmado', 'aprobado', 'activo', 'completado'].includes(s)) {
+    if (['verified', 'confirmado', 'aprobado', 'activo', 'completado', 'publicado'].includes(s)) {
       return { bg: 'rgba(34, 197, 94, 0.1)', text: '#22c55e', label: status.toUpperCase() }
     }
     if (['pending', 'pendiente', 'en revisión'].includes(s)) {

@@ -21,11 +21,18 @@ export interface AdminModule {
   enabled: boolean
   badge?: number
   description: string
+  /** Sección del menú lateral. */
+  group: AdminGroup
 }
+
+export type AdminGroup = 'General' | 'Catálogo' | 'Contenido' | 'Comunidad' | 'Sistema'
+
+export const ADMIN_GROUPS: AdminGroup[] = ['General', 'Catálogo', 'Contenido', 'Comunidad', 'Sistema']
 
 export const ADMIN_MODULES: AdminModule[] = [
   {
     id: 'dashboard',
+    group: 'General',
     label: 'Dashboard',
     icon: LayoutDashboard,
     path: '/admin/dashboard',
@@ -34,15 +41,16 @@ export const ADMIN_MODULES: AdminModule[] = [
   },
   {
     id: 'spots',
+    group: 'Catálogo',
     label: 'Spots',
     icon: MapPin,
     path: '/admin/spots',
     enabled: true,
-    badge: 3,
     description: 'Gestión y aprobación de spots',
   },
   {
     id: 'tiktoks',
+    group: 'Catálogo',
     label: 'TikToks',
     icon: Video,
     path: '/admin/tiktoks',
@@ -51,15 +59,16 @@ export const ADMIN_MODULES: AdminModule[] = [
   },
   {
     id: 'churres',
+    group: 'Comunidad',
     label: 'Churres',
     icon: Users,
     path: '/admin/churres',
     enabled: true,
-    badge: 1,
     description: 'Verificación de guías locales',
   },
   {
     id: 'usuarios',
+    group: 'Comunidad',
     label: 'Usuarios',
     icon: UserCircle,
     path: '/admin/usuarios',
@@ -68,6 +77,7 @@ export const ADMIN_MODULES: AdminModule[] = [
   },
   {
     id: 'hoy-en-piura',
+    group: 'Contenido',
     label: 'Hoy en Piura',
     icon: Sun,
     path: '/admin/hoy-en-piura',
@@ -76,6 +86,7 @@ export const ADMIN_MODULES: AdminModule[] = [
   },
   {
     id: 'resenas',
+    group: 'Comunidad',
     label: 'Reseñas',
     icon: Star,
     path: '/admin/resenas',
@@ -84,6 +95,7 @@ export const ADMIN_MODULES: AdminModule[] = [
   },
   {
     id: 'categorias',
+    group: 'Catálogo',
     label: 'Categorías',
     icon: Tag,
     path: '/admin/categorias',
@@ -92,6 +104,7 @@ export const ADMIN_MODULES: AdminModule[] = [
   },
   {
     id: 'configuracion',
+    group: 'Sistema',
     label: 'Configuración',
     icon: Settings,
     path: '/admin/configuracion',
@@ -100,6 +113,7 @@ export const ADMIN_MODULES: AdminModule[] = [
   },
   {
     id: 'qr',
+    group: 'Catálogo',
     label: 'Códigos QR',
     icon: QrCode,
     path: '/admin/qr',
@@ -108,10 +122,11 @@ export const ADMIN_MODULES: AdminModule[] = [
   },
   {
     id: 'historia',
+    group: 'Contenido',
     label: 'Biblioteca',
     icon: BookOpen,
     path: '/admin/historia',
     enabled: true,
-    description: 'Crear y editar historias'
+    description: 'Crear y editar historias',
   }
 ]

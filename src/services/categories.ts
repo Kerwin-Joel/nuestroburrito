@@ -91,6 +91,17 @@ export const categoriesService = {
     return mapCategory(data)
   },
 
+  /** Mueve todos los spots de una categoría a otra (antes de borrarla). */
+  async reassignSpots(fromId: string, toId: string): Promise<void> {
+    const { error } = await supabase
+      .from('spots')
+      .update({ category: toId })
+      .eq('category', fromId)
+
+    if (error) throw error
+    invalidateCache('hotels')
+  },
+
   async delete(id: string): Promise<void> {
     const { error } = await supabase
       .from('categories')
@@ -117,6 +128,22 @@ export const categoriesService = {
     const { data, error } = await supabase
       .from('zones')
       .insert({ name, sort_order: sortOrder ?? 0 })
+      .select()
+      .single()
+
+    if (error) throw error
+    return mapZone(data)
+  },
+
+  async updateZone(id: string, updates: Partial<Pick<Zone, 'name' | 'sortOrder'>>): Promise<Zone> {
+    const row: any = {}
+    if (updates.name !== undefined) row.name = updates.name
+    if (updates.sortOrder !== undefined) row.sort_order = updates.sortOrder
+
+    const { data, error } = await supabase
+      .from('zones')
+      .update(row)
+      .eq('id', id)
       .select()
       .single()
 

@@ -1,278 +1,180 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { gsap } from 'gsap'
-import { 
-  Menu, 
-  X, 
-  Bell, 
-  Plus, 
-  ExternalLink,
-  LogOut
-} from 'lucide-react'
-import { ADMIN_MODULES } from '../lib/adminModules'
-import UserAvatarMenu from '../components/auth/UserAvatarMenu'
+import { Menu, Search, ExternalLink, LogOut, PanelLeftClose, PanelLeftOpen, ChevronRight, X } from 'lucide-react'
+import { ADMIN_MODULES, ADMIN_GROUPS } from '../lib/adminModules'
+import { UserAvatar } from '../components/auth/UserAvatarMenu'
 import AdminNotifications from '../components/admin/AdminNotifications'
 import AdminQuickActions from '../components/admin/AdminQuickActions'
+import AdminCommandPalette from '../components/admin/AdminCommandPalette'
 import { useAuthStore } from '../stores/useAuthStore'
+import { loadInbox, type AdminInbox } from '../services/adminStats'
+import '../styles/admin.css'
+import '../styles/admin-shell.css'
+
+const COLLAPSE_KEY = 'burrito-admin-sidebar-collapsed'
+
+function readCollapsed(): boolean {
+  try { return localStorage.getItem(COLLAPSE_KEY) === '1' } catch { return false }
+}
 
 export default function AdminLayout() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
+  const user = useAuthStore(s => s.user)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(readCollapsed)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [inbox, setInbox] = useState<AdminInbox | null>(null)
+
   const activeModule = ADMIN_MODULES.find(m => location.pathname.startsWith(m.path)) || ADMIN_MODULES[0]
 
+  // Se refresca al navegar: aprobar un spot en una página baja el badge al cambiar de vista.
+  useEffect(() => { loadInbox().then(setInbox) }, [location.pathname])
+
+  // Cerrar el menú móvil al cambiar de ruta.
+  useEffect(() => { setMobileOpen(false) }, [location.pathname])
+
   useEffect(() => {
-    // GSAP sidebar entrance
-    gsap.from('.admin-sidebar', {
-      x: -260,
-      opacity: 0,
-      duration: 0.8,
-      ease: 'power3.out'
-    })
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen(o => !o)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const closeMobileMenu = () => setIsMobileMenuOpen(false)
+  const toggleCollapsed = () => setCollapsed(c => {
+    try { localStorage.setItem(COLLAPSE_KEY, c ? '0' : '1') } catch { /* solo esta sesión */ }
+    return !c
+  })
 
-  const SidebarContent = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '24px 16px' }}>
-      {/* Logo */}
-      <div style={{ padding: '0 8px 32px' }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 800, color: 'var(--white)', letterSpacing: '-1.5px' }}>
-          burrito<span style={{ color: 'var(--orange)' }}>Admin</span>
-        </h1>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--gray)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          v1.0.0 MVP
-        </span>
+  const logout = useCallback(() => {
+    useAuthStore.getState().logout()
+    navigate('/login')
+  }, [navigate])
+
+  const badgeFor = (id: string) =>
+    id === 'spots' ? inbox?.pendingSpots.length
+      : id === 'churres' ? inbox?.pendingChurres.length
+        : undefined
+
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+
+  const sidebar = (compact: boolean) => (
+    <div className="adm-sidebar-inner" data-compact={compact}>
+      <div className="adm-brand">
+        <Link to="/admin/dashboard" className="adm-brand-link" title="burrito admin">
+          <span className="adm-brand-mark">b</span>
+          {!compact && (
+            <span className="adm-brand-text">burrito<span className="adm-brand-pill">admin</span></span>
+          )}
+        </Link>
       </div>
 
-      {/* Admin User */}
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        padding: '12px', 
-        background: 'var(--card)', 
-        borderRadius: '12px',
-        marginBottom: '24px',
-        border: '1px solid var(--border)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <UserAvatarMenu />
-          <div>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, color: 'var(--white)', margin: 0 }}>Admin Root</p>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--gray)', margin: 0 }}>Superusuario</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Nav */}
-      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        {ADMIN_MODULES.filter(m => m.enabled).map((module) => {
-          const isActive = location.pathname.startsWith(module.path)
-          const Icon = module.icon
-          
+      <nav className="adm-nav" aria-label="Módulos">
+        {ADMIN_GROUPS.map(group => {
+          const modules = ADMIN_MODULES.filter(m => m.enabled && m.group === group)
+          if (modules.length === 0) return null
           return (
-            <Link
-              key={module.id}
-              to={module.path}
-              onClick={closeMobileMenu}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '10px 12px',
-                borderRadius: '8px',
-                textDecoration: 'none',
-                color: isActive ? 'var(--orange)' : 'var(--gray)',
-                background: isActive ? 'rgba(255,85,0,0.08)' : 'transparent',
-                borderLeft: isActive ? '3px solid var(--orange)' : '3px solid transparent',
-                transition: 'all 0.2s ease',
-              }}
-              className="nav-item"
-            >
-              <Icon size={18} />
-              <span style={{ 
-                fontFamily: 'var(--font-body)', 
-                fontSize: '14px', 
-                fontWeight: isActive ? 600 : 400,
-                flex: 1
-              }}>
-                {module.label}
-              </span>
-              {module.badge && module.badge > 0 && (
-                <span style={{
-                  background: 'var(--orange)',
-                  color: 'white',
-                  fontSize: '10px',
-                  fontFamily: 'var(--font-mono)',
-                  padding: '2px 6px',
-                  borderRadius: '10px',
-                  fontWeight: 700
-                }}>
-                  {module.badge}
-                </span>
-              )}
-            </Link>
+            <div key={group} className="adm-nav-group">
+              {!compact && <div className="adm-nav-label">{group}</div>}
+              {modules.map(module => {
+                const isActive = location.pathname.startsWith(module.path)
+                const Icon = module.icon
+                const badge = badgeFor(module.id)
+                return (
+                  <Link key={module.id} to={module.path} className="adm-nav-item" aria-current={isActive ? 'page' : undefined}
+                    title={compact ? module.label : undefined}>
+                    <Icon size={18} />
+                    {!compact && <span className="adm-nav-text">{module.label}</span>}
+                    {!!badge && <span className="adm-nav-badge">{badge}</span>}
+                  </Link>
+                )
+              })}
+            </div>
           )
         })}
       </nav>
 
-      {/* Bottom Links */}
-      <div style={{ paddingTop: '24px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <button 
-          onClick={() => navigate('/app')}
-          className="btn btn-ghost btn-sm" 
-          style={{ justifyContent: 'flex-start', fontSize: '12px', color: 'var(--gray)' }}
-        >
-          <ExternalLink size={14} /> Ver app turista
+      <div className="adm-sidebar-footer">
+        <button className="adm-nav-item" onClick={() => navigate('/app')} title={compact ? 'Ver app turista' : undefined}>
+          <ExternalLink size={18} />
+          {!compact && <span className="adm-nav-text">Ver app turista</span>}
         </button>
-        <button 
-          onClick={() => {
-            useAuthStore.getState().logout()
-            navigate('/login')
-          }}
-          className="btn btn-ghost btn-sm" 
-          style={{ justifyContent: 'flex-start', fontSize: '12px', color: 'var(--red)' }}
-        >
-          <LogOut size={14} /> Cerrar sesión
-        </button>
+        <div className="adm-user">
+          <UserAvatar size={32} />
+          {!compact && (
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="adm-user-name">{user?.profile.name || 'Administrador'}</div>
+              <div className="adm-user-mail">{user?.email}</div>
+            </div>
+          )}
+          <button className="adm-icon-btn" data-tone="danger" onClick={logout} title="Cerrar sesión" aria-label="Cerrar sesión">
+            <LogOut size={16} />
+          </button>
+        </div>
       </div>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex' }}>
-      {/* Desktop Sidebar */}
-      <aside 
-        className="admin-sidebar"
-        style={{
-          width: '260px',
-          height: '100vh',
-          background: 'var(--card2)',
-          borderRight: '1px solid var(--border)',
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          zIndex: 100,
-          display: 'none', // Overwritten by media query
-        }}
-      >
-        <SidebarContent />
-      </aside>
+    <div className="adm-shell" data-collapsed={collapsed}>
+      {/* Sidebar de escritorio */}
+      <aside className="adm-sidebar">{sidebar(collapsed)}</aside>
 
-      {/* Mobile Drawer */}
+      {/* Menú móvil */}
       <AnimatePresence>
-        {isMobileMenuOpen && (
+        {mobileOpen && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={closeMobileMenu}
-              style={{
-                position: 'fixed',
-                inset: 0,
-                background: 'rgba(0,0,0,0.8)',
-                backdropFilter: 'blur(4px)',
-                zIndex: 200,
-              }}
-            />
-            <motion.aside
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              style={{
-                position: 'fixed',
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: '280px',
-                background: 'var(--card2)',
-                zIndex: 201,
-                boxShadow: '20px 0 50px rgba(0,0,0,0.5)',
-              }}
-            >
-              <SidebarContent />
+            <motion.div className="adm-drawer-backdrop" onClick={() => setMobileOpen(false)}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+            <motion.aside className="adm-drawer"
+              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}>
+              <button className="adm-icon-btn adm-drawer-close" onClick={() => setMobileOpen(false)} aria-label="Cerrar menú"><X size={18} /></button>
+              {sidebar(false)}
             </motion.aside>
           </>
         )}
       </AnimatePresence>
 
-      {/* Main Content Area */}
-      <main style={{ 
-        flex: 1, 
-        marginLeft: 'var(--sidebar-width)',
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: 0,
-      }}>
-        {/* Topbar */}
-        <header style={{
-          height: '72px',
-          background: 'rgba(8,7,5,0.8)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid var(--border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 32px',
-          position: 'sticky',
-          top: 0,
-          zIndex: 90,
-        }} className="admin-topbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button 
-              className="show-mobile"
-              onClick={() => setIsMobileMenuOpen(true)}
-              style={{ background: 'transparent', border: 'none', color: 'var(--white)', cursor: 'pointer' }}
-            >
-              <Menu size={24} />
-            </button>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 800, color: 'var(--white)', margin: 0 }}>
-                {activeModule.label}
-              </h2>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--gray)', margin: 0 }}>
-                {activeModule.description}
-              </p>
-            </div>
-          </div>
+      <div className="adm-main">
+        <header className="adm-topbar">
+          <button className="adm-icon-btn adm-topbar-btn adm-only-mobile" onClick={() => setMobileOpen(true)} aria-label="Abrir menú">
+            <Menu size={20} />
+          </button>
+          <button className="adm-icon-btn adm-topbar-btn adm-only-desktop" onClick={toggleCollapsed}
+            aria-label={collapsed ? 'Expandir menú' : 'Contraer menú'} title={collapsed ? 'Expandir menú' : 'Contraer menú'}>
+            {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AdminNotifications />
+          <nav className="adm-breadcrumb" aria-label="Ruta">
+            <span className="adm-hide-sm">Admin</span>
+            <ChevronRight size={14} className="adm-hide-sm" />
+            <strong>{activeModule.label}</strong>
+          </nav>
+
+          <button className="adm-search-trigger" onClick={() => setPaletteOpen(true)} aria-label="Buscar">
+            <Search size={15} />
+            <span className="adm-hide-sm">Buscar spots, módulos…</span>
+            <kbd className="adm-hide-sm">{isMac ? '⌘' : 'Ctrl'} K</kbd>
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <AdminNotifications inbox={inbox} />
             <AdminQuickActions />
           </div>
         </header>
 
-        {/* Page Content */}
-        <div style={{ padding: '32px', maxWidth: '1200px', width: '100%', margin: '0 auto' }}>
+        <main className="adm-content">
           <Outlet />
-        </div>
-      </main>
+        </main>
+      </div>
 
-      <style>{`
-        :root {
-          --sidebar-width: 260px;
-        }
-        @media (max-width: 1024px) {
-          :root { --sidebar-width: 0px; }
-          .admin-sidebar { display: none !important; }
-          .admin-topbar { padding: 0 16px; }
-        }
-        @media (min-width: 1025px) {
-          .admin-sidebar { display: block !important; }
-          .show-mobile { display: none !important; }
-        }
-        @media (max-width: 640px) {
-          .hide-mobile { display: none !important; }
-        }
-        .nav-item:hover {
-          background: rgba(255,85,0,0.04) !important;
-          color: var(--white) !important;
-        }
-      `}</style>
+      <AdminCommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   )
 }

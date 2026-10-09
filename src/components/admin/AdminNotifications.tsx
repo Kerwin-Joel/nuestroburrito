@@ -1,16 +1,22 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, MapPin, Star, UserPlus } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Bell, MapPin, UserPlus, ShoppingBag, CheckCircle2 } from 'lucide-react'
+import type { AdminInbox } from '../../services/adminStats'
 
-const MOCK_NOTIFS = [
-  { id: 1, type: 'spot', label: 'Nuevo spot sugerido: Playa Yacila', time: '12m', icon: MapPin, color: 'var(--orange)' },
-  { id: 2, type: 'review', label: 'Reseña pendiente en Paita Sea Food', time: '1h', icon: Star, color: 'var(--yellow)' },
-  { id: 3, type: 'churre', label: 'Nuevo churre registrado: Juan Pérez', time: '4h', icon: UserPlus, color: 'var(--amber)' },
-]
+function timeAgo(iso: string | null): string {
+  if (!iso) return ''
+  const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000)
+  if (min < 60) return `hace ${Math.max(1, min)} min`
+  if (min < 1440) return `hace ${Math.floor(min / 60)} h`
+  return `hace ${Math.floor(min / 1440)} d`
+}
 
-export default function AdminNotifications() {
+/** Campana del topbar: lo que está esperando una acción del admin. */
+export default function AdminNotifications({ inbox }: { inbox: AdminInbox | null }) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const click = (e: MouseEvent) => {
@@ -20,49 +26,59 @@ export default function AdminNotifications() {
     return () => document.removeEventListener('mousedown', click)
   }, [isOpen])
 
+  const items = [
+    ...(inbox?.pendingSpots ?? []).slice(0, 5).map(s => ({
+      key: `s-${s.id}`, icon: MapPin, label: <>Spot por revisar: <strong>{s.name}</strong></>,
+      time: timeAgo(s.created_at), path: `/admin/spots?editar=${s.id}`,
+    })),
+    ...(inbox?.pendingChurres ?? []).slice(0, 3).map(c => ({
+      key: `c-${c.id}`, icon: UserPlus, label: <>Churre por verificar: <strong>{c.name ?? 'Sin nombre'}</strong></>,
+      time: timeAgo(c.created_at), path: '/admin/churres',
+    })),
+    ...(inbox && inbox.pendingOrders > 0 ? [{
+      key: 'orders', icon: ShoppingBag,
+      label: <><strong>{inbox.pendingOrders}</strong> pedido{inbox.pendingOrders > 1 ? 's' : ''} esperando confirmación del negocio</>,
+      time: '', path: '/admin/dashboard',
+    }] : []),
+  ]
+  const total = (inbox?.pendingSpots.length ?? 0) + (inbox?.pendingChurres.length ?? 0) + (inbox?.pendingOrders ?? 0)
+
   return (
     <div style={{ position: 'relative' }} ref={menuRef}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="btn btn-ghost btn-sm" 
-        style={{ padding: '8px', background: isOpen ? 'rgba(255,255,255,0.05)' : 'transparent' }}
-      >
-        <div style={{ position: 'relative' }}>
-          <Bell size={18} />
-          <span style={{ position: 'absolute', top: '-5px', right: '-5px', width: '8px', height: '8px', background: 'var(--orange)', borderRadius: '50%', border: '2px solid var(--bg)' }} />
-        </div>
+      <button onClick={() => setIsOpen(!isOpen)} className="adm-icon-btn adm-topbar-btn" aria-label={`Notificaciones${total ? ` (${total})` : ''}`}>
+        <Bell size={18} />
+        {total > 0 && <span className="adm-dot-badge">{total > 9 ? '9+' : total}</span>}
       </button>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            style={{
-              position: 'absolute', top: '100%', right: 0, marginTop: '12px',
-              width: '320px', background: 'var(--card)', border: '1px solid var(--border)',
-              borderRadius: '16px', padding: '8px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', zIndex: 1000
-            }}
+            initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }}
+            transition={{ duration: 0.15 }}
+            className="adm-popover" style={{ width: 'min(340px, calc(100vw - 24px))' }}
           >
-            <div style={{ padding: '12px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>
-              <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--white)' }}>Notificaciones</h4>
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--white)', fontFamily: 'var(--font-body)' }}>Pendientes</h4>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--gray)' }}>{total}</span>
             </div>
-            {MOCK_NOTIFS.map(n => (
-              <div key={n.id} style={{ display: 'flex', gap: '12px', padding: '10px 12px', borderRadius: '10px', cursor: 'pointer' }} className="notif-item">
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: `${n.color}11`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <n.icon size={16} color={n.color} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--white)', lineHeight: 1.4 }}>{n.label}</p>
-                  <span style={{ fontSize: '11px', color: 'var(--gray)' }}>Hace {n.time}</span>
-                </div>
+            {items.length === 0 ? (
+              <div style={{ padding: '28px 16px', textAlign: 'center', color: 'var(--gray)', fontFamily: 'var(--font-body)', fontSize: '13px' }}>
+                <CheckCircle2 size={22} color="#22c55e" style={{ marginBottom: '6px' }} /><br />
+                Nada pendiente. ¡Todo al día!
               </div>
-            ))}
-            <div style={{ padding: '8px 4px 4px' }}>
-              <button className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center', fontSize: '12px' }}>Ver todas</button>
-            </div>
-            <style>{`.notif-item:hover { background: rgba(255,120,30,0.05); }`}</style>
+            ) : (
+              <div style={{ padding: '6px', maxHeight: '360px', overflowY: 'auto' }}>
+                {items.map(n => (
+                  <button key={n.key} className="adm-menu-item" onClick={() => { navigate(n.path); setIsOpen(false) }}>
+                    <span className="adm-cmdk-icon"><n.icon size={15} /></span>
+                    <span style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                      <span style={{ display: 'block', fontSize: '13px', color: 'var(--white)', lineHeight: 1.4 }}>{n.label}</span>
+                      {n.time && <span style={{ fontSize: '11px', color: 'var(--gray)' }}>{n.time}</span>}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

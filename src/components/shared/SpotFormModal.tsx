@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { X, Upload, MapPin, Clock, Camera, Star, DollarSign, ChevronRight, Plus, Percent, Gift, Zap, Globe, MessageCircle, Trash2 } from 'lucide-react'
+import { X, Upload, MapPin, Clock, Star, DollarSign, ChevronRight, ChevronLeft, Plus, Percent, Gift, Zap, Globe, MessageCircle, Trash2, AlertCircle, Check } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { categoriesService, type Category } from '../../services/categories'
 import { supabase } from '../../lib/supabase'
+import LocationPicker from './LocationPicker'
 import type { SpotSocialLinks } from '../../types/spot'
 
 const FacebookIcon = () => (
@@ -66,6 +67,14 @@ const SECTIONS = [
   { id: 'benefits', label: 'Beneficios', icon: '🎁' },
 ]
 
+// Cada campo validado vive en una pestaña: si falla, hay que llevar al usuario ahí.
+const FIELD_SECTION: Record<string, string> = {
+  name: 'basic', category: 'basic', description: 'basic', localTip: 'basic',
+  event_date: 'basic', event_date_end: 'basic',
+  price_range: 'details', rating: 'details', review_count: 'details',
+  address: 'location', lat: 'location', lng: 'location',
+}
+
 interface Benefit {
   id: string
   type: 'discount' | 'gift' | 'experience' | 'priority'
@@ -94,7 +103,7 @@ const BENEFIT_LABELS: Record<string, string> = {
 interface Props {
   isOpen: boolean
   onClose: () => void
-  onSave: (data: FormData & { photoUrl?: string; photos?: string[]; schedule?: Record<string, string>; benefits?: Benefit[]; socialLinks?: SpotSocialLinks }) => void
+  onSave: (data: FormData & { photoUrl?: string; photos?: string[]; schedule?: Record<string, string>; benefits?: Benefit[]; removedBenefitIds?: string[]; socialLinks?: SpotSocialLinks }) => void
   initialData?: any
 }
 
@@ -121,7 +130,12 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
   // Estado local para price_range y category — independiente del form
   const [selectedPrice, setSelectedPrice] = useState<PriceRange | undefined>(undefined)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [uploading, setUploading] = useState(false)
+  // Contador: varias fotos suben en paralelo y la primera en terminar no debe destrabar el form.
+  const [uploadingCount, setUploadingCount] = useState(0)
+  const uploading = uploadingCount > 0
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [removedBenefitIds, setRemovedBenefitIds] = useState<string[]>([])
+  const [formError, setFormError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const nameVal = watch('name')
 
@@ -147,6 +161,9 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
     if (!isOpen) return
     setActiveSection('basic')
     setBenefits([])
+    setRemovedBenefitIds([])
+    setFormError(null)
+    setUploadError(null)
     setAdding(false)
     setNewBenefit({ type: 'discount', active: true })
 
@@ -214,7 +231,12 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) return
-    setUploading(true)
+    if (file.size > 8 * 1024 * 1024) {
+      setUploadError(`"${file.name}" pesa más de 8 MB`)
+      return
+    }
+    setUploadError(null)
+    setUploadingCount(c => c + 1)
 
     // Preview local inmediato
     const localUrl = URL.createObjectURL(file)
@@ -246,9 +268,9 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
     } catch (e: any) {
       setPhotos(p => p.filter(u => u !== localUrl))
       setPreview(prev => prev === localUrl ? null : prev)
-      console.error('Error subiendo foto:', e.message)
+      setUploadError(`No se pudo subir "${file.name}": ${e.message ?? 'error'}`)
     } finally {
-      setUploading(false)
+      setUploadingCount(c => c - 1)
     }
   }
 
@@ -259,6 +281,23 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
       setPreview(next[0] ?? null)
       return next
     })
+  }
+
+  // La primera foto es la portada: mover = cambiar el orden del carrusel.
+  const movePhoto = (from: number, to: number) => {
+    setPhotos(p => {
+      if (to < 0 || to >= p.length) return p
+      const next = [...p]
+      const [item] = next.splice(from, 1)
+      next.splice(to, 0, item)
+      setPreview(next[0] ?? null)
+      return next
+    })
+  }
+
+  const removeBenefit = (b: Benefit) => {
+    setBenefits(p => p.filter(x => x.id !== b.id))
+    if (!b.id.startsWith('new-')) setRemovedBenefitIds(p => [...p, b.id])
   }
 
   const toggleDay = (key: string) => {
@@ -278,7 +317,16 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
     setValue('category', id)
   }
 
+  const onInvalid = (errs: Record<string, unknown>) => {
+    const first = Object.keys(errs)[0]
+    const section = FIELD_SECTION[first]
+    if (section) setActiveSection(section)
+    const label = SECTIONS.find(s => s.id === section)?.label
+    setFormError(`Revisa los campos marcados${label ? ` en "${label}"` : ''}`)
+  }
+
   const onSubmit: SubmitHandler<FormData> = async data => {
+    setFormError(null)
     setSaving(true)
     try {
       await onSave({
@@ -289,6 +337,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
         photos,
         schedule,
         benefits,
+        removedBenefitIds,
         socialLinks,
       })
     } finally {
@@ -302,6 +351,15 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
     const idx = SECTIONS.findIndex(s => s.id === activeSection)
     if (idx < SECTIONS.length - 1) setActiveSection(SECTIONS[idx + 1].id)
   }
+
+  const goPrev = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const idx = SECTIONS.findIndex(s => s.id === activeSection)
+    if (idx > 0) setActiveSection(SECTIONS[idx - 1].id)
+  }
+
+  const sectionHasError: Record<string, boolean> = {}
+  Object.keys(errors).forEach(k => { const sec = FIELD_SECTION[k]; if (sec) sectionHasError[sec] = true })
 
   const sectionComplete: Record<string, boolean> = {
     basic: !!(watch('name') && selectedCategory && watch('description')),
@@ -354,8 +412,8 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                 style={{ flex: 1, padding: '8px 4px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: activeSection === sec.id ? 'rgba(255,85,0,0.15)' : 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', transition: 'all 0.2s', position: 'relative' }}>
                 <span style={{ fontSize: '14px' }}>{sec.icon}</span>
                 <span style={{ fontFamily: 'var(--font-body)', fontSize: '10px', fontWeight: 600, color: activeSection === sec.id ? 'var(--orange)' : 'var(--muted)' }}>{sec.label}</span>
-                {sectionComplete[sec.id] && (
-                  <div style={{ position: 'absolute', top: '4px', right: '4px', width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e' }} />
+                {(sectionHasError[sec.id] || sectionComplete[sec.id]) && (
+                  <div style={{ position: 'absolute', top: '4px', right: '4px', width: '6px', height: '6px', borderRadius: '50%', background: sectionHasError[sec.id] ? '#ef4444' : '#22c55e' }} />
                 )}
               </button>
             ))}
@@ -363,12 +421,17 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
         </div>
 
         {/* FORM */}
-        <form onSubmit={handleSubmit(onSubmit as any)} onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <form onSubmit={handleSubmit(onSubmit as any, onInvalid)} onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           {/* Hiddens siempre montados */}
           <input type="hidden" {...register('price_range')} />
           <input type="hidden" {...register('category')} />
 
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+            {formError && (
+              <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444', fontFamily: 'var(--font-body)', fontSize: '13px' }}>
+                <AlertCircle size={15} /> {formError}
+              </div>
+            )}
 
             {/* BÁSICO */}
             {activeSection === 'basic' && (
@@ -388,7 +451,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                   </div>
                 </Field>
                 <Field label={`Descripción · ${descLen}/400`} error={errors.description?.message}>
-                  <textarea {...register('description')} className="input" placeholder="Describe este lugar como le contarías a un amigo..." maxLength={400} onChange={e => setDescLen(e.target.value.length)} style={{ ...inputStyle, height: '96px', resize: 'none' as const }} />
+                  <textarea {...register('description', { onChange: e => setDescLen(e.target.value.length) })} className="input" placeholder="Describe este lugar como le contarías a un amigo..." maxLength={400} style={{ ...inputStyle, height: '96px', resize: 'none' as const }} />
                 </Field>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <Field label="📅 Inicio del evento">
@@ -399,7 +462,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                   </Field>
                 </div>
                 <Field label={`💡 Tip local · ${tipLen}/200`}>
-                  <textarea {...register('localTip')} className="input" placeholder="El secreto que solo los locales conocen..." maxLength={200} onChange={e => setTipLen(e.target.value.length)} style={{ ...inputStyle, height: '72px', resize: 'none' as const }} />
+                  <textarea {...register('localTip', { onChange: e => setTipLen(e.target.value.length) })} className="input" placeholder="El secreto que solo los locales conocen..." maxLength={200} style={{ ...inputStyle, height: '72px', resize: 'none' as const }} />
                 </Field>
               </div>
             )}
@@ -440,15 +503,35 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                   </div>
                 </div>
 
+                {uploadError && (
+                  <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444', fontFamily: 'var(--font-body)', fontSize: '12px' }}>
+                    <AlertCircle size={14} /> {uploadError}
+                  </div>
+                )}
+
                 {/* Photo grid */}
                 {photos.length > 0 && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                     {photos.map((url, i) => (
                       <div key={i} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', aspectRatio: '1' }}>
                         <img src={url} alt={`Foto ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        {i === 0 && (
+                        {i === 0 ? (
                           <div style={{ position: 'absolute', top: '4px', left: '4px', background: 'var(--orange)', borderRadius: '6px', padding: '2px 7px', fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#fff', fontWeight: 700 }}>PORTADA</div>
+                        ) : (
+                          <button type="button" onClick={() => movePhoto(i, 0)} title="Usar como portada"
+                            style={{ position: 'absolute', top: '4px', left: '4px', background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: '6px', padding: '3px 7px', fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+                            ★ PORTADA
+                          </button>
                         )}
+                        {url.startsWith('blob:') && (
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>Subiendo…</div>
+                        )}
+                        <div style={{ position: 'absolute', bottom: '4px', right: '4px', display: 'flex', gap: '3px' }}>
+                          <button type="button" onClick={() => movePhoto(i, i - 1)} disabled={i === 0} title="Mover antes"
+                            style={{ ...photoBtnStyle, opacity: i === 0 ? 0.35 : 1 }}><ChevronLeft size={12} /></button>
+                          <button type="button" onClick={() => movePhoto(i, i + 1)} disabled={i === photos.length - 1} title="Mover después"
+                            style={{ ...photoBtnStyle, opacity: i === photos.length - 1 ? 0.35 : 1 }}><ChevronRight size={12} /></button>
+                        </div>
                         <button
                           type="button"
                           onClick={() => removePhoto(i)}
@@ -462,7 +545,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                 )}
                 {photos.length > 0 && (
                   <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--muted)', textAlign: 'center' }}>
-                    {photos.length} foto{photos.length !== 1 ? 's' : ''} · La primera será la portada
+                    {photos.length} foto{photos.length !== 1 ? 's' : ''} · La primera es la portada · usa las flechas para ordenar el carrusel
                   </p>
                 )}
               </div>
@@ -564,12 +647,14 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                     <input type="number" step="any" {...register('lng')} className="input" placeholder="-80.6328" style={inputStyle} />
                   </Field>
                 </div>
-                <div style={{ background: 'rgba(255,85,0,0.06)', border: '1px solid rgba(255,85,0,0.15)', borderRadius: '12px', padding: '12px 14px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '18px', flexShrink: 0 }}>💡</span>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--muted)', margin: 0, lineHeight: 1.5 }}>
-                    Para obtener coordenadas exactas: abre Google Maps, haz clic derecho en el lugar y copia las coordenadas.
-                  </p>
-                </div>
+                <LocationPicker
+                  lat={Number(watch('lat'))}
+                  lng={Number(watch('lng'))}
+                  onChange={(lat, lng) => {
+                    setValue('lat', lat, { shouldValidate: true, shouldDirty: true })
+                    setValue('lng', lng, { shouldValidate: true, shouldDirty: true })
+                  }}
+                />
               </div>
             )}
 
@@ -598,7 +683,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
                         <div style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 800, color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.title}</div>
                         {b.code && <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: colors.color, marginTop: '2px' }}>{b.code}</div>}
                       </div>
-                      <button type="button" onClick={() => setBenefits(p => p.filter(x => x.id !== b.id))}
+                      <button type="button" onClick={() => removeBenefit(b)} title="Quitar beneficio"
                         style={{ background: 'rgba(255,64,64,0.08)', border: '1px solid rgba(255,64,64,0.2)', borderRadius: '8px', color: '#ff4040', cursor: 'pointer', padding: '6px 8px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                         <X size={13} />
                       </button>
@@ -666,45 +751,51 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
               style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--muted)', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
               Cancelar
             </button>
-            {activeSection !== 'benefits' ? (
-              <button type="button" onClick={goNext} disabled={uploading}
-                style={{
-                  flex: 2, padding: '12px', borderRadius: '10px',
-                  background: 'rgba(255,85,0,0.12)', border: '1px solid rgba(255,85,0,0.3)',
-                  color: uploading ? 'var(--muted)' : 'var(--orange)',
-                  fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700,
-                  cursor: uploading ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                  opacity: uploading ? 0.6 : 1,
-                }}>
-                {uploading ? '⏳ Subiendo foto...' : <>Siguiente <ChevronRight size={16} /></>}
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={saving}
-                style={{
-                  flex: 2, padding: '12px', borderRadius: '10px',
-                  background: saving ? 'rgba(255,85,0,0.5)' : 'var(--orange)',
-                  border: 'none', color: '#fff', fontFamily: 'var(--font-body)',
-                  fontSize: '14px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  transition: 'all 0.2s',
-                }}
-              >
-                {saving ? (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-                      style={{ animation: 'spin 0.8s linear infinite' }}>
-                      <path d="M21 12a9 9 0 11-6.219-8.56" strokeLinecap="round" />
-                    </svg>
-                    {initialData ? 'Actualizando...' : 'Guardando...'}
-                  </>
-                ) : (
-                  initialData ? 'Actualizar spot ✓' : 'Guardar spot →'
-                )}
+            {activeSection !== SECTIONS[0].id && (
+              <button type="button" onClick={goPrev} title="Anterior"
+                style={{ padding: '12px 14px', borderRadius: '10px', background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <ChevronLeft size={16} />
               </button>
             )}
+            {activeSection !== SECTIONS[SECTIONS.length - 1].id && (
+              <button type="button" onClick={goNext}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: '10px',
+                  background: 'rgba(255,85,0,0.12)', border: '1px solid rgba(255,85,0,0.3)',
+                  color: 'var(--orange)', fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 700,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                }}>
+                Siguiente <ChevronRight size={16} />
+              </button>
+            )}
+            {/* Guardar siempre disponible: corregir un horario no debería obligar a recorrer 6 pestañas. */}
+            <button
+              type="submit"
+              disabled={saving || uploading}
+              title={uploading ? 'Espera a que terminen de subir las fotos' : undefined}
+              style={{
+                flex: 1.4, padding: '12px', borderRadius: '10px',
+                background: saving || uploading ? 'rgba(255,85,0,0.5)' : 'var(--orange)',
+                border: 'none', color: '#fff', fontFamily: 'var(--font-body)',
+                fontSize: '14px', fontWeight: 700, cursor: saving || uploading ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                transition: 'all 0.2s',
+              }}
+            >
+              {saving ? (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                    style={{ animation: 'spin 0.8s linear infinite' }}>
+                    <path d="M21 12a9 9 0 11-6.219-8.56" strokeLinecap="round" />
+                  </svg>
+                  {initialData ? 'Actualizando...' : 'Guardando...'}
+                </>
+              ) : uploading ? (
+                `⏳ Subiendo ${uploadingCount} foto${uploadingCount > 1 ? 's' : ''}…`
+              ) : (
+                <><Check size={16} /> {initialData ? 'Guardar cambios' : 'Crear spot'}</>
+              )}
+            </button>
           </div>
         </form>
         <style>{`@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }`}</style>
@@ -712,6 +803,11 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
     </div>,
     document.body
   )
+}
+
+const photoBtnStyle: React.CSSProperties = {
+  background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: '6px', color: '#fff', cursor: 'pointer',
+  width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
 }
 
 const inputStyle: React.CSSProperties = {
