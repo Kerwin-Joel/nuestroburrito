@@ -1,0 +1,90 @@
+/* Tienda de artesanos: animaciones compartidas (espejo de aiShimmer / loaders de la app). */
+@keyframes mk-spin { to { transform: rotate(360deg); } }
+
+.mk-spinner {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: mk-spin 0.8s linear infinite;
+}
+.mk-spinner.dark {
+  border-color: color-mix(in srgb, var(--orange) 25%, transparent);
+  border-top-color: var(--orange);
+}
+
+/* Brillo que recorre el bloque mientras la IA trabaja. */
+@keyframes mk-shimmer {
+  from { background-position: -150% 0; }
+  to { background-position: 250% 0; }
+}
+.mk-shimmer {
+  background-image: linear-gradient(110deg, transparent 30%, rgba(255, 184, 107, 0.33) 50%, transparent 70%);
+  background-size: 60% 100%;
+  background-repeat: no-repeat;
+  animation: mk-shimmer 1.3s linear infinite;
+}
+
+.mk-field {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border-hover);
+  border-radius: 14px;
+  padding: 14px 14px;
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.mk-field:focus { border-color: var(--orange); }
+.mk-field::placeholder { color: var(--muted); }
+textarea.mk-field { resize: vertical; line-height: 1.45; }
+
+.mk-label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0 0 6px 2px;
+}
+
+.mk-chip {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--white);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.mk-chip.on {
+  background: var(--white);
+  color: var(--bg);
+  border-color: var(--white);
+}
+
+.mk-btn {
+  height: 54px;
+  border: none;
+  border-radius: 16px;
+  background: var(--orange);
+  color: white;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.mk-btn:active:not(:disabled) { transform: scale(0.98); }
+.mk-btn:disabled { opacity: 0.35; cursor: default; }
+.mk-btn.ink { background: var(--white); color: var(--bg); }
+.mk-btn.outline { background: transparent; color: var(--white); border: 1px solid var(--border-hover); }

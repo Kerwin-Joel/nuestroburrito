@@ -25,6 +25,7 @@ const HistoriaPage = lazy(() => import('./pages/tourist/HistoriaPage'))
 const ServiciosPage = lazy(() => import('./pages/tourist/ServiciosPage'))
 const HotelesPage = lazy(() => import('./pages/tourist/HotelesPage'))
 const TiendaPage = lazy(() => import('./pages/tourist/TiendaPage'))
+const VenderPage = lazy(() => import('./pages/tourist/VenderPage'))
 const PasaportePage = lazy(() => import('./pages/tourist/PasaportePage'))
 const BeneficiosPage = lazy(() => import('./pages/tourist/BeneficiosPage'))
 const FavoritosPage = lazy(() => import('./pages/tourist/FavoritosPage'))
@@ -135,6 +136,7 @@ export default function App() {
             <Route path="servicios" element={<ServiciosPage />} />
             <Route path="hoteles" element={<HotelesPage />} />
             <Route path="tienda" element={<TiendaPage />} />
+            <Route path="vender" element={<VenderPage />} />
             <Route path="pasaporte" element={<PasaportePage />} />
             <Route path="beneficios" element={<BeneficiosPage />} />
             <Route path="favoritos" element={<FavoritosPage />} />

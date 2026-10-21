@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Store, X, Minus, Plus } from 'lucide-react'
-import { PageHeader } from '../../components/tourist/ExtrasHeader'
+import { Search, X, Minus, Plus } from 'lucide-react'
 import BeneficiosPage from './BeneficiosPage'
+import { MarketGridCard, MarketHeroCard, MarketProductModal, SellInviteCard } from '../../components/market/MarketParts'
+import { displayTitle, marketService, type MarketProduct } from '../../services/market'
 
 /**
  * Catálogo de la primera versión — espejo de StoreCatalog.kt / StoreScreen.kt.
@@ -13,11 +15,11 @@ import BeneficiosPage from './BeneficiosPage'
  */
 const STORE_WHATSAPP = ''
 
-type Section = 'merch' | 'experiencias' | 'local' | 'cupones'
+type Section = 'artesanos' | 'merch' | 'experiencias' | 'local' | 'cupones'
 
 interface Product {
   id: string
-  section: Exclude<Section, 'cupones'>
+  section: Exclude<Section, 'cupones' | 'artesanos'>
   emoji: string
   name: string
   price: number
@@ -28,6 +30,7 @@ interface Product {
 }
 
 const SECTIONS: { id: Section; label: string; emoji: string }[] = [
+  { id: 'artesanos', label: 'Artesanos', emoji: '🧑‍🎨' },
   { id: 'merch', label: 'Merch', emoji: '🧢' },
   { id: 'experiencias', label: 'Experiencias', emoji: '🧭' },
   { id: 'local', label: 'Hecho en Piura', emoji: '🏺' },
@@ -52,15 +55,24 @@ const PRODUCTS: Product[] = [
 ]
 
 export default function TiendaPage() {
-  const [section, setSection] = useState<Section>('merch')
+  const navigate = useNavigate()
+  const [section, setSection] = useState<Section | null>(null)
+  const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<Product | null>(null)
+  const [selectedMarket, setSelectedMarket] = useState<MarketProduct | null>(null)
+  const [market, setMarket] = useState<MarketProduct[]>([])
+
+  useEffect(() => { marketService.catalog().then(setMarket).catch(() => {}) }, [])
+
+  const onSell = () => navigate('/app/vender')
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '110px' }}>
-      <PageHeader icon={<Store size={16} color="var(--orange)" />} eyebrow="Tienda Burrito" title={<>Tienda<br /><span style={{ color: 'var(--orange)' }}>Burrito</span></>} subtitle="Merch, experiencias y lo mejor hecho en Piura." />
+      <StoreHeader query={query} onQuery={setQuery} />
 
       <div className="page-container">
-        <div className="scroll-row" style={{ marginBottom: '20px' }}>
+        <div className="scroll-row" style={{ marginBottom: '14px', gap: '8px' }}>
+          <button onClick={() => setSection(null)} className={`chip ${section === null ? 'selected' : ''}`}>✨ Todo</button>
           {SECTIONS.map(s => (
             <button key={s.id} onClick={() => setSection(s.id)} className={`chip ${section === s.id ? 'selected' : ''}`}>
               {s.emoji} {s.label}
@@ -68,33 +80,165 @@ export default function TiendaPage() {
           ))}
         </div>
 
-        {section === 'cupones' ? (
-          <div style={{ margin: '-24px -20px 0' }}><BeneficiosPage /></div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px' }}>
-            {PRODUCTS.filter(p => p.section === section).map(p => (
-              <ProductCard key={p.id} product={p} onClick={() => setSelected(p)} />
-            ))}
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={section ?? 'todo'}
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+          >
+            {section === 'cupones' ? (
+              <div style={{ margin: '-24px -20px 0' }}><BeneficiosPage /></div>
+            ) : (
+              <StoreGrid
+                section={section} query={query.trim()} market={market}
+                onOpen={setSelected} onOpenMarket={setSelectedMarket} onSell={onSell}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {selected && <ProductModal product={selected} onClose={() => setSelected(null)} />}
+      {selectedMarket && <MarketProductModal p={selectedMarket} onClose={() => setSelectedMarket(null)} />}
     </div>
   )
 }
 
+function StoreHeader({ query, onQuery }: { query: string; onQuery: (q: string) => void }) {
+  return (
+    <div className="page-container" style={{ paddingTop: '24px', paddingBottom: '14px' }}>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px, 5vw, 36px)', fontWeight: 900, color: 'var(--white)', letterSpacing: '-1px', lineHeight: 1.1, margin: 0 }}>
+        Tienda <span style={{ color: 'var(--orange)' }}>Burrito</span>
+      </h1>
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--muted)', margin: '4px 0 0' }}>Lo hecho en Piura, por su gente.</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '48px', marginTop: '12px', padding: '0 14px', borderRadius: '16px', background: 'var(--card2)' }}>
+        <Search size={19} color="var(--muted)" />
+        <input
+          value={query} onChange={e => onQuery(e.target.value)} placeholder="Busca sombreros, cerámica, chifles…"
+          style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: '14.5px' }}
+        />
+        {query && (
+          <button onClick={() => onQuery('')} aria-label="Borrar" style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}>
+            <X size={17} color="var(--muted)" />
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+const matches = (p: Product, q: string) => {
+  const t = q.toLowerCase()
+  return !t || [p.name, p.tagline, p.description].some(x => x.toLowerCase().includes(t))
+}
+const marketMatches = (p: MarketProduct, q: string) => {
+  const t = q.toLowerCase()
+  return !t || [displayTitle(p), p.tagline ?? '', p.description ?? '', p.seller?.business_name ?? '', ...p.tags, ...p.materials]
+    .some(x => x.toLowerCase().includes(t))
+}
+
+const GRID: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px' }
+
+function Label({ children }: { children: React.ReactNode }) {
+  return <p className="section-label" style={{ margin: '14px 0 10px' }}>{children}</p>
+}
+
+function StoreGrid({ section, query, market, onOpen, onOpenMarket, onSell }: {
+  section: Section | null
+  query: string
+  market: MarketProduct[]
+  onOpen: (p: Product) => void
+  onOpenMarket: (p: MarketProduct) => void
+  onSell: () => void
+}) {
+  const art = useMemo(() => market.filter(p => marketMatches(p, query)), [market, query])
+  const products = PRODUCTS.filter(p => matches(p, query) && (section === null || p.section === section))
+
+  // Portada: carrusel de artesanos + invitación a vender + secciones de la casa.
+  if (section === null && !query) {
+    return (
+      <>
+        {art.length > 0 && (
+          <>
+            <Label>🧑‍🎨 Hecho por artesanos de Piura</Label>
+            <div className="scroll-row" style={{ paddingBottom: 6 }}>
+              {art.slice(0, 10).map(p => <MarketHeroCard key={p.id} p={p} onClick={() => onOpenMarket(p)} />)}
+            </div>
+          </>
+        )}
+        <div style={{ margin: '12px 0 4px' }}><SellInviteCard onClick={onSell} /></div>
+        {SECTIONS.filter(s => s.id !== 'artesanos' && s.id !== 'cupones').map(s => {
+          const list = products.filter(p => p.section === s.id)
+          return list.length === 0 ? null : (
+            <div key={s.id}>
+              <Label>{s.emoji} {s.label}</Label>
+              <div style={GRID}>{list.map(p => <ProductCard key={p.id} product={p} onClick={() => onOpen(p)} />)}</div>
+            </div>
+          )
+        })}
+      </>
+    )
+  }
+
+  if (section === 'artesanos') {
+    return (
+      <>
+        <SellInviteCard onClick={onSell} />
+        {art.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '30px 0' }}>
+            <p style={{ fontSize: 40, margin: 0 }}>🧺</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--muted)', marginTop: 8 }}>
+              {query ? `Nada coincide con "${query}"` : 'Pronto verás aquí lo que hacen los artesanos de Piura'}
+            </p>
+          </div>
+        ) : (
+          <div style={{ ...GRID, marginTop: 12 }}>{art.map(p => <MarketGridCard key={p.id} p={p} onClick={() => onOpenMarket(p)} />)}</div>
+        )}
+      </>
+    )
+  }
+
+  // Búsqueda en "Todo": artesanos primero, luego lo de la casa.
+  if (section === null) {
+    return (
+      <>
+        {art.length > 0 && (
+          <>
+            <Label>🧑‍🎨 Artesanos</Label>
+            <div style={GRID}>{art.map(p => <MarketGridCard key={p.id} p={p} onClick={() => onOpenMarket(p)} />)}</div>
+          </>
+        )}
+        {products.length > 0 && (
+          <>
+            <Label>🫏 De Burrito</Label>
+            <div style={GRID}>{products.map(p => <ProductCard key={p.id} product={p} onClick={() => onOpen(p)} />)}</div>
+          </>
+        )}
+        {art.length === 0 && products.length === 0 && (
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--muted)', padding: '30px 0' }}>Nada coincide con "{query}"</p>
+        )}
+      </>
+    )
+  }
+
+  return <div style={GRID}>{products.map(p => <ProductCard key={p.id} product={p} onClick={() => onOpen(p)} />)}</div>
+}
+
 function ProductCard({ product, onClick }: { product: Product; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="card" style={{ textAlign: 'left', cursor: 'pointer', padding: '10px' }}>
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '1', borderRadius: '14px', background: product.tint, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
-        <span style={{ fontSize: '46px' }}>{product.emoji}</span>
+    <motion.button whileTap={{ scale: 0.97 }} onClick={onClick} className="card" style={{ textAlign: 'left', cursor: 'pointer', padding: 0, borderRadius: 20 }}>
+      <div style={{ position: 'relative', width: '100%', aspectRatio: '0.9', background: `linear-gradient(135deg, ${product.tint}, ${product.tint}8C)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Círculo suave detrás del emoji: le da volumen sin necesitar foto. */}
+        <span style={{ position: 'absolute', width: 96, height: 96, borderRadius: '50%', background: 'rgba(255,255,255,0.45)' }} />
+        <span style={{ fontSize: '50px', position: 'relative' }}>{product.emoji}</span>
         {product.badge && <span className="badge badge-orange" style={{ position: 'absolute', top: '8px', left: '8px' }}>{product.badge}</span>}
       </div>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13.5px', color: 'var(--white)', lineHeight: 1.25 }}>{product.name}</div>
-      <div style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{product.tagline}</div>
-      <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '15px', color: 'var(--orange)', marginTop: '6px' }}>S/ {product.price}</div>
-    </button>
+      <div style={{ padding: '10px 11px' }}>
+        <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '14px', color: 'var(--white)', lineHeight: '17px' }}>{product.name}</div>
+        <div style={{ fontFamily: 'var(--font-body)', fontSize: '11.5px', color: 'var(--muted)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.tagline}</div>
+        <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '15px', color: 'var(--orange)', marginTop: '6px' }}>S/ {product.price}</div>
+      </div>
+    </motion.button>
   )
 }
 
