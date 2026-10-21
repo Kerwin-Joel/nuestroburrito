@@ -10,7 +10,9 @@ import {
   Settings,
   QrCode,
   LucideIcon,
-  BookOpen
+  BookOpen,
+  Car,
+  Store
 } from 'lucide-react'
 
 export interface AdminModule {
@@ -25,9 +27,9 @@ export interface AdminModule {
   group: AdminGroup
 }
 
-export type AdminGroup = 'General' | 'Catálogo' | 'Contenido' | 'Comunidad' | 'Sistema'
+export type AdminGroup = 'General' | 'Negocio' | 'Catálogo' | 'Contenido' | 'Comunidad' | 'Sistema'
 
-export const ADMIN_GROUPS: AdminGroup[] = ['General', 'Catálogo', 'Contenido', 'Comunidad', 'Sistema']
+export const ADMIN_GROUPS: AdminGroup[] = ['General', 'Negocio', 'Catálogo', 'Contenido', 'Comunidad', 'Sistema']
 
 export const ADMIN_MODULES: AdminModule[] = [
   {
@@ -38,6 +40,24 @@ export const ADMIN_MODULES: AdminModule[] = [
     path: '/admin/dashboard',
     enabled: true,
     description: 'Métricas generales de la plataforma',
+  },
+  {
+    id: 'taxi',
+    group: 'Negocio',
+    label: 'Taxi',
+    icon: Car,
+    path: '/admin/taxi',
+    enabled: true,
+    description: 'Conductores, alertas SOS y viajes',
+  },
+  {
+    id: 'tienda',
+    group: 'Negocio',
+    label: 'Tienda',
+    icon: Store,
+    path: '/admin/tienda',
+    enabled: true,
+    description: 'Productos de artesanos por revisar y vendedores',
   },
   {
     id: 'spots',

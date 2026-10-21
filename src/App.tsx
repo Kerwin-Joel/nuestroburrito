@@ -53,6 +53,8 @@ const AdminConfigPage = lazy(() => import('./pages/admin/AdminConfigPage'))
 const AuthCallbackPage = lazy(() => import('./pages/auth/AuthCallbackPage'))
 const AdminQRPage = lazy(() => import('./pages/admin/AdminQRPage'))
 const AdminHistoriaPage = lazy(() => import('./pages/admin/AdminHistoriaPage'))
+const AdminTaxiPage = lazy(() => import('./pages/admin/AdminTaxiPage'))
+const AdminTiendaPage = lazy(() => import('./pages/admin/AdminTiendaPage'))
 
 
 // Landing page
@@ -176,6 +178,8 @@ export default function App() {
             <Route path="configuracion" element={<AdminConfigPage />} />
             <Route path="qr" element={<AdminQRPage />} />
             <Route path="historia" element={<AdminHistoriaPage />} />
+            <Route path="taxi" element={<AdminTaxiPage />} />
+            <Route path="tienda" element={<AdminTiendaPage />} />
           </Route>
 
           {/* Fallback */}
