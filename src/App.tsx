@@ -56,6 +56,7 @@ const AdminHistoriaPage = lazy(() => import('./pages/admin/AdminHistoriaPage'))
 
 // Landing page
 const LandingPage = lazy(() => import('./pages/LandingPage'))
+const SharedRidePage = lazy(() => import('./pages/SharedRidePage'))
 
 
 export default function App() {
@@ -104,6 +105,7 @@ export default function App() {
         <Routes>
           {/* Public Auth Routes */}
           <Route path="/landing" element={<LandingPage />} />
+          <Route path="/viaje/:token" element={<SharedRidePage />} />
           <Route
             path="/auth/callback"
             element={<AuthCallbackPage />}
