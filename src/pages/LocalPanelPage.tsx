@@ -1,14 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, animate, motion } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
+import { Check, Maximize2, Minimize2, Store } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import './local-panel.css'
 
 /**
  * Panel del local (nuestroburrito.com/local/<token>): lo abre el dueño o su
  * personal, sin cuenta, con el enlace que le da el equipo Burrito. Muestra el
- * PIN vigente y un QR con ese mismo PIN; los dos cambian cada vez que alguien
- * los usa (para marcar una visita o canjear un premio).
+ * PIN vigente y un QR con ese mismo PIN; los dos cambian apenas alguien los
+ * usa (para marcar una visita o canjear un premio).
+ *
+ * Diseño: el local es el protagonista (su foto de fondo y su nombre en grande);
+ * Burrito acompaña (logo arriba, en el centro del QR y al pie). "Modo
+ * mostrador" lo deja a pantalla completa y sin que se apague la pantalla.
  */
 interface Panel {
   spot_id: string
@@ -26,12 +32,22 @@ interface Panel {
   rewards_redeemed_today: number
 }
 
+type WakeLock = { release: () => Promise<void> }
+
+const stagger = (i: number) => ({
+  initial: { opacity: 0, y: 22 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay: 0.08 + i * 0.08, type: 'spring' as const, stiffness: 260, damping: 26 },
+})
+
 export default function LocalPanelPage() {
   const { token = '' } = useParams()
   const [panel, setPanel] = useState<Panel | null>(null)
   const [missing, setMissing] = useState(false)
-  const [justUsed, setJustUsed] = useState(false)
+  const [usedAt, setUsedAt] = useState(0)
+  const [counter, setCounter] = useState(false)
   const lastPin = useRef<string | null>(null)
+  const wake = useRef<WakeLock | null>(null)
 
   useEffect(() => {
     let alive = true
@@ -41,10 +57,7 @@ export default function LocalPanelPage() {
       if (error || !data) { setMissing(true); return }
       const p = data as Panel
       // El PIN cambió: alguien lo acaba de usar.
-      if (lastPin.current && lastPin.current !== p.pin) {
-        setJustUsed(true)
-        setTimeout(() => setJustUsed(false), 3500)
-      }
+      if (lastPin.current && lastPin.current !== p.pin) setUsedAt(Date.now())
       lastPin.current = p.pin
       setMissing(false)
       setPanel(p)
@@ -54,78 +67,159 @@ export default function LocalPanelPage() {
     return () => { alive = false; clearInterval(id) }
   }, [token])
 
+  useEffect(() => {
+    if (!usedAt) return
+    const t = setTimeout(() => setUsedAt(0), 3600)
+    return () => clearTimeout(t)
+  }, [usedAt])
+
+  /** Modo mostrador: pantalla completa y la pantalla no se apaga. */
+  const toggleCounter = async () => {
+    const on = !counter
+    setCounter(on)
+    try {
+      if (on) {
+        await document.documentElement.requestFullscreen?.()
+        const nav = navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<WakeLock> } }
+        wake.current = (await nav.wakeLock?.request('screen')) ?? null
+      } else {
+        if (document.fullscreenElement) await document.exitFullscreen()
+        await wake.current?.release()
+        wake.current = null
+      }
+    } catch { /* el navegador puede no permitirlo: el panel igual funciona */ }
+  }
+
   const qrUrl = panel ? `${window.location.origin}/app/verify?code=${encodeURIComponent(panel.qr_payload)}` : ''
+  const used = usedAt > 0
+  const name = panel?.spot_name.trim() ?? ''
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#FDF8EF', color: '#1A120A', fontFamily: 'var(--font-body)', padding: '24px 18px 40px' }}>
-      <div style={{ maxWidth: 440, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 18 }}>
-          <span style={{ font: '800 24px var(--font-display)', letterSpacing: '-1px' }}>burri<span style={{ color: '#E8920A' }}>to</span></span>
-          <div style={{ font: '700 11px var(--font-mono)', letterSpacing: 2, color: '#A08060', marginTop: 2 }}>PANEL DEL LOCAL</div>
-        </div>
+    <div className="lp-root">
+      {/* Fondo: la foto del local, desenfocada y con un zoom lento. */}
+      {panel?.photo_url && (
+        <div className="lp-ambient"><img src={panel.photo_url} alt="" /></div>
+      )}
+      <div className="lp-shade" />
+
+      <div className="lp-content">
+        {/* ── Barra: Burrito acompaña, discreto ── */}
+        <motion.header {...stagger(0)} className="lp-topbar">
+          <div className="lp-brand">
+            <img src="/isotipo_burrito.png" alt="" />
+            <span>burri<b>to</b></span>
+            <em>para negocios</em>
+          </div>
+          {panel && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span className="lp-live"><i /> En vivo</span>
+              <button className="lp-icon-btn" onClick={toggleCounter} aria-label={counter ? 'Salir del modo mostrador' : 'Modo mostrador'}>
+                {counter ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
+              </button>
+            </div>
+          )}
+        </motion.header>
 
         {missing && (
-          <div style={{ textAlign: 'center', padding: 30, borderRadius: 24, background: '#FFFCF5' }}>
-            <div style={{ fontSize: 40 }}>🔒</div>
-            <h2 style={{ font: '800 20px var(--font-display)', margin: '8px 0 4px' }}>Enlace no válido</h2>
-            <p style={{ margin: 0, color: '#7A6550', fontSize: 14 }}>Pide un enlace nuevo al equipo de Burrito.</p>
-          </div>
+          <motion.div {...stagger(1)} className="lp-card" style={{ textAlign: 'center', padding: 34 }}>
+            <div style={{ fontSize: 44 }}>🔒</div>
+            <h2 className="lp-h2" style={{ marginTop: 8 }}>Enlace no válido</h2>
+            <p className="lp-muted">Pide un enlace nuevo al equipo de Burrito.</p>
+          </motion.div>
         )}
 
         {panel && (
           <>
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              {panel.photo_url && <img src={panel.photo_url} alt="" style={{ width: 54, height: 54, borderRadius: 16, objectFit: 'cover' }} />}
-              <div style={{ minWidth: 0 }}>
-                <div style={{ font: '800 20px var(--font-display)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{panel.spot_name.trim()}</div>
-                <div style={{ fontSize: 13, color: '#7A6550' }}>
-                  {panel.enabled && panel.reward_title ? `${panel.reward_emoji} ${panel.reward_title} cada ${panel.visits_required} visitas` : 'Visitas del pasaporte'}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* PIN vigente */}
-            <div style={{ position: 'relative', borderRadius: 28, background: '#1A120A', color: '#fff', padding: '22px 18px', textAlign: 'center', overflow: 'hidden' }}>
-              <AnimatePresence>
-                {justUsed && (
-                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                    style={{ position: 'absolute', top: 12, left: 0, right: 0, font: '700 12px var(--font-body)', color: '#7CE0A3' }}>
-                    ✓ PIN usado · ya hay uno nuevo
-                  </motion.div>
+            {/* ── El local, protagonista ── */}
+            <motion.section {...stagger(1)} className="lp-hero">
+              {panel.photo_url ? <img src={panel.photo_url} alt="" /> : <div className="lp-hero-fallback"><Store size={40} /></div>}
+              <div className="lp-hero-shade" />
+              <div className="lp-hero-text">
+                <h1>{name}</h1>
+                {panel.enabled && panel.reward_title ? (
+                  <span className="lp-reward-pill">
+                    <span className="lp-reward-emoji">{panel.reward_emoji}</span>
+                    {panel.reward_title} cada {panel.visits_required} visitas
+                  </span>
+                ) : (
+                  <span className="lp-reward-pill">Visitas del pasaporte Burrito</span>
                 )}
-              </AnimatePresence>
-              <div style={{ font: '700 12px var(--font-mono)', letterSpacing: 2, opacity: 0.7, marginTop: 8 }}>PIN DE HOY</div>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12 }}>
-                {panel.pin.split('').map((d, i) => (
-                  <AnimatePresence key={i} mode="popLayout" initial={false}>
-                    <motion.span key={`${d}-${panel.rotated_at}`}
-                      initial={{ rotateX: -90, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }} exit={{ rotateX: 90, opacity: 0 }}
-                      transition={{ delay: i * 0.07, type: 'spring', stiffness: 300, damping: 22 }}
-                      style={{ width: 62, height: 78, borderRadius: 16, background: 'rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 44px var(--font-display)' }}>
-                      {d}
+              </div>
+            </motion.section>
+
+            {/* ── PIN ── */}
+            <motion.section {...stagger(2)} className={`lp-pin-card ${used ? 'used' : ''}`}>
+              <div className="lp-pin-head">
+                <span className="lp-eyebrow">PIN para tus clientes</span>
+                <AnimatePresence>
+                  {used && (
+                    <motion.span className="lp-used" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 18 }}>
+                      <Check size={14} strokeWidth={3} /> Usado · ya hay uno nuevo
                     </motion.span>
-                  </AnimatePresence>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="lp-digits">
+                {panel.pin.split('').map((d, i) => (
+                  <div key={i} className="lp-digit-slot">
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      <motion.span key={`${d}-${panel.rotated_at}`} className="lp-digit"
+                        initial={{ rotateX: -95, opacity: 0, y: -10 }} animate={{ rotateX: 0, opacity: 1, y: 0 }} exit={{ rotateX: 95, opacity: 0, y: 10 }}
+                        transition={{ delay: i * 0.08, type: 'spring', stiffness: 320, damping: 22 }}>
+                        {d}
+                      </motion.span>
+                    </AnimatePresence>
+                  </div>
                 ))}
               </div>
-              <p style={{ margin: '14px 0 0', fontSize: 13, opacity: 0.75 }}>Díctalo al cliente o escríbelo en su celular. Cambia apenas se usa.</p>
-            </div>
+              <p className="lp-pin-help">Díctalo al cliente o escríbelo en su celular. <b>Cambia apenas se usa.</b></p>
+              {used && <span key={usedAt} className="lp-ripple" />}
+            </motion.section>
 
-            {/* QR con el mismo PIN */}
-            <div style={{ marginTop: 16, borderRadius: 28, background: '#FFFCF5', padding: 20, textAlign: 'center', border: '1px solid rgba(160,100,20,.14)' }}>
-              <motion.div key={panel.qr_payload} initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                style={{ display: 'inline-block', padding: 12, background: '#fff', borderRadius: 18 }}>
-                <QRCodeSVG value={qrUrl} size={210} fgColor="#1A120A" level="M" />
-              </motion.div>
-              <p style={{ margin: '12px 0 0', fontSize: 13, color: '#7A6550' }}>O que escaneen este QR desde la app de Burrito.</p>
-            </div>
+            {/* ── QR con el mismo PIN, con el sello de Burrito al centro ── */}
+            <motion.section {...stagger(3)} className="lp-ticket">
+              <div className="lp-ticket-qr">
+                <motion.div key={panel.qr_payload} initial={{ scale: 0.9, opacity: 0, rotate: -2 }} animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 20 }}>
+                  <QRCodeSVG value={qrUrl} size={196} fgColor="#1A120A" bgColor="#ffffff" level="H"
+                    imageSettings={{ src: '/isotipo_burrito.png', height: 46, width: 46, excavate: true }} />
+                </motion.div>
+              </div>
+              <div className="lp-ticket-cut" />
+              <div className="lp-ticket-foot">
+                <b>¿Prefieren escanear?</b>
+                <span>Desde la app de Burrito: Pasaporte → Registrar visita.</span>
+              </div>
+            </motion.section>
 
-            <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-              <Stat value={panel.visits_today} label="Visitas hoy" />
-              <Stat value={panel.rewards_redeemed_today} label="Premios canjeados hoy" />
-            </div>
-            <p style={{ textAlign: 'center', fontSize: 12, color: '#A08060', marginTop: 18 }}>
-              No compartas este enlace: quien lo tenga ve el PIN de tu local.
-            </p>
+            {/* ── Hoy ── */}
+            <motion.section {...stagger(4)} className="lp-stats">
+              <Stat value={panel.visits_today} label="Visitas hoy" emoji="👣" />
+              <Stat value={panel.rewards_redeemed_today} label="Premios canjeados" emoji={panel.reward_emoji} />
+            </motion.section>
+
+            <motion.section {...stagger(5)} className="lp-steps">
+              {[
+                ['1', 'El cliente abre Burrito', 'Pasaporte → tu local → Registrar visita'],
+                ['2', 'Le das el PIN o el QR', 'Suma su sello al instante'],
+                ['3', panel.enabled ? `A las ${panel.visits_required} visitas, premio` : 'Queda en su pasaporte', panel.enabled ? 'Para canjearlo también pide el PIN' : 'Y te recomienda a otros turistas'],
+              ].map(([n, t, s]) => (
+                <div key={n} className="lp-step">
+                  <span>{n}</span>
+                  <div><b>{t}</b><small>{s}</small></div>
+                </div>
+              ))}
+            </motion.section>
+
+            <motion.footer {...stagger(6)} className="lp-footer">
+              <div className="lp-brand small">
+                <img src="/isotipo_burrito.png" alt="" />
+                <span>burri<b>to</b></span>
+              </div>
+              <p>La guía piurana que trae turistas a {name}.</p>
+              <small>No compartas este enlace: quien lo tenga ve el PIN de tu local.</small>
+            </motion.footer>
           </>
         )}
       </div>
@@ -133,11 +227,23 @@ export default function LocalPanelPage() {
   )
 }
 
-function Stat({ value, label }: { value: number; label: string }) {
+/** Número que cuenta hasta su valor al aparecer y al cambiar. */
+function Stat({ value, label, emoji }: { value: number; label: string; emoji: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const prev = useRef(0)
+  useEffect(() => {
+    const controls = animate(prev.current, value, {
+      duration: 0.9, ease: [0.2, 0.8, 0.2, 1],
+      onUpdate: v => { if (ref.current) ref.current.textContent = String(Math.round(v)) },
+    })
+    prev.current = value
+    return () => controls.stop()
+  }, [value])
   return (
-    <div style={{ flex: 1, borderRadius: 20, background: '#FFFCF5', border: '1px solid rgba(160,100,20,.14)', padding: '14px 12px', textAlign: 'center' }}>
-      <div style={{ font: '800 26px var(--font-display)' }}>{value}</div>
-      <div style={{ fontSize: 12, color: '#7A6550' }}>{label}</div>
+    <div className="lp-stat">
+      <span className="lp-stat-emoji">{emoji}</span>
+      <span ref={ref} className="lp-stat-value">0</span>
+      <span className="lp-stat-label">{label}</span>
     </div>
   )
 }

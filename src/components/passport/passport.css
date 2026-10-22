@@ -37,13 +37,14 @@
 }
 .pp-slot.filled { border: none; background: transparent; }
 .pp-slot.next { animation: pp-pulse-ring 1.6s ease-out infinite; border-color: var(--orange); }
+/* El sello es el logo circular de Burrito, con aro blanco y girado como un timbre. */
 .pp-slot .pp-mark {
-  width: 100%; height: 100%; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #FFB347, #E8590C 70%);
-  display: flex; align-items: center; justify-content: center; color: #fff;
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.35), 0 3px 8px rgba(232, 89, 12, 0.35);
+  width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
+  background: #FF5500; border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(232, 89, 12, 0.38), 0 0 0 1px rgba(232, 89, 12, 0.25);
   transform: rotate(-14deg);
 }
+.pp-slot .pp-mark img { width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; }
 .pp-slot .pp-mark.animate { animation: pp-stamp 0.62s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
 .pp-slot .pp-ink {
   position: absolute; inset: 0; border-radius: 50%; border: 3px solid #E8590C;

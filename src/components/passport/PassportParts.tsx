@@ -31,7 +31,7 @@ export function StampCard({ loyalty, progress, animateIndex }: { loyalty: Loyalt
             {filled ? (
               <>
                 <div className={`pp-mark ${animateIndex === i ? 'animate' : ''}`}>
-                  <img src="/isotipo_burrito.png" alt="" style={{ width: '62%', height: '62%', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+                  <img src="/isotipo_burrito.png" alt="" draggable={false} />
                 </div>
                 {animateIndex === i && <span className="pp-ink" />}
               </>
@@ -278,8 +278,8 @@ export function CheckInCelebration({ result, onClose }: { result: Extract<CheckI
               <>
                 <motion.div initial={{ scale: 2.2, rotate: -40, opacity: 0 }} animate={{ scale: 1, rotate: -12, opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 380, damping: 14 }}
-                  style={{ width: 92, height: 92, margin: '0 auto', borderRadius: '50%', background: result.already ? 'var(--card2)' : 'radial-gradient(circle at 35% 30%, #FFB347, #E8590C 70%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: result.already ? 'none' : '0 10px 24px rgba(232,89,12,.4)' }}>
-                  {result.already ? <Check size={42} color="var(--muted)" /> : <img src="/isotipo_burrito.png" alt="" style={{ width: 58, filter: 'brightness(0) invert(1)' }} />}
+                  style={{ width: 96, height: 96, margin: '0 auto', borderRadius: '50%', overflow: 'hidden', background: 'var(--card2)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: result.already ? 'none' : '4px solid #fff', boxShadow: result.already ? 'none' : '0 12px 28px rgba(232,89,12,.45)' }}>
+                  {result.already ? <Check size={42} color="var(--muted)" /> : <img src="/isotipo_burrito.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                 </motion.div>
                 <h3 style={{ margin: '14px 0 4px', font: '800 24px var(--font-display)', color: 'var(--white)' }}>
                   {result.already ? 'Ya tienes tu sello de hoy' : '¡+1 sello!'}
