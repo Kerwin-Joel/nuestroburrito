@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import ToastContainer from './components/shared/ToastContainer'
 import { useAuthStore } from './stores/useAuthStore'
 import ProtectedRoute from './components/auth/ProtectedRoute'
@@ -27,6 +27,9 @@ const HotelesPage = lazy(() => import('./pages/tourist/HotelesPage'))
 const TiendaPage = lazy(() => import('./pages/tourist/TiendaPage'))
 const VenderPage = lazy(() => import('./pages/tourist/VenderPage'))
 const TaxiPage = lazy(() => import('./pages/tourist/TaxiPage'))
+const PasaporteSpotPage = lazy(() => import('./pages/tourist/PasaporteSpotPage'))
+const LocalPanelPage = lazy(() => import('./pages/LocalPanelPage'))
+const AdminVisitasPage = lazy(() => import('./pages/admin/AdminVisitasPage'))
 const PasaportePage = lazy(() => import('./pages/tourist/PasaportePage'))
 const BeneficiosPage = lazy(() => import('./pages/tourist/BeneficiosPage'))
 const FavoritosPage = lazy(() => import('./pages/tourist/FavoritosPage'))
@@ -110,6 +113,10 @@ export default function App() {
           {/* Public Auth Routes */}
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/viaje/:token" element={<SharedRidePage />} />
+          {/* Panel del local (enlace secreto del dueño: PIN y QR que cambian en cada uso). */}
+          <Route path="/local/:token" element={<LocalPanelPage />} />
+          {/* Los QR impresos apuntan a /verify: se manda a la app conservando el código. */}
+          <Route path="/verify" element={<VerifyRedirect />} />
           <Route
             path="/auth/callback"
             element={<AuthCallbackPage />}
@@ -141,6 +148,7 @@ export default function App() {
             <Route path="tienda" element={<TiendaPage />} />
             <Route path="vender" element={<VenderPage />} />
             <Route path="taxi" element={<TaxiPage />} />
+            <Route path="pasaporte/:spotId" element={<PasaporteSpotPage />} />
             <Route path="pasaporte" element={<PasaportePage />} />
             <Route path="beneficios" element={<BeneficiosPage />} />
             <Route path="favoritos" element={<FavoritosPage />} />
@@ -182,6 +190,7 @@ export default function App() {
             <Route path="historia" element={<AdminHistoriaPage />} />
             <Route path="taxi" element={<AdminTaxiPage />} />
             <Route path="tienda" element={<AdminTiendaPage />} />
+            <Route path="visitas" element={<AdminVisitasPage />} />
           </Route>
 
           {/* Fallback */}
@@ -193,4 +202,9 @@ export default function App() {
       <ToastContainer />
     </BrowserRouter>
   )
+}
+
+function VerifyRedirect() {
+  const { search } = useLocation()
+  return <Navigate to={`/app/verify${search}`} replace />
 }

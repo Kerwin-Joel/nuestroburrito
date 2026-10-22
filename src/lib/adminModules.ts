@@ -12,7 +12,8 @@ import {
   LucideIcon,
   BookOpen,
   Car,
-  Store
+  Store,
+  Stamp
 } from 'lucide-react'
 
 export interface AdminModule {
@@ -58,6 +59,15 @@ export const ADMIN_MODULES: AdminModule[] = [
     path: '/admin/tienda',
     enabled: true,
     description: 'Productos de artesanos por revisar y vendedores',
+  },
+  {
+    id: 'visitas',
+    group: 'Negocio',
+    label: 'Visitas y premios',
+    icon: Stamp,
+    path: '/admin/visitas',
+    enabled: true,
+    description: 'Premios por visitas, QR o PIN de cada local',
   },
   {
     id: 'spots',

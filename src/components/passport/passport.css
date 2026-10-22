@@ -1,0 +1,88 @@
+/* Pasaporte · visitas y premios — espejo de las animaciones de passport/*.kt */
+
+/* Sello que cae y se "timbra": entra grande y girado, golpea y rebota. */
+@keyframes pp-stamp {
+  0% { transform: scale(2.4) rotate(-38deg); opacity: 0; }
+  55% { transform: scale(0.86) rotate(-10deg); opacity: 1; }
+  72% { transform: scale(1.08) rotate(-16deg); }
+  100% { transform: scale(1) rotate(-14deg); }
+}
+/* Onda de tinta al golpear. */
+@keyframes pp-ink {
+  0% { transform: scale(0.4); opacity: 0.55; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+@keyframes pp-float {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-6px) rotate(4deg); }
+}
+@keyframes pp-shine {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to { transform: translateX(260%) skewX(-18deg); }
+}
+@keyframes pp-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+@keyframes pp-pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(232, 146, 10, 0.45); }
+  100% { box-shadow: 0 0 0 14px rgba(232, 146, 10, 0); }
+}
+
+.pp-slot {
+  position: relative; aspect-ratio: 1; border-radius: 50%;
+  border: 2px dashed var(--border-hover); display: flex; align-items: center; justify-content: center;
+  background: var(--card);
+}
+.pp-slot.filled { border: none; background: transparent; }
+.pp-slot.next { animation: pp-pulse-ring 1.6s ease-out infinite; border-color: var(--orange); }
+.pp-slot .pp-mark {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #FFB347, #E8590C 70%);
+  display: flex; align-items: center; justify-content: center; color: #fff;
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.35), 0 3px 8px rgba(232, 89, 12, 0.35);
+  transform: rotate(-14deg);
+}
+.pp-slot .pp-mark.animate { animation: pp-stamp 0.62s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.pp-slot .pp-ink {
+  position: absolute; inset: 0; border-radius: 50%; border: 3px solid #E8590C;
+  animation: pp-ink 0.7s ease-out 0.28s both; pointer-events: none;
+}
+.pp-gift { animation: pp-float 2.6s ease-in-out infinite; }
+
+.pp-shine { position: relative; overflow: hidden; }
+.pp-shine::after {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: pp-shine 2.8s ease-in-out infinite;
+}
+
+.pp-shake { animation: pp-shake 0.4s ease; }
+
+/* Ticket de premio: muescas laterales y línea perforada. */
+.pp-ticket {
+  position: relative; border-radius: 18px; background: var(--card); border: 1px solid var(--border);
+  display: flex; overflow: hidden;
+}
+.pp-ticket::before, .pp-ticket::after {
+  content: ''; position: absolute; left: 84px; width: 18px; height: 18px; border-radius: 50%; background: var(--bg);
+  border: 1px solid var(--border);
+}
+.pp-ticket::before { top: -10px; }
+.pp-ticket::after { bottom: -10px; }
+
+.pp-key {
+  height: 58px; border-radius: 16px; border: none; background: var(--card2); color: var(--white);
+  font: 700 22px var(--font-display); cursor: pointer; transition: transform 0.08s, background 0.15s;
+}
+.pp-key:active { transform: scale(0.94); background: var(--dim); }
+.pp-pin-box {
+  flex: 1; height: 64px; border-radius: 16px; background: var(--card2); display: flex; align-items: center; justify-content: center;
+  font: 800 30px var(--font-display); color: var(--white); border: 2px solid transparent; transition: border-color 0.15s, transform 0.15s;
+}
+.pp-pin-box.active { border-color: var(--orange); }
+.pp-pin-box.filled { transform: scale(1.04); }
+
+@keyframes pp-spin { to { transform: rotate(360deg); } }
+.pp-spinner { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--orange); animation: pp-spin .8s linear infinite; }

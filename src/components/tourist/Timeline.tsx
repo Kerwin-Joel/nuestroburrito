@@ -10,8 +10,10 @@ import StopReviewModal from '../../pages/tourist/StopReviewModal'
 import { reviewsService } from '../../services/reviews'
 import { itinerariesService } from '../../services/itineraries'
 import SpotDrawer from './SpotDrawer'
-import { supabase } from '../../lib/supabase'
 import QRScannerModal from '../../pages/verify/QRScannerModal'
+import { CheckInSheet } from '../passport/PassportParts'
+import { checkInMessage, passportService } from '../../services/passport'
+import { benefitsService } from '../../services/benefits'
 
 
 export default function Timeline({ readOnly = false,
@@ -28,6 +30,8 @@ export default function Timeline({ readOnly = false,
   const [reviewStop, setReviewStop] = useState<ItineraryStop | null>(null)
   const [selectedStop, setSelectedStop] = useState<ItineraryStop | null>(null)
   const [scanningStop, setScanningStop] = useState<ItineraryStop | null>(null)
+  // Parada cuyo local valida con PIN (se pide ahí mismo, sin salir del día).
+  const [pinStop, setPinStop] = useState<ItineraryStop | null>(null)
 
 
   useEffect(() => {
@@ -107,23 +111,25 @@ export default function Timeline({ readOnly = false,
     setScanningStop(null)
     if (!scanningStop) return
 
+    // El servidor valida el QR y, de paso, suma la visita al pasaporte.
+    const stop = scanningStop
     try {
-      const { data: qr } = await supabase
-        .from('spot_qr_codes')
-        .select('spot_id')
-        .eq('code', code)
-        .eq('active', true)
-        .single()
-
-      if (!qr || qr.spot_id !== scanningStop.spotId) {
+      const r = await passportService.checkIn({ code, itineraryId: current?.id })
+      if (!r.ok) {
+        if (r.reason === 'PIN_REQUIRED' && r.spot_id === stop.spotId) { setPinStop(stop); return }
+        addToast({ type: 'error', message: checkInMessage(r) })
+        return
+      }
+      if (r.spot_id !== stop.spotId) {
         addToast({ type: 'error', message: 'Este QR no corresponde a este spot' })
         return
       }
-
-      // QR válido → abre el modal de reseña
-      setReviewStop(scanningStop)
+      if (user) benefitsService.invalidateVisited(user.id)
+      if (r.reward_earned) addToast({ type: 'success', message: `${r.reward_earned.emoji} ¡Ganaste ${r.reward_earned.title}! Míralo en tu pasaporte.` })
+      // Asistencia confirmada → abre el modal de reseña
+      setReviewStop(stop)
     } catch {
-      addToast({ type: 'error', message: 'QR inválido o no reconocido' })
+      addToast({ type: 'error', message: 'No se pudo verificar el QR. Revisa tu conexión.' })
     }
   }
 
@@ -460,6 +466,17 @@ export default function Timeline({ readOnly = false,
         isOpen={!!scanningStop}
         onClose={() => setScanningStop(null)}
         onScan={handleQRScan}
+      />
+      <CheckInSheet
+        open={!!pinStop} onClose={() => setPinStop(null)}
+        spotId={pinStop?.spotId} spotName={pinStop?.spotName} validation="pin" itineraryId={current?.id}
+        onResult={r => {
+          const stop = pinStop
+          setPinStop(null)
+          if (user) benefitsService.invalidateVisited(user.id)
+          if (r.reward_earned) addToast({ type: 'success', message: `${r.reward_earned.emoji} ¡Ganaste ${r.reward_earned.title}! Míralo en tu pasaporte.` })
+          if (stop) setReviewStop(stop)
+        }}
       />
       <StopReviewModal
         stop={reviewStop}
