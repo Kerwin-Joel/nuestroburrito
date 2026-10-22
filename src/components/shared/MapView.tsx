@@ -151,7 +151,7 @@ interface PinMove {
  * cambia) — para poder animar "de dónde vino cada pin" hace falta manejar
  * los L.Marker a mano, igual que allá maneja los overlays directamente.
  */
-function ClusteredSpotMarkers({ spots, selectedSpot, onSpotClick }: {
+export function ClusteredSpotMarkers({ spots, selectedSpot, onSpotClick }: {
   spots: Spot[]
   selectedSpot: Spot | null
   onSpotClick: (spot: Spot) => void

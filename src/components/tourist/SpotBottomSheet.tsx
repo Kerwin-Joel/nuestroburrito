@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import {
   X, Star, Plus, ExternalLink, ChevronUp, Lightbulb,
-  Globe, MessageCircle, ChevronLeft, ChevronRight, Share2, Loader2, Heart
+  Globe, MessageCircle, ChevronLeft, ChevronRight, Share2, Loader2, Heart, CarTaxiFront
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { taxiLink } from '../../lib/taxiLink'
 import { shareSpot } from '../../lib/shareSpot'
 import { useSpotsStore } from '../../stores/useSpotsStore'
 import { useItineraryStore } from '../../stores/useItineraryStore'
@@ -173,6 +175,7 @@ function SocialLinksSection({ links }: { links: SpotSocialLinks }) {
 
 /* ─── Main Component ─── */
 export default function SpotBottomSheet() {
+  const navigate = useNavigate()
   const { selectedSpot, sheetOpen, sheetExpanded, setSheetOpen, setSheetExpanded, selectSpot } = useSpotsStore()
   const { requestAddStop } = useItineraryStore()
   const { addToast } = useUIStore()
@@ -479,6 +482,17 @@ export default function SpotBottomSheet() {
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: '8px' }}>
+            {/* Taxi Burrito: viaje desde mi ubicación hasta este spot (igual que en la app). */}
+            <button
+              onClick={() => {
+                setSheetOpen(false)
+                navigate(taxiLink({ lat: selectedSpot.lat, lng: selectedSpot.lng, name: selectedSpot.name, spotId: selectedSpot.id }))
+              }}
+              className="btn btn-ghost btn-sm"
+              style={{ justifyContent: 'center', gap: '6px' }}
+            >
+              <CarTaxiFront size={14} /> Taxi
+            </button>
             {sheetExpanded && (
               <a
                 href={mapsUrl}

@@ -552,6 +552,9 @@ THREE.ColorManagement.enabled = false;
   // alumbra cada cara al girar. Durmiendo gira solo, como en una vitrina;
   // con el dedo se gira a mano y, al soltar, sigue por inercia y frena.
   let turn = 0, turnVel = 0, dragVel = 0, dragging = false, resumeAt = -10, reactEnd = 0, reactBack = null;
+  // Orientación pedida desde la app (mapa del taxi: hacia dónde avanza). null = libre.
+  let faceTarget = null;
+  function face(a) { faceTarget = a; }
   function spin(dx) {
     const d = dx * 0.012;
     turn += d;
@@ -589,7 +592,7 @@ THREE.ColorManagement.enabled = false;
     play('grumble');
     reactEnd = t + 2.4;
   }
-  window.burrito = { play, spin, release, react, reactNext, grumble };
+  window.burrito = { play, spin, release, react, reactNext, grumble, face };
   setOption(params.get('v') === 'C' ? 'C' : 'B');
   // Se simulan los primeros segundos antes del primer cuadro: si arranca
   // durmiendo, aparece ya dormido (no echándose frente al usuario).
@@ -621,6 +624,11 @@ THREE.ColorManagement.enabled = false;
       const auto = action === 'sleep' ? 0.4 : 0;                 // vitrina: ~16 s por vuelta
       const resume = Math.min(1, Math.max(0, (t - resumeAt - 0.4) / 1.4)); // retoma suave tras soltar
       turn += (turnVel + auto * resume) * dt;
+      if (faceTarget !== null) {
+        // Gira por el camino corto hacia la orientación pedida.
+        const d = Math.atan2(Math.sin(faceTarget - turn), Math.cos(faceTarget - turn));
+        turn += d * (1 - Math.exp(-dt * 6));
+      }
     }
     R.root.rotation.y = turn;
     const T = targets(dt);

@@ -1,4 +1,4 @@
-import { BookOpen, Store, BookMarked, Ticket, Luggage, Hotel, Heart, Sparkles, QrCode, LifeBuoy, type LucideIcon } from 'lucide-react'
+import { BookOpen, Store, BookMarked, Ticket, Luggage, Hotel, Heart, Sparkles, QrCode, LifeBuoy, CarTaxiFront, type LucideIcon } from 'lucide-react'
 
 /**
  * Lo que puede ocupar el cuarto lugar de la barra flotante (por defecto,
@@ -10,7 +10,7 @@ import { BookOpen, Store, BookMarked, Ticket, Luggage, Hotel, Heart, Sparkles, Q
  * cualquier pantalla, sin navegar a ningún lado.
  */
 export type CustomTabId =
-  | 'historia' | 'tienda' | 'pasaporte' | 'beneficios' | 'servicios' | 'hoteles' | 'favoritos'
+  | 'historia' | 'tienda' | 'pasaporte' | 'beneficios' | 'servicios' | 'hoteles' | 'favoritos' | 'taxi'
   | 'wizard' | 'qr' | 'emergencias'
 
 export interface CustomTabOption {
@@ -30,6 +30,7 @@ export const CUSTOM_TAB_OPTIONS: CustomTabOption[] = [
   { id: 'beneficios', label: 'Cupones', title: 'Mis beneficios', sub: 'Descuentos que desbloqueas', icon: Ticket, to: '/app/beneficios' },
   { id: 'servicios', label: 'Servicios', title: 'Servicios turísticos', sub: 'Transporte, dinero, salud y guías', icon: Luggage, to: '/app/servicios' },
   { id: 'hoteles', label: 'Hoteles', title: 'Hoteles en Piura', sub: 'Reserva tu habitación', icon: Hotel, to: '/app/hoteles' },
+  { id: 'taxi', label: 'Taxi', title: 'Taxi Burrito', sub: 'Pide un viaje', icon: CarTaxiFront, to: '/app/taxi' },
   { id: 'favoritos', label: 'Favoritos', title: 'Favoritos', sub: 'Los spots que guardaste', icon: Heart, to: '/app/favoritos' },
   { id: 'wizard', label: 'Armar IA', title: 'Armar día con IA', sub: 'Tu ruta lista en un minuto', icon: Sparkles, action: 'wizard' },
   { id: 'qr', label: 'Escanear', title: 'Escanear QR', sub: 'Marca tu visita al llegar', icon: QrCode, action: 'qr-scan' },

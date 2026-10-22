@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, MapPin, Clock, DollarSign, Star, ExternalLink, Tag, Gift, Percent, Zap, Upload, Camera, ChevronRight, Plus, Share2 } from 'lucide-react'
+import { X, MapPin, Clock, DollarSign, Star, ExternalLink, Tag, Gift, Percent, Zap, Upload, Camera, ChevronRight, Plus, Share2, CarTaxiFront } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { taxiLink } from '../../lib/taxiLink'
 import { supabase } from '../../lib/supabase'
 import { shareSpot } from '../../lib/shareSpot'
 import { useUIStore } from '../../stores/useUIStore'
@@ -492,6 +494,20 @@ export default function SpotDrawer({ stop, onClose }: Props) {
                                             >
                                                 Ir <ExternalLink size={11} />
                                             </a>
+                                            {/* Ir en taxi hasta esta parada (igual que en la app). */}
+                                            <Link
+                                                to={taxiLink({ lat: spot.lat, lng: spot.lng, name: spot.name, spotId: stop?.spotId })}
+                                                style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                                    padding: '8px 12px', borderRadius: '8px',
+                                                    background: 'var(--card)', border: '1px solid var(--border)',
+                                                    color: 'var(--white)',
+                                                    fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 700,
+                                                    textDecoration: 'none',
+                                                }}
+                                            >
+                                                <CarTaxiFront size={12} /> Taxi
+                                            </Link>
                                             <button
                                                 onClick={handleShare}
                                                 disabled={shareLoading}
