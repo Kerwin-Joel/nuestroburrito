@@ -35,6 +35,56 @@ function thin(points: [number, number][], max = 300): [number, number][] {
   return out;
 }
 
+/** Hasta dónde se busca otra calle para llegar (un pin puede caer sobre la calzada equivocada). */
+const SNAP_RADIUS_M = 60;
+/** Velocidad a pie para comparar "llegar en auto a otra calle + caminar hasta el pin". */
+const WALK_MPS = 1.4;
+
+/**
+ * Punto de llegada más conveniente cerca de `to`. Si el pin cae encima de una
+ * calzada de un solo sentido, OSRM lo pega ahí y da una vuelta enorme para
+ * entrar en su sentido (p. ej. Av. Sullana Oeste junto al Óvalo Grau: 2.5 km
+ * en vez de 1.1 km). Se prueban las calles vecinas (máx. 60 m) con una sola
+ * consulta de tiempos y se elige la de menor "manejo + caminata hasta el pin".
+ * Si algo falla, se usa el punto tal cual.
+ */
+async function bestArrival(base: string, from: P, to: P): Promise<P> {
+  try {
+    const near = await fetch(`${base}/nearest/v1/driving/${to.lng},${to.lat}?number=6`, { signal: AbortSignal.timeout(3000) });
+    if (!near.ok) return to;
+    const n = await near.json() as { waypoints?: { location: [number, number]; distance: number; name: string }[] };
+    const seen = new Set<string>();
+    const cands = (n.waypoints ?? [])
+      .filter(w => w.distance <= SNAP_RADIUS_M)
+      .filter(w => {
+        const key = `${w.name}|${w.location[0].toFixed(4)},${w.location[1].toFixed(4)}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 4);
+    if (cands.length <= 1) return to;
+
+    const coords = [[from.lng, from.lat], ...cands.map(w => w.location)].map(c => c.join(",")).join(";");
+    const table = await fetch(`${base}/table/v1/driving/${coords}?sources=0&annotations=duration`, { signal: AbortSignal.timeout(3000) });
+    if (!table.ok) return to;
+    const t = await table.json() as { durations?: (number | null)[][] };
+    const row = t.durations?.[0];
+    if (!row) return to;
+    let best = -1;
+    let bestCost = Infinity;
+    cands.forEach((w, i) => {
+      const drive = row[i + 1];
+      if (drive == null) return;
+      const cost = drive + w.distance / WALK_MPS;
+      if (cost < bestCost) { bestCost = cost; best = i; }
+    });
+    return best < 0 ? to : { lat: cands[best].location[1], lng: cands[best].location[0] };
+  } catch {
+    return to;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json(405, { error: "Usa POST" });
@@ -49,7 +99,8 @@ Deno.serve(async (req) => {
   const { from, to } = body as { from: P; to: P };
 
   const base = (Deno.env.get("OSRM_URL") ?? "https://router.project-osrm.org").replace(/\/$/, "");
-  const url = `${base}/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson`;
+  const arrival = await bestArrival(base, from, to);
+  const url = `${base}/route/v1/driving/${from.lng},${from.lat};${arrival.lng},${arrival.lat}?overview=full&geometries=geojson`;
 
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
