@@ -5,7 +5,7 @@ import L from 'leaflet'
 import { ClusteredSpotMarkers } from '../../../components/shared/MapView'
 import { PIURA_CENTER } from '../../../lib/constants'
 import type { Spot } from '../../../types/spot'
-import type { GeoPoint } from '../../../services/taxi'
+import { distanceM, type GeoPoint } from '../../../services/taxi'
 
 /*
  * Mapa del taxi — espejo de TaxiMap.kt / MapBurrito.kt de la app nativa:
@@ -109,6 +109,10 @@ export default function TaxiMap({ content, sheetHeight, topInset, recenterSignal
         <Polyline positions={content.route.map(ll)} pathOptions={{ color: INK, weight: 4, opacity: 0.6, dashArray: '9 7' }} interactive={false} />
       ) : null}
 
+      {walkLeg(content) && (
+        <Polyline positions={walkLeg(content)!.map(ll)} pathOptions={{ color: INK, weight: 3, opacity: 0.55, dashArray: '2 7', lineCap: 'round' }} interactive={false} />
+      )}
+
       {content.pulseAt && <Marker position={ll(content.pulseAt)} icon={pulseIcon} interactive={false} />}
       {content.cars?.map((c, i) => <Marker key={`car-${i}`} position={ll(c.at)} icon={carIcon} interactive={false} />)}
       {content.pickup && <Marker position={ll(content.pickup)} icon={endpointIcon(content.pickupLabel, true)} interactive={false} zIndexOffset={800} />}
@@ -118,6 +122,22 @@ export default function TaxiMap({ content, sheetHeight, topInset, recenterSignal
       {(content.burritos ?? []).slice(0, MAX_3D_BURRITOS + 1).map(b => <FloatingBurrito key={b.key} b={b} />)}
     </MapContainer>
   )
+}
+
+/**
+ * Tramo a pie: la ruta termina en la calle a la que el auto puede llegar
+ * (taxi-ruta elige la más conveniente a menos de 60 m del pin), y desde ahí
+ * se camina. Se dibuja punteado hasta el recojo o el destino, como en Uber.
+ */
+function walkLeg(c: TaxiMapContent): [GeoPoint, GeoPoint] | null {
+  const path = c.routePath
+  if (!path || path.length < 2) return null
+  const end = path[path.length - 1]
+  const target = [c.dropoff, c.pickup]
+    .filter((p): p is GeoPoint => !!p)
+    .map(p => ({ p, d: distanceM(end, p) }))
+    .sort((a, b) => a.d - b.d)[0]
+  return target && target.d > 8 && target.d < 120 ? [end, target.p] : null
 }
 
 /** Mantener presionado (o clic derecho en la computadora): destino libre. */
