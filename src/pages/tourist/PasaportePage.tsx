@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { BookMarked, Check, QrCode } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { BookMarked, Check, QrCode, Search, X } from 'lucide-react'
+import { smartSearch } from '../../lib/smartSearch'
 import { useSpots } from '../../hooks/useSpots'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { PageHeader } from '../../components/tourist/ExtrasHeader'
@@ -23,6 +24,15 @@ const LEVELS = [
   { min: 24, emoji: '🏆', name: 'Leyenda de Piura' },
 ]
 
+type Filter = 'all' | 'reward' | 'ready' | 'visited' | 'pending'
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: 'all', label: 'Todos' },
+  { id: 'reward', label: '🎁 Con premio' },
+  { id: 'ready', label: '✨ Premio listo' },
+  { id: 'visited', label: '✓ Visitados' },
+  { id: 'pending', label: 'Por visitar' },
+]
+
 export default function PasaportePage() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
@@ -30,6 +40,8 @@ export default function PasaportePage() {
   const [summary, setSummary] = useState<Map<string, SpotPassport> | null>(null)
   const [checkIn, setCheckIn] = useState(false)
   const [celebrate, setCelebrate] = useState<Extract<CheckInResult, { ok: true }> | null>(null)
+  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState<Filter>('all')
 
   const refresh = useCallback(() => {
     passportService.summary()
@@ -46,6 +58,25 @@ export default function PasaportePage() {
     .filter((x): x is { spot: Spot; p: SpotPassport } => !!x.p?.loyalty)
     .sort((a, b) => (b.p.rewards.some(r => !r.redeemed_at) ? 1 : 0) - (a.p.rewards.some(r => !r.redeemed_at) ? 1 : 0)
       || b.p.progress / b.p.loyalty!.visits_required - a.p.progress / a.p.loyalty!.visits_required), [spots, summary])
+
+  // Buscador inteligente + filtros rápidos sobre todos los sellos.
+  const searching = query.trim() !== '' || filter !== 'all'
+  const results = useMemo(() => {
+    const byFilter = stamps.filter(sp => {
+      const p = summary?.get(sp.id)
+      switch (filter) {
+        case 'reward': return !!p?.loyalty
+        case 'ready': return !!p?.rewards.some(r => !r.redeemed_at)
+        case 'visited': return (p?.visits ?? 0) > 0
+        case 'pending': return (p?.visits ?? 0) === 0
+        default: return true
+      }
+    })
+    return smartSearch(byFilter, query, sp => {
+      const l = summary?.get(sp.id)?.loyalty
+      return { name: sp.name, category: sp.category, address: sp.address, extra: l ? `${l.reward_title ?? ''} premio` : null, hasReward: !!l }
+    })
+  }, [stamps, summary, query, filter])
 
   const count = stamps.filter(s => visits(s.id) > 0).length
   const level = [...LEVELS].reverse().find(l => count >= l.min)!
@@ -88,6 +119,52 @@ export default function PasaportePage() {
               </span>
             </motion.button>
 
+            {/* ── Buscador ── */}
+            <div style={{ position: 'sticky', top: 0, zIndex: 5, background: 'var(--bg)', padding: '6px 0 10px', margin: '-6px 0 14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 48, padding: '0 14px', borderRadius: 16, background: 'var(--card2)', border: '1px solid var(--border)' }}>
+                <Search size={19} color="var(--muted)" />
+                <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Busca un spot, comida, playa, premio…"
+                  style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: 'var(--white)', font: '14.5px var(--font-body)' }} />
+                <AnimatePresence>
+                  {query && (
+                    <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} onClick={() => setQuery('')} aria-label="Borrar"
+                      style={{ width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'var(--dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                      <X size={14} color="var(--white)" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="scroll-row" style={{ gap: 8, marginTop: 10, paddingBottom: 0 }}>
+                {FILTERS.map(f => (
+                  <button key={f.id} onClick={() => setFilter(f.id)} className={`chip ${filter === f.id ? 'selected' : ''}`}>{f.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {searching ? (
+              <>
+                <motion.p key={`${query}|${filter}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="section-label" style={{ marginBottom: 14 }}>
+                  {results.length === 0 ? 'Sin resultados' : results.length === 1 ? '1 spot' : `${results.length} spots`}
+                </motion.p>
+                {results.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '30px 0' }}>
+                    <p style={{ fontSize: 38, margin: 0 }}>🔎</p>
+                    <p style={{ font: '14px var(--font-body)', color: 'var(--muted)', margin: '8px 0 0' }}>
+                      {query ? `Nada coincide con "${query.trim()}".` : 'Todavía no hay spots en este filtro.'} Prueba con otra palabra o filtro.
+                    </p>
+                  </div>
+                ) : (
+                  <motion.div layout style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))', gap: '18px 12px' }}>
+                    <AnimatePresence>
+                      {results.map((spot, i) => (
+                        <StampTile key={spot.id} spot={spot} p={summary.get(spot.id)} index={i} onOpen={() => navigate(`/app/pasaporte/${spot.id}`)} />
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </>
+            ) : (
+            <>
             {cards.length > 0 && (
               <>
                 <p className="section-label" style={{ marginBottom: 12 }}>🎁 Premios por visitas</p>
@@ -103,6 +180,8 @@ export default function PasaportePage() {
                 <StampTile key={spot.id} spot={spot} p={summary.get(spot.id)} index={i} onOpen={() => navigate(`/app/pasaporte/${spot.id}`)} />
               ))}
             </div>
+            </>
+            )}
           </>
         )}
       </div>
@@ -157,7 +236,8 @@ function StampTile({ spot, p, index, onOpen }: { spot: Spot; p: SpotPassport | u
   )
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: Math.min(index, 18) * 0.025, type: 'spring', stiffness: 300, damping: 22 }}
+      layout initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ delay: Math.min(index, 18) * 0.025, type: 'spring', stiffness: 300, damping: 22 }}
       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
       {/* Solo los spots con premio abren su tarjeta; los demás solo muestran sus visitas. */}
       <motion.button
