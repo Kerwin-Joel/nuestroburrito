@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ArrowDownUp } from 'lucide-react'
 
 export interface Column<T> {
   header: React.ReactNode
@@ -8,6 +8,11 @@ export interface Column<T> {
   /** Valor para ordenar cuando `accessor` es una función (si no, no hay cómo ordenar). */
   sortValue?: (item: T) => string | number
   width?: string
+  /** En móvil la tabla se vuelve tarjetas: 'main' ocupa el ancho libre (sin etiqueta),
+   *  'full' toma una fila entera, 'actions' va al pie de la tarjeta y 'hide' se oculta. */
+  mobile?: 'main' | 'full' | 'actions' | 'hide'
+  /** Etiqueta que se muestra en la tarjeta móvil (por defecto, el header si es texto). */
+  label?: string
 }
 
 interface Props<T> {
@@ -19,9 +24,11 @@ interface Props<T> {
   /** Resalta filas (p. ej. las seleccionadas). */
   isRowHighlighted?: (item: T) => boolean
   emptyMessage?: React.ReactNode
+  /** Controles extra para la barra móvil (p. ej. "seleccionar todos", ya que el thead se oculta). */
+  mobileBar?: React.ReactNode
 }
 
-export default function AdminTable<T>({ columns, data, onRowClick, pageSize = 10, rowKey, isRowHighlighted, emptyMessage }: Props<T>) {
+export default function AdminTable<T>({ columns, data, onRowClick, pageSize = 10, rowKey, isRowHighlighted, emptyMessage, mobileBar }: Props<T>) {
   const [sortConfig, setSortConfig] = useState<{ col: number; direction: 'asc' | 'desc' } | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -66,9 +73,35 @@ export default function AdminTable<T>({ columns, data, onRowClick, pageSize = 10
         : { col, direction: 'asc' })
   }
 
+  const labelOf = (col: Column<T>) =>
+    col.label ?? (typeof col.header === 'string' && col.header ? col.header : undefined)
+  const sortableCols = columns.map((c, i) => ({ c, i })).filter(({ c }) => isSortable(c))
+
   return (
     <div className="admin-table-container" style={{ width: '100%', overflowX: 'auto' }}>
-      <table style={{
+      {/* Solo en móvil: el thead se oculta, así que el orden se elige aquí. */}
+      {(sortableCols.length > 0 || mobileBar) && (
+        <div className="adm-table-sortbar">
+          {mobileBar}
+          {sortableCols.length > 0 && (
+            <>
+              <ArrowDownUp size={14} style={{ marginLeft: mobileBar ? 'auto' : undefined, flexShrink: 0 }} />
+              <select className="adm-select" aria-label="Ordenar por" value={sortConfig ? String(sortConfig.col) : ''}
+                onChange={e => setSortConfig(e.target.value === '' ? null : { col: Number(e.target.value), direction: sortConfig?.direction ?? 'asc' })}>
+                <option value="">Orden original</option>
+                {sortableCols.map(({ c, i }) => <option key={i} value={i}>{labelOf(c) ?? `Columna ${i + 1}`}</option>)}
+              </select>
+              {sortConfig && (
+                <button className="adm-icon-btn" aria-label="Invertir orden" title="Invertir orden"
+                  onClick={() => setSortConfig(p => p && { ...p, direction: p.direction === 'asc' ? 'desc' : 'asc' })}>
+                  {sortConfig.direction === 'asc' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      )}
+      <table className="adm-table" style={{
         width: '100%',
         borderCollapse: 'collapse',
         fontFamily: 'var(--font-body)',
@@ -129,7 +162,7 @@ export default function AdminTable<T>({ columns, data, onRowClick, pageSize = 10
                 className="table-row"
               >
                 {columns.map((col, colIndex) => (
-                  <td key={colIndex} style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
+                  <td key={colIndex} data-label={labelOf(col)} data-m={col.mobile} style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
                     {typeof col.accessor === 'function'
                       ? col.accessor(item)
                       : (item[col.accessor] as any)}
@@ -139,8 +172,8 @@ export default function AdminTable<T>({ columns, data, onRowClick, pageSize = 10
             )
           })}
           {data.length === 0 && (
-            <tr>
-              <td colSpan={columns.length} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--gray)', fontSize: '14px' }}>
+            <tr className="table-row">
+              <td colSpan={columns.length} data-empty style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--gray)', fontSize: '14px' }}>
                 {emptyMessage ?? 'No hay resultados'}
               </td>
             </tr>
@@ -155,6 +188,7 @@ export default function AdminTable<T>({ columns, data, onRowClick, pageSize = 10
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '12px 16px',
+          gap: '12px',
           borderTop: '1px solid var(--border)',
           fontFamily: 'var(--font-mono)',
           fontSize: '12px',

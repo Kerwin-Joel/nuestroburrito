@@ -39,6 +39,7 @@ export default function AdminUsuariosPage() {
   const columns: Column<UserRecord>[] = [
     {
       header: 'Usuario',
+      mobile: 'full',
       accessor: (u) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ 
@@ -99,6 +100,7 @@ export default function AdminUsuariosPage() {
     },
     {
       header: '',
+      mobile: 'actions',
       accessor: () => (
         <button className="btn btn-ghost btn-xs">
           <MoreVertical size={16} />
@@ -108,55 +110,27 @@ export default function AdminUsuariosPage() {
   ]
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <header>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 800, color: 'var(--white)', margin: 0 }}>Usuarios (131)</h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--gray)', margin: 0 }}>Gestión de cuentas y accesos</p>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="adm-page">
+      <header className="adm-page-header">
+        <div>
+          <h1 className="adm-title">Usuarios (131)</h1>
+          <p className="adm-subtitle">Gestión de cuentas y accesos</p>
+        </div>
       </header>
 
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        background: 'var(--card2)',
-        padding: '16px',
-        borderRadius: '16px',
-        border: '1px solid var(--border)',
-        gap: '20px'
-      }}>
-        <div style={{ display: 'flex', gap: '4px', background: 'var(--dim)', padding: '4px', borderRadius: '10px' }}>
+      <div className="adm-panel adm-toolbar">
+        <div className="adm-tabs" role="group" aria-label="Filtrar por tipo">
           {['todos', 'turistas', 'churres'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              style={{
-                padding: '6px 16px',
-                borderRadius: '8px',
-                border: 'none',
-                background: activeTab === tab ? 'var(--card2)' : 'transparent',
-                color: activeTab === tab ? 'var(--orange)' : 'var(--gray)',
-                fontFamily: 'var(--font-body)',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                textTransform: 'capitalize',
-                transition: 'all 0.2s'
-              }}
-            >
+            <button key={tab} aria-pressed={activeTab === tab} onClick={() => setActiveTab(tab as any)} style={{ textTransform: 'capitalize' }}>
               {tab}
             </button>
           ))}
         </div>
 
-        <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
-          <Search size={18} color="var(--gray)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-          <input 
-            type="text" 
-            placeholder="Buscar por nombre o email..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: '100%', background: 'var(--dim)', border: '1px solid var(--border)', borderRadius: '10px', padding: '10px 10px 10px 40px', color: 'white', outline: 'none' }}
-          />
+        <div className="adm-search">
+          <Search size={16} />
+          <input type="text" className="adm-input" placeholder="Buscar por nombre o email..."
+            value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
       </div>
 

@@ -374,6 +374,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
 
   return createPortal(
     <div
+      className="adm-modal-wrap"
       style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
       onClick={onClose}
     >
@@ -381,6 +382,7 @@ export default function SpotFormModal({ isOpen, onClose, onSave, initialData }: 
 
       <div
         onClick={e => e.stopPropagation()}
+        className="adm-modal"
         style={{
           position: 'relative', background: 'var(--card)', border: '1px solid var(--border)',
           borderRadius: '24px', width: '100%', maxWidth: '600px', maxHeight: '92vh',

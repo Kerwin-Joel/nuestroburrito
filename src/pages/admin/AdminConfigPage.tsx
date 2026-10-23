@@ -11,18 +11,18 @@ export default function AdminConfigPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="adm-page" style={{ gap: 'clamp(24px, 5vw, 40px)' }}>
       <header>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 800, color: 'var(--white)', margin: 0 }}>Configuración</h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--gray)', margin: 0 }}>Ajustes globales y parámetros del sistema</p>
+        <h1 className="adm-title">Configuración</h1>
+        <p className="adm-subtitle">Ajustes globales y parámetros del sistema</p>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '48px' }} className="config-grid">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: 'clamp(24px, 4vw, 48px)' }} className="config-grid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(24px, 5vw, 48px)' }}>
           
           {/* App Info */}
           <section>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
               <Info size={18} color="var(--orange)" />
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', color: 'var(--white)', margin: 0 }}>Información de la App</h3>
             </div>
@@ -31,7 +31,7 @@ export default function AdminConfigPage() {
               background: 'var(--card2)', 
               border: '1px solid var(--border)', 
               borderRadius: '20px', 
-              padding: '24px',
+              padding: 'clamp(16px, 4vw, 24px)',
               display: 'flex',
               flexDirection: 'column',
               gap: '20px'
@@ -41,7 +41,7 @@ export default function AdminConfigPage() {
                 <input 
                   type="text" 
                   defaultValue="Burrito"
-                  style={{ width: '100%', background: 'var(--dim)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', color: 'white', outline: 'none' }}
+                  style={{ width: '100%', background: 'var(--dim)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', color: 'var(--white)', outline: 'none' }}
                 />
               </div>
               <div>
@@ -53,12 +53,12 @@ export default function AdminConfigPage() {
                   style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', color: 'var(--gray)', cursor: 'not-allowed' }}
                 />
               </div>
-              <div style={{ display: 'flex', gap: '20px' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: '12px 20px', flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 160px' }}>
                   <label style={{ display: 'block', fontSize: '11px', color: 'var(--gray)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Versión</label>
                   <input type="text" value="1.0.0 MVP" disabled style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', color: 'var(--gray)' }} />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: '1 1 160px' }}>
                   <label style={{ display: 'block', fontSize: '11px', color: 'var(--gray)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>Ambiente</label>
                   <input type="text" value="Development" disabled style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', color: 'var(--gray)' }} />
                 </div>
@@ -71,7 +71,7 @@ export default function AdminConfigPage() {
 
           {/* Feature Flags */}
           <section>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
               <Zap size={18} color="var(--orange)" />
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', color: 'var(--white)', margin: 0 }}>Feature Flags</h3>
             </div>
@@ -90,9 +90,10 @@ export default function AdminConfigPage() {
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between',
+                  gap: '12px',
                   borderBottom: '1px solid var(--border)'
                 }}>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--white)', margin: 0, textTransform: 'capitalize' }}>
                       {key.replace(/([A-Z])/g, ' $1').trim()}
                     </h4>
@@ -100,7 +101,10 @@ export default function AdminConfigPage() {
                   </div>
                   <button 
                     onClick={() => toggleFlag(key)}
+                    role="switch"
+                    aria-checked={!!flags[key]}
                     style={{
+                      flexShrink: 0,
                       width: '40px',
                       height: '20px',
                       borderRadius: '10px',
@@ -128,10 +132,10 @@ export default function AdminConfigPage() {
           </section>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(24px, 5vw, 48px)' }}>
           {/* Danger Zone */}
           <section>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
               <Shield size={18} color="#ef4444" />
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', color: '#ef4444', margin: 0 }}>Zona de Peligro</h3>
             </div>
@@ -140,7 +144,7 @@ export default function AdminConfigPage() {
               background: 'rgba(239, 68, 68, 0.05)', 
               border: '1px solid rgba(239, 68, 68, 0.2)', 
               borderRadius: '20px', 
-              padding: '24px',
+              padding: 'clamp(16px, 4vw, 24px)',
               display: 'flex',
               flexDirection: 'column',
               gap: '16px'

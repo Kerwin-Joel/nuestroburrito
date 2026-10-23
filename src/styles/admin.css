@@ -168,3 +168,136 @@
   .adm-seg { overflow-x: auto; }
   .adm-bulk { top: 64px; }
 }
+
+/* ===========================
+   RESPONSIVE — piezas de layout reutilizables
+   =========================== */
+
+/* Grilla de tarjetas que nunca desborda en pantallas chicas */
+.adm-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(var(--adm-card-min, 300px), 100%), 1fr)); gap: 16px; }
+
+/* Lista + panel lateral (QR, categorías, config) */
+.adm-split { display: grid; grid-template-columns: minmax(0, 1fr) var(--adm-aside, 360px); gap: 24px; align-items: start; }
+.adm-split > .adm-aside { position: sticky; top: 80px; }
+
+/* Filas de formulario: se apilan en móvil */
+.adm-form-row { display: grid; gap: 12px; }
+
+/* Pestañas de filtro deslizables (no se cortan ni se apilan raro) */
+.adm-tabs {
+  display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--dim);
+  width: fit-content; max-width: 100%; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.adm-tabs::-webkit-scrollbar { display: none; }
+.adm-tabs > button {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 7px 14px; border-radius: 9px; border: none; background: transparent; cursor: pointer;
+  color: var(--gray); font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  transition: background .2s, color .2s, box-shadow .2s;
+}
+.adm-tabs > button:hover { color: var(--white); }
+.adm-tabs > button[aria-pressed="true"] { background: var(--card); color: var(--orange); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.adm-tabs .adm-count {
+  font-family: var(--font-mono); font-size: 10px; padding: 1px 6px; border-radius: 10px; background: var(--card2); color: var(--muted);
+}
+.adm-tabs > button[aria-pressed="true"] .adm-count { background: rgba(255,85,0,0.15); color: var(--orange); }
+
+/* Píldoras de filtro (categorías) deslizables en móvil */
+.adm-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Fila de lista con acciones (historia, QR…) */
+.adm-row {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  background: var(--card2); border: 1px solid var(--border); border-radius: 14px; min-width: 0;
+}
+.adm-row-main { flex: 1; min-width: 0; }
+.adm-row-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+/* Cabecera de la página: título a la izquierda, acciones a la derecha */
+.adm-page-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ── Tabla: modo tarjeta en móvil ── */
+.adm-table-sortbar { display: none; }
+
+/* ── Modales: hoja inferior en móvil ── */
+.adm-modal-wrap { overscroll-behavior: contain; }
+.adm-modal { max-height: min(92vh, 92dvh); overflow-y: auto; }
+
+@media (max-width: 1100px) {
+  .adm-split { grid-template-columns: minmax(0, 1fr); }
+  .adm-split > .adm-aside { position: static; }
+}
+
+@media (max-width: 720px) {
+  /* Tabla → tarjetas */
+  .adm-table thead { display: none; }
+  .adm-table, .adm-table tbody { display: block; width: 100%; }
+  .adm-table tr.table-row {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px;
+  }
+  .adm-table tr.table-row > td { display: block; padding: 0 !important; min-width: 0; }
+  .adm-table td[data-label]::before {
+    content: attr(data-label); display: block; margin-bottom: 3px;
+    font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .8px; text-transform: uppercase; color: var(--gray);
+  }
+  .adm-table td[data-m="main"] { flex: 1 1 0; }
+  .adm-table td[data-m="main"]::before { display: none; }
+  .adm-table td[data-m="full"] { flex: 1 1 100%; }
+  .adm-table td[data-m="actions"] {
+    flex: 1 1 100%; display: flex; justify-content: flex-end;
+    padding-top: 10px !important; border-top: 1px dashed var(--border);
+  }
+  .adm-table td[data-m="actions"]::before { display: none; }
+  .adm-table td[data-m="hide"] { display: none; }
+  .adm-table td[data-empty] { flex: 1 1 100%; }
+  .adm-table-sortbar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 14px;
+    background: var(--card2); border-bottom: 1px solid var(--border);
+    font-family: var(--font-body); font-size: 12.5px; color: var(--gray);
+  }
+  .adm-table-sortbar .adm-select { flex: 1; min-width: 0; padding-top: 7px; padding-bottom: 7px; }
+
+  .adm-form-row { grid-template-columns: 1fr !important; }
+  .adm-pills { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -4px; padding: 0 4px 2px; }
+  .adm-pills::-webkit-scrollbar { display: none; }
+  .adm-pills > * { flex-shrink: 0; }
+  .adm-tabs { width: 100%; }
+}
+
+@media (max-width: 640px) {
+  .adm-page { gap: 16px; }
+  .adm-title { font-size: 21px; }
+  .adm-subtitle { font-size: 13px; }
+  .adm-page-header { align-items: flex-start; }
+  .adm-page-header > .btn-primary, .adm-page-actions { flex: 1 1 100%; }
+  .adm-page-header > .btn-primary, .adm-page-actions > .btn { justify-content: center; }
+  .adm-page-actions > .btn { flex: 1; }
+  .adm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .adm-stat { padding: 12px; }
+  .adm-stat-value { font-size: 22px; }
+  .adm-stat-hint { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .adm-cards { gap: 12px; }
+  .adm-grid { grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
+  .adm-row { flex-wrap: wrap; padding: 12px 14px; gap: 10px 12px; }
+  .adm-row-actions { margin-left: auto; }
+  .adm-icon-btn { width: 36px; height: 36px; }
+  .adm-cat-row .adm-cat-actions { opacity: 1; }
+
+  /* Modales como hoja inferior */
+  .adm-modal-wrap { align-items: flex-end !important; padding: 0 !important; }
+  .adm-modal {
+    max-width: 100% !important; width: 100% !important;
+    border-radius: 22px 22px 0 0 !important; border-bottom: none !important;
+    max-height: 94dvh !important; padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  .adm-modal-pad { padding: 20px 18px !important; }
+}
+
+/* Tablas anchas hechas a mano (p. ej. viajes de taxi) */
+.adm-table-wide { min-width: 760px; }
+@media (max-width: 720px) {
+  .adm-table-wide { min-width: 0; }
+  .adm-table tr.table-row { border-bottom: 1px solid var(--border); }
+  .adm-table tr.table-row > td { border-bottom: none !important; max-width: none !important; }
+  .adm-table tr.table-row > td[data-m="full"] span { white-space: normal !important; }
+}

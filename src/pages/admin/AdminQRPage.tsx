@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { QrCode, RefreshCw, Search, Eye, EyeOff } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
@@ -24,6 +24,15 @@ export default function AdminQRPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedEntry, setSelectedEntry] = useState<QREntry | null>(null)
     const [visitsToday, setVisitsToday] = useState<Record<string, number>>({})
+    const asideRef = useRef<HTMLDivElement>(null)
+
+    // En pantallas angostas el panel queda debajo de la lista: lo traemos a la vista al elegir.
+    const selectEntry = (entry: QREntry) => {
+        setSelectedEntry(entry)
+        if (window.matchMedia('(max-width: 1100px)').matches) {
+            requestAnimationFrame(() => asideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+        }
+    }
 
     // ← ELIMINADO: printRef (ya vive dentro de QRPrintCard)
     // ← ELIMINADO: handlePrint   (ya vive dentro de QRPrintCard)
@@ -116,23 +125,13 @@ export default function AdminQRPage() {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}
+            className="adm-page"
         >
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="adm-page-header">
                 <div>
-                    <h1 style={{
-                        fontFamily: 'var(--font-display)', fontSize: '24px',
-                        fontWeight: 800, color: 'var(--white)', margin: 0,
-                    }}>
-                        Códigos QR
-                    </h1>
-                    <p style={{
-                        fontFamily: 'var(--font-body)', fontSize: '14px',
-                        color: 'var(--gray)', margin: 0,
-                    }}>
-                        Genera e imprime los QR para tus locales aliados
-                    </p>
+                    <h1 className="adm-title">Códigos QR</h1>
+                    <p className="adm-subtitle">Genera e imprime los QR para tus locales aliados</p>
                 </div>
                 <button onClick={loadQRs} className="btn btn-ghost btn-sm">
                     <RefreshCw size={14} /> Recargar
@@ -140,7 +139,7 @@ export default function AdminQRPage() {
             </div>
 
             {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'clamp(8px, 2vw, 12px)' }}>
                 {[
                     { label: 'QR activos', value: entries.filter(e => e.active).length, color: '#22c55e' },
                     { label: 'QR totales', value: entries.length, color: 'var(--orange)' },
@@ -148,10 +147,10 @@ export default function AdminQRPage() {
                 ].map(stat => (
                     <div key={stat.label} style={{
                         background: 'var(--card2)', border: '1px solid var(--border)',
-                        borderRadius: '14px', padding: '16px',
+                        borderRadius: '14px', padding: 'clamp(12px, 2.5vw, 16px)', minWidth: 0,
                     }}>
                         <div style={{
-                            fontFamily: 'var(--font-display)', fontSize: '28px',
+                            fontFamily: 'var(--font-display)', fontSize: 'clamp(22px, 5vw, 28px)',
                             fontWeight: 800, color: stat.color, marginBottom: '4px',
                         }}>
                             {stat.value}
@@ -167,7 +166,7 @@ export default function AdminQRPage() {
             </div>
 
             {/* Grid lista + panel */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '24px', alignItems: 'start' }}>
+            <div className="adm-split">
 
                 {/* ── Lista ── */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -223,10 +222,10 @@ export default function AdminQRPage() {
                             filtered.map((entry, idx) => (
                                 <motion.div
                                     key={entry.id}
-                                    onClick={() => setSelectedEntry(entry)}
+                                    onClick={() => selectEntry(entry)}
                                     whileHover={{ backgroundColor: 'rgba(255,85,0,0.04)' }}
                                     style={{
-                                        display: 'flex', alignItems: 'center', gap: '14px',
+                                        display: 'flex', alignItems: 'center', gap: '8px 14px', flexWrap: 'wrap',
                                         padding: '14px 16px',
                                         borderBottom: idx < filtered.length - 1
                                             ? '1px solid var(--border)' : 'none',
@@ -237,18 +236,18 @@ export default function AdminQRPage() {
                                     }}
                                 >
                                     {/* Mini QR */}
-                                    <div style={{ flexShrink: 0, opacity: entry.active ? 1 : 0.35 }}>
+                                    <div style={{ flexShrink: 0, opacity: entry.active ? 1 : 0.35, color: selectedEntry?.id === entry.id ? 'var(--orange)' : 'var(--white)', display: 'flex' }}>
                                         <QRCodeSVG
                                             value={`${APP_URL}/verify?code=${entry.code}`}
                                             size={44}
                                             bgColor="transparent"
-                                            fgColor={selectedEntry?.id === entry.id ? '#FF5500' : '#ffffff'}
+                                            fgColor="currentColor"
                                             level="M"
                                         />
                                     </div>
 
                                     {/* Info */}
-                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ flex: '1 1 140px', minWidth: 0 }}>
                                         <div style={{
                                             fontFamily: 'var(--font-display)', fontSize: '15px',
                                             fontWeight: 700,
@@ -267,7 +266,7 @@ export default function AdminQRPage() {
                                     </div>
 
                                     {/* Badges y acciones */}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
                                         {visitsToday[entry.spot_id] > 0 && (
                                             <span style={{
                                                 fontFamily: 'var(--font-mono)', fontSize: '10px',
@@ -317,7 +316,7 @@ export default function AdminQRPage() {
                 </div>
 
                 {/* ── Panel derecho: QRPrintCard ── */}
-                <div style={{ position: 'sticky', top: '80px' }}>
+                <div ref={asideRef} className="adm-aside" style={{ scrollMarginTop: '76px' }}>
                     {/* ← REEMPLAZADO: todo el bloque del panel anterior
                         por este único componente                         */}
                     <QRPrintCard

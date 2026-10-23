@@ -399,10 +399,11 @@ export default function AdminSpotsPage() {
     },
     {
       header: 'Spot',
+      mobile: 'main',
       sortable: true,
       sortValue: (spot) => spot.name.toLowerCase(),
       accessor: (spot) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '220px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 'min(220px, 100%)' }}>
           {thumb(spot)}
           <div style={{ minWidth: 0 }}>
             <p style={{ fontWeight: 600, color: 'var(--white)', margin: '0 0 3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '260px' }}>{spot.name}</p>
@@ -453,7 +454,7 @@ export default function AdminSpotsPage() {
         </span>
       ),
     },
-    { header: '', accessor: (spot) => rowActions(spot) },
+    { header: '', mobile: 'actions', accessor: (spot) => rowActions(spot) },
   ]
 
   const statTiles: { key: StatusTab | 'incompletos'; label: string; value: number; hint: string; icon: React.ReactNode }[] = [
@@ -581,6 +582,12 @@ export default function AdminSpotsPage() {
             onRowClick={openEditModal}
             isRowHighlighted={s => selected.has(s.id)}
             emptyMessage={hasFilters ? 'Ningún spot coincide con los filtros' : 'Aún no hay spots. Crea el primero.'}
+            mobileBar={
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--white)' }}>
+                <input type="checkbox" className="adm-checkbox" checked={allVisibleSelected} onChange={toggleSelectAll} />
+                Todos
+              </label>
+            }
           />
         </div>
       ) : filteredSpots.length === 0 ? (

@@ -15,10 +15,10 @@ export default function AdminResenasPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="adm-page">
       <header>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 800, color: 'var(--white)', margin: 0 }}>Moderación de Reseñas</h1>
-        <div style={{ display: 'flex', gap: '32px', marginTop: '12px' }}>
+        <h1 className="adm-title">Moderación de Reseñas</h1>
+        <div style={{ display: 'flex', gap: '10px 32px', marginTop: '12px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Star color="var(--yellow)" fill="var(--yellow)" size={16} />
             <span style={{ fontSize: '14px', color: 'var(--white)' }}>Rating promedio: <strong>{stats.promedio}</strong></span>
@@ -34,24 +34,9 @@ export default function AdminResenasPage() {
         </div>
       </header>
 
-      <div style={{ display: 'flex', gap: '4px', background: 'var(--dim)', padding: '4px', borderRadius: '10px', width: 'fit-content' }}>
+      <div className="adm-tabs" role="group" aria-label="Filtrar reseñas">
         {['todas', 'pendientes', 'aprobadas', 'ocultas'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab as any)}
-            style={{
-              padding: '6px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              background: activeTab === tab ? 'var(--card2)' : 'transparent',
-              color: activeTab === tab ? 'var(--orange)' : 'var(--gray)',
-              fontFamily: 'var(--font-body)',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              textTransform: 'capitalize',
-            }}
-          >
+          <button key={tab} aria-pressed={activeTab === tab} onClick={() => setActiveTab(tab as any)} style={{ textTransform: 'capitalize' }}>
             {tab}
           </button>
         ))}
@@ -63,10 +48,10 @@ export default function AdminResenasPage() {
             background: 'var(--card2)',
             border: '1px solid var(--border)',
             borderRadius: '16px',
-            padding: '20px'
+            padding: 'clamp(14px, 3vw, 20px)'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px 10px', flexWrap: 'wrap', minWidth: 0 }}>
                 <div style={{ display: 'flex', gap: '2px' }}>
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} size={12} fill={i < rev.rating ? 'var(--yellow)' : 'transparent'} color="var(--yellow)" />
@@ -86,7 +71,7 @@ export default function AdminResenasPage() {
               "{rev.comment}"
             </p>
 
-            <div style={{ display: 'flex', gap: '12px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+            <div style={{ display: 'flex', gap: '8px 12px', flexWrap: 'wrap', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
               <button className="btn btn-ghost btn-sm" style={{ color: '#22c55e', gap: '6px' }}><Check size={14} /> Aprobar</button>
               <button className="btn btn-ghost btn-sm" style={{ color: 'var(--amber)', gap: '6px' }}><EyeOff size={14} /> Ocultar</button>
               <button className="btn btn-ghost btn-sm" style={{ color: '#ef4444', gap: '6px' }}><Trash2 size={14} /> Eliminar</button>

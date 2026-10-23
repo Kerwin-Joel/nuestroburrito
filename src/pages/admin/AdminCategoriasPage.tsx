@@ -59,6 +59,7 @@ function CategoryFormModal({ isOpen, initial, existingIds, onClose, onSave }: Ca
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
+        className="adm-modal-wrap"
         style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
           backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center',
@@ -70,6 +71,7 @@ function CategoryFormModal({ isOpen, initial, existingIds, onClose, onSave }: Ca
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={e => e.stopPropagation()}
           onKeyDown={e => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') handleSubmit() }}
+          className="adm-modal adm-modal-pad"
           style={{
             background: 'var(--card)', border: '1px solid var(--border)',
             borderRadius: '20px', padding: '28px', width: '100%', maxWidth: '460px',
@@ -188,6 +190,7 @@ function DeleteModal({ target, spotCount, categories, onConfirm, onCancel }: {
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
       onClick={onCancel}
+      className="adm-modal-wrap"
       style={{
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
         backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center',
@@ -197,6 +200,7 @@ function DeleteModal({ target, spotCount, categories, onConfirm, onCancel }: {
       <motion.div
         initial={{ scale: 0.95 }} animate={{ scale: 1 }}
         onClick={e => e.stopPropagation()}
+        className="adm-modal adm-modal-pad"
         style={{
           background: 'var(--card)', border: '1px solid var(--border)',
           borderRadius: '20px', padding: '28px', width: '100%', maxWidth: '420px',
@@ -441,9 +445,9 @@ export default function AdminCategoriasPage() {
       </div>
 
       {orphanCount > 0 && (
-        <div role="alert" className="adm-panel" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', borderColor: 'rgba(245,158,11,0.4)', background: 'rgba(245,158,11,0.06)', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--white)' }}>
+        <div role="alert" className="adm-panel" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '12px 16px', borderColor: 'rgba(245,158,11,0.4)', background: 'rgba(245,158,11,0.06)', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--white)' }}>
           <AlertTriangle size={16} color="#f59e0b" />
-          <span style={{ flex: 1 }}><strong>{orphanCount} spot{orphanCount > 1 ? 's' : ''}</strong> tienen una categoría que ya no existe y no aparecen en los filtros.</span>
+          <span style={{ flex: '1 1 200px' }}><strong>{orphanCount} spot{orphanCount > 1 ? 's' : ''}</strong> tienen una categoría que ya no existe y no aparecen en los filtros.</span>
           <button className="btn btn-ghost btn-sm" onClick={() => navigate('/admin/spots')}>Revisar <ChevronRight size={14} /></button>
         </div>
       )}

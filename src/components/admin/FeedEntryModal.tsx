@@ -74,13 +74,14 @@ export default function FeedEntryModal({ isOpen, onClose, onSave, initialData }:
           />
           <motion.div
             initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            className="adm-modal-wrap"
             style={{
               position: 'fixed', inset: 0, zIndex: 1001,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               padding: '20px', pointerEvents: 'none'
             }}
           >
-            <div style={{
+            <div className="adm-modal" style={{
               background: 'var(--card)',
               border: '1px solid var(--border)',
               borderRadius: '24px',
@@ -88,10 +89,9 @@ export default function FeedEntryModal({ isOpen, onClose, onSave, initialData }:
               maxWidth: '480px',
               pointerEvents: 'auto',
               boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
-              overflow: 'hidden'
             }}>
               {/* Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'clamp(16px, 4vw, 24px) clamp(18px, 5vw, 32px)', borderBottom: '1px solid var(--border)' }}>
                 <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 800, color: 'var(--white)', margin: 0 }}>
                   {initialData ? 'Editar entrada' : 'Nueva entrada diario'}
                 </h2>
@@ -100,10 +100,10 @@ export default function FeedEntryModal({ isOpen, onClose, onSave, initialData }:
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit(onSubmit as any)} style={{ padding: '32px' }}>
+              <form onSubmit={handleSubmit(onSubmit as any)} style={{ padding: 'clamp(18px, 5vw, 32px)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
+                  <div className="adm-form-row" style={{ gridTemplateColumns: '2fr 1fr' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', color: 'var(--gray)', marginBottom: '8px' }}>Tipo</label>
                       <select {...register('type')} className="input" style={{ width: '100%' }}>

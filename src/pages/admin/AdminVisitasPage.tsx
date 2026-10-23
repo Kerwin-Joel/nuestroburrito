@@ -73,31 +73,30 @@ export default function AdminVisitasPage() {
   }), [rows])
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="adm-page">
+      <header className="adm-page-header">
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: 'var(--white)', margin: 0 }}>Visitas y premios</h1>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--gray)', margin: 0 }}>
+          <h1 className="adm-title">Visitas y premios</h1>
+          <p className="adm-subtitle">
             Premios por visitas del pasaporte y cómo valida cada local (QR o PIN)
           </p>
         </div>
         <Link to="/admin/qr" className="btn btn-ghost btn-sm" style={{ gap: 6 }}><QrCode size={15} /> Imprimir QR de locales</Link>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 14 }}>
+      <div className="adm-stats">
         <AdminStatCard icon={Gift} value={totals.enabled} label="Spots con premio" />
         <AdminStatCard icon={Stamp} value={totals.visits} label="Visitas (30 días)" />
         <AdminStatCard icon={Gift} value={totals.earned} label="Premios ganados" sub={`${totals.redeemed} canjeados`} subType="success" />
       </div>
 
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: '1 1 260px', maxWidth: 420 }}>
-          <Search size={17} color="var(--gray)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar spot…"
-            style={{ width: '100%', background: 'var(--dim)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 10px 10px 38px', color: 'var(--white)', outline: 'none' }} />
+      <div className="adm-panel adm-toolbar">
+        <div className="adm-search" style={{ maxWidth: 420 }}>
+          <Search size={16} />
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar spot…" className="adm-input" />
         </div>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--gray)', fontSize: 13, cursor: 'pointer' }}>
-          <input type="checkbox" checked={onlyEnabled} onChange={e => setOnlyEnabled(e.target.checked)} /> Solo con premio
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--gray)', fontSize: 13, cursor: 'pointer', flex: '0 0 auto' }}>
+          <input type="checkbox" className="adm-checkbox" checked={onlyEnabled} onChange={e => setOnlyEnabled(e.target.checked)} /> Solo con premio
         </label>
       </div>
 
@@ -155,15 +154,15 @@ function SpotRow({ r, open, onToggle, onSaved }: { r: Row; open: boolean; onTogg
 
   return (
     <div style={{ background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', borderLeft: `4px solid ${r.enabled ? 'var(--orange)' : 'var(--border)'}` }}>
-      <button onClick={onToggle} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: 14, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-        {r.photo_url ? <img src={r.photo_url} alt="" style={{ width: 46, height: 46, borderRadius: 12, objectFit: 'cover' }} /> : <div style={{ width: 46, height: 46, borderRadius: 12, background: 'var(--dim)' }} />}
-        <div style={{ flex: 1, minWidth: 0 }}>
+      <button onClick={onToggle} aria-expanded={open} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px 14px', flexWrap: 'wrap', padding: 14, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+        {r.photo_url ? <img src={r.photo_url} alt="" style={{ width: 46, height: 46, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} /> : <div style={{ width: 46, height: 46, borderRadius: 12, background: 'var(--dim)', flexShrink: 0 }} />}
+        <div style={{ flex: '1 1 160px', minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--white)' }}>{r.name.trim()}</div>
           <div style={{ fontSize: 12, color: 'var(--gray)' }}>
             {r.enabled ? `${r.reward_emoji} ${r.reward_title} · ${r.visits_required} visitas` : 'Solo cuenta visitas'} · {r.validation === 'pin' ? 'PIN del dueño' : 'QR impreso'}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 14, fontSize: 12, color: 'var(--gray)', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: '6px 14px', fontSize: 12, color: 'var(--gray)', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', marginLeft: 'auto' }}>
           <span><strong style={{ color: 'var(--white)' }}>{r.visits_30d}</strong> visitas 30d</span>
           <span><strong style={{ color: 'var(--white)' }}>{r.rewards_earned}</strong> premios</span>
           <StatusBadge status={r.enabled ? 'activo' : 'inactivo'} />
@@ -173,7 +172,7 @@ function SpotRow({ r, open, onToggle, onSaved }: { r: Row; open: boolean; onTogg
       <AnimatePresence initial={false}>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 32 }} style={{ overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, padding: '4px 16px 18px', borderTop: '1px solid var(--border)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 20, padding: '4px clamp(12px, 3vw, 16px) 18px', borderTop: '1px solid var(--border)' }}>
               {/* ── Premio ── */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 14 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--white)', fontWeight: 600, cursor: 'pointer' }}>
@@ -227,7 +226,7 @@ function SpotRow({ r, open, onToggle, onSaved }: { r: Row; open: boolean; onTogg
                 </Field>
 
                 <div style={{ padding: 12, borderRadius: 12, background: 'var(--dim)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px 10px', flexWrap: 'wrap' }}>
                     <KeyRound size={16} color="var(--orange)" />
                     <span style={{ fontSize: 13, color: 'var(--gray)' }}>PIN vigente</span>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: 'var(--white)', letterSpacing: 4 }}>

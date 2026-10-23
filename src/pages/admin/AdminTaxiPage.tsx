@@ -184,11 +184,11 @@ export default function AdminTaxiPage() {
   const s = data?.stats
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="adm-page">
+      <header className="adm-page-header">
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 800, color: 'var(--white)', margin: 0 }}>Taxi Burrito</h1>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--gray)', margin: 0 }}>
+          <h1 className="adm-title">Taxi Burrito</h1>
+          <p className="adm-subtitle">
             Conductores, alertas de seguridad y viajes
           </p>
         </div>
@@ -198,7 +198,7 @@ export default function AdminTaxiPage() {
       </header>
 
       {s && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '14px' }}>
+        <div className="adm-stats">
           <AdminStatCard icon={AlertTriangle} value={s.open_alerts} label="Alertas abiertas" subType={s.open_alerts > 0 ? 'danger' : 'success'} sub={s.open_alerts > 0 ? 'Atender ahora' : 'Todo en calma'} />
           <AdminStatCard icon={Clock} value={s.pending_drivers} label="Conductores por aprobar" subType={s.pending_drivers > 0 ? 'warning' : 'neutral'} sub={`${s.approved_drivers} aprobados`} />
           <AdminStatCard icon={Wifi} value={s.online_now} label="Conectados ahora" sub={`${s.active_now} en viaje`} />
@@ -207,7 +207,7 @@ export default function AdminTaxiPage() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '4px', background: 'var(--dim)', padding: '4px', borderRadius: '10px', width: 'fit-content', flexWrap: 'wrap' }}>
+      <div className="adm-tabs" role="group" aria-label="Secciones">
         {([
           ['conductores', `Conductores${s ? ` (${data!.drivers.length})` : ''}`],
           ['alertas', `Alertas${s && s.open_alerts ? ` · ${s.open_alerts}` : ''}`],
@@ -215,13 +215,9 @@ export default function AdminTaxiPage() {
         ] as [Tab, string][]).map(([key, label]) => (
           <button
             key={key}
+            aria-pressed={tab === key}
             onClick={() => setTab(key)}
-            style={{
-              padding: '7px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-              background: tab === key ? 'var(--card2)' : 'transparent',
-              color: tab === key ? (key === 'alertas' && s?.open_alerts ? '#ef4444' : 'var(--orange)') : 'var(--gray)',
-              fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600,
-            }}
+            style={tab === key && key === 'alertas' && s?.open_alerts ? { color: '#ef4444' } : undefined}
           >
             {label}
           </button>
@@ -232,7 +228,7 @@ export default function AdminTaxiPage() {
 
       {data && tab === 'conductores' && (
         <>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div className="adm-pills">
             {(['todos', 'pending_review', 'approved', 'suspended'] as const).map(f => (
               <button
                 key={f}
@@ -250,7 +246,7 @@ export default function AdminTaxiPage() {
           {drivers.length === 0 ? (
             <AdminEmptyState icon={Car} title="Sin conductores aquí" subtitle="Los conductores se registran desde la app, en Taxi → Conducir." />
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+            <div className="adm-cards">
               {drivers.map(d => (
                 <div key={d.id} style={{
                   ...card, display: 'flex', flexDirection: 'column', gap: '14px',
@@ -373,7 +369,7 @@ export default function AdminTaxiPage() {
           <AdminEmptyState icon={Route} title="Todavía no hay viajes" subtitle="Los viajes pedidos desde la app aparecen aquí." />
         ) : (
           <div style={{ ...card, padding: 0, overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 760 }}>
+            <table className="adm-table adm-table-wide" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ textAlign: 'left', color: 'var(--gray)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   {['Pedido', 'Pasajero', 'Conductor', 'Ruta', 'Km', 'Precio', 'Abordaje', 'Estado'].map(h => (
@@ -383,23 +379,23 @@ export default function AdminTaxiPage() {
               </thead>
               <tbody>
                 {data.rides.map(r => (
-                  <tr key={r.id} style={{ color: 'var(--white)' }}>
-                    <td style={td}>{timeAgo(r.requested_at)}</td>
-                    <td style={td}>{r.passenger_name ?? '—'}</td>
-                    <td style={td}>{r.driver_name ? `${r.driver_name} · ${r.vehicle_plate}` : '—'}</td>
-                    <td style={{ ...td, maxWidth: 260 }}>
+                  <tr key={r.id} className="table-row" style={{ color: 'var(--white)' }}>
+                    <td style={td} data-label="Pedido">{timeAgo(r.requested_at)}</td>
+                    <td style={td} data-label="Pasajero">{r.passenger_name ?? '—'}</td>
+                    <td style={td} data-label="Conductor">{r.driver_name ? `${r.driver_name} · ${r.vehicle_plate}` : '—'}</td>
+                    <td style={{ ...td, maxWidth: 260 }} data-label="Ruta" data-m="full">
                       <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {r.pickup_address ?? 'Recojo'} → {r.dropoff_address ?? 'Destino'}
                       </span>
                       {r.cancel_reason && <span style={{ fontSize: 11, color: 'var(--gray)' }}>{r.cancel_reason}</span>}
                     </td>
-                    <td style={td}>{r.distance_km != null ? Number(r.distance_km).toFixed(1) : '—'}</td>
-                    <td style={td}>
+                    <td style={td} data-label="Km">{r.distance_km != null ? Number(r.distance_km).toFixed(1) : '—'}</td>
+                    <td style={td} data-label="Precio">
                       {soles(r.final_fare ?? r.offered_fare)}
                       {r.recommended_fare != null && <span style={{ display: 'block', fontSize: 11, color: 'var(--gray)' }}>sug. {soles(r.recommended_fare)}</span>}
                     </td>
-                    <td style={td}>{r.boarding_method ? `${r.boarding_method === 'pin' ? 'PIN' : r.boarding_method}${r.boarding_confidence ? ` · ${r.boarding_confidence}` : ''}` : '—'}</td>
-                    <td style={td}><StatusBadge status={RIDE_STATUS[r.status] ?? r.status} /></td>
+                    <td style={td} data-label="Abordaje">{r.boarding_method ? `${r.boarding_method === 'pin' ? 'PIN' : r.boarding_method}${r.boarding_confidence ? ` · ${r.boarding_confidence}` : ''}` : '—'}</td>
+                    <td style={td} data-label="Estado"><StatusBadge status={RIDE_STATUS[r.status] ?? r.status} /></td>
                   </tr>
                 ))}
               </tbody>

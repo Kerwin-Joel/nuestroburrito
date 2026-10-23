@@ -108,17 +108,17 @@ export default function AdminTiktoksPage() {
   )
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="adm-page">
       <header>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 800, color: 'var(--white)', margin: 0 }}>TikToks por spot</h1>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--gray)', margin: 0 }}>
+        <h1 className="adm-title">TikToks por spot</h1>
+        <p className="adm-subtitle">
           {spots.reduce((acc, s) => acc + s.tiktokUrls.length, 0)} videos totales · {spots.length} spots
         </p>
       </header>
 
       {spotsWithoutVideos.length > 0 && (
-        <div style={{ background: 'rgba(255,170,59,0.1)', border: '1px solid rgba(255,170,59,0.2)', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ background: 'rgba(255,170,59,0.1)', border: '1px solid rgba(255,170,59,0.2)', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 220px', minWidth: 0 }}>
             <AlertCircle color="var(--amber)" size={20} />
             <div>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--white)', fontWeight: 600, margin: 0 }}>
@@ -135,15 +135,10 @@ export default function AdminTiktoksPage() {
         </div>
       )}
 
-      <div style={{ position: 'relative' }}>
-        <Search size={18} color="var(--gray)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-        <input
-          type="text"
-          placeholder="Buscar spot..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ width: '100%', background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 12px 12px 40px', color: 'white', outline: 'none' }}
-        />
+      <div className="adm-search" style={{ minWidth: 0 }}>
+        <Search size={16} />
+        <input type="text" className="adm-input" placeholder="Buscar spot..." style={{ padding: '11px 12px 11px 36px' }}
+          value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -151,20 +146,20 @@ export default function AdminTiktoksPage() {
           <div key={spot.id} style={{ background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '16px', overflow: 'hidden' }}>
             <div
               onClick={() => setExpandedSpotId(expandedSpotId === spot.id ? null : spot.id)}
-              style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+              style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', cursor: 'pointer' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <img src={spot.photoUrl} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover' }} />
-                <div>
-                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '16px', color: 'var(--white)', margin: 0 }}>{spot.name}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                <img src={spot.photoUrl} alt="" style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
+                <div style={{ minWidth: 0 }}>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '16px', color: 'var(--white)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{spot.name}</h3>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: spot.tiktokUrls.length > 0 ? 'var(--amber)' : '#ef4444' }}>
                     {spot.tiktokUrls.length > 0 ? `${spot.tiktokUrls.length} videos 🎬` : 'Sin videos ⚠️'}
                   </span>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button className="btn btn-ghost btn-xs" onClick={(e) => { e.stopPropagation(); setExpandedSpotId(spot.id) }}>
-                  <Plus size={14} /> Añadir video
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                <button className="btn btn-ghost btn-xs" onClick={(e) => { e.stopPropagation(); setExpandedSpotId(spot.id) }} aria-label="Añadir video">
+                  <Plus size={14} /> <span className="adm-hide-sm">Añadir video</span>
                 </button>
                 {expandedSpotId === spot.id ? <ChevronUp size={18} color="var(--gray)" /> : <ChevronDown size={18} color="var(--gray)" />}
               </div>
@@ -178,8 +173,8 @@ export default function AdminTiktoksPage() {
                   exit={{ height: 0, opacity: 0 }}
                   style={{ overflow: 'hidden', background: 'rgba(0,0,0,0.1)', borderTop: '1px solid var(--border)' }}
                 >
-                  <div style={{ padding: '20px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ padding: 'clamp(14px, 3vw, 20px)' }}>
+                    <div className="adm-cards" style={{ ['--adm-card-min' as string]: '200px', marginBottom: '24px' }}>
                       {spot.tiktokUrls.map((url, i) => (
                         <div key={i} style={{ background: 'var(--card)', padding: '12px', borderRadius: '12px', border: '1px solid var(--border)', position: 'relative' }}>
                           <button
@@ -198,13 +193,14 @@ export default function AdminTiktoksPage() {
 
                     <div style={{ background: 'var(--card)', border: '1px dashed var(--border)', borderRadius: '12px', padding: '16px' }}>
                       <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--gray)', textTransform: 'uppercase', marginBottom: '12px' }}>URL de TikTok</p>
-                      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                      <div style={{ display: 'flex', gap: '10px 12px', marginBottom: '16px', flexWrap: 'wrap' }}>
                         <input
                           type="text"
                           placeholder="https://www.tiktok.com/@user/video/..."
                           value={newUrl}
                           onChange={(e) => setNewUrl(e.target.value)}
-                          style={{ flex: 1, background: 'var(--dim)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px', color: 'white', outline: 'none' }}
+                          className="adm-input"
+                          style={{ flex: '1 1 220px', width: 'auto', minWidth: 0 }}
                         />
                         <button
                           className="btn btn-primary"

@@ -32,19 +32,20 @@ export default function ChurreInviteModal({ isOpen, onClose }: Props) {
           />
           <motion.div
             initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            className="adm-modal-wrap"
             style={{
               position: 'fixed', inset: 0, zIndex: 1001,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               padding: '20px', pointerEvents: 'none'
             }}
           >
-            <div style={{
+            <div className="adm-modal" style={{
               background: 'var(--card)',
               border: '1px solid var(--border)',
               borderRadius: '24px',
               width: '100%',
               maxWidth: '440px',
-              padding: '32px',
+              padding: 'clamp(20px, 5vw, 32px)',
               pointerEvents: 'auto',
               boxShadow: '0 20px 60px rgba(0,0,0,0.6)'
             }}>

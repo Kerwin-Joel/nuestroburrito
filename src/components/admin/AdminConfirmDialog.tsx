@@ -26,7 +26,7 @@ export default function AdminConfirmDialog({
 
   return (
     <AnimatePresence>
-      <div style={{
+      <div className="adm-modal-wrap" style={{
         position: 'fixed',
         inset: 0,
         zIndex: 1000,
@@ -54,6 +54,7 @@ export default function AdminConfirmDialog({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="adm-modal"
           style={{
             position: 'relative',
             width: '100%',

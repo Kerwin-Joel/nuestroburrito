@@ -516,6 +516,7 @@ const A4Modal = ({ entry, variant, onClose, onPrintA4 }: A4ModalProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
+            className="adm-modal-wrap"
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
         >
             <motion.div
@@ -524,6 +525,7 @@ const A4Modal = ({ entry, variant, onClose, onPrintA4 }: A4ModalProps) => {
                 exit={{ scale: 0.95, opacity: 0, y: 16 }}
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                 onClick={e => e.stopPropagation()}
+                className="adm-modal"
                 style={{ background: 'var(--card)', borderRadius: '20px', overflow: 'hidden', width: '100%', maxWidth: '720px', maxHeight: '94vh', display: 'flex', flexDirection: 'column', border: '1px solid var(--border)' }}
             >
                 {/* Toolbar */}
@@ -554,7 +556,7 @@ const A4Modal = ({ entry, variant, onClose, onPrintA4 }: A4ModalProps) => {
                 </div>
 
                 {/* Área de preview — simula la impresora */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '32px 24px', background: '#1e1e1e', display: 'flex', justifyContent: 'center' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: 'clamp(14px, 4vw, 32px) clamp(10px, 3vw, 24px)', background: '#1e1e1e', display: 'flex', justifyContent: 'center' }}>
 
                     {/* Hoja A4 simulada — 210:297 */}
                     <div style={{
@@ -739,7 +741,7 @@ export default function QRPrintCard({ entry, visitsToday, onToggleActive, onRege
                 </div>
 
                 {/* Preview tarjeta */}
-                <div style={{ padding: '20px 16px', display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,0.03)' }}>
+                <div style={{ padding: '20px 16px', display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,0.03)', overflowX: 'auto' }}>
                     <AnimatePresence mode="wait">
                         <motion.div key={variant} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.15 }}>
                             <PrintCard entry={entry} variant={variant} innerRef={printRef} />

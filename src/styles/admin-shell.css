@@ -137,6 +137,10 @@
   .adm-search-trigger { width: 36px; justify-content: center; padding: 0; }
   .adm-new-btn { width: 36px; padding: 0; justify-content: center; }
   .adm-topbar { gap: 6px; }
+  /* Menús de la barra superior: anclados a la pantalla para que no se salgan por un lado. */
+  .adm-popover { position: fixed; top: 66px; left: 12px; right: 12px; width: auto !important; max-height: calc(100dvh - 90px); overflow-y: auto; }
+  .adm-cmdk-backdrop { padding-top: 10px; }
+  .adm-cmdk { max-height: calc(100dvh - 20px); }
 }
 
 /* ── Buscador (Ctrl K) ── */

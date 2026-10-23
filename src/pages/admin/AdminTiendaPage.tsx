@@ -133,11 +133,11 @@ export default function AdminTiendaPage() {
   const list = tab === 'revisar' ? pending : tab === 'publicados' ? published : others
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="adm-page">
+      <header className="adm-page-header">
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 800, color: 'var(--white)', margin: 0 }}>Tienda · Artesanos</h1>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--gray)', margin: 0 }}>
+          <h1 className="adm-title">Tienda · Artesanos</h1>
+          <p className="adm-subtitle">
             Revisa lo que suben los vendedores antes de que aparezca en la app
           </p>
         </div>
@@ -146,26 +146,21 @@ export default function AdminTiendaPage() {
         </button>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '14px' }}>
+      <div className="adm-stats">
         <AdminStatCard icon={Inbox} value={pending.length} label="Por revisar" subType={pending.length ? 'warning' : 'success'} sub={pending.length ? 'Esperan tu respuesta' : 'Al día'} />
         <AdminStatCard icon={ShoppingBag} value={published.length} label="Publicados" />
         <AdminStatCard icon={Users} value={sellers.length} label="Vendedores" sub={`${sellers.filter(s => s.verified).length} verificados`} />
         <AdminStatCard icon={Film} value={products.filter(p => p.ai_video_path).length} label="Con video IA" />
       </div>
 
-      <div style={{ display: 'flex', gap: '4px', background: 'var(--dim)', padding: '4px', borderRadius: '10px', width: 'fit-content', flexWrap: 'wrap' }}>
+      <div className="adm-tabs" role="group" aria-label="Secciones">
         {([
           ['revisar', `Por revisar (${pending.length})`],
           ['publicados', `Publicados (${published.length})`],
           ['otros', `Borradores y rechazados (${others.length})`],
           ['vendedores', `Vendedores (${sellers.length})`],
         ] as [Tab, string][]).map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} style={{
-            padding: '7px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-            background: tab === key ? 'var(--card2)' : 'transparent',
-            color: tab === key ? 'var(--orange)' : 'var(--gray)',
-            fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600,
-          }}>{label}</button>
+          <button key={key} aria-pressed={tab === key} onClick={() => setTab(key)}>{label}</button>
         ))}
       </div>
 
@@ -175,12 +170,12 @@ export default function AdminTiendaPage() {
         sellers.length === 0 ? (
           <AdminEmptyState icon={Store} title="Sin vendedores todavía" subtitle="Se registran desde la app: Tienda → Vender en Burrito." />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+          <div className="adm-cards">
             {sellers.map(s => (
               <div key={s.id} style={{ ...card, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                   <div style={{
-                    width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(45deg, #ff9a3c, #e8590c)',
+                    flexShrink: 0, width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(45deg, #ff9a3c, #e8590c)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 19,
                   }}>{s.business_name[0]?.toUpperCase()}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -191,10 +186,10 @@ export default function AdminTiendaPage() {
                   </div>
                 </div>
                 {s.bio && <p style={{ margin: 0, fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>{s.bio}</p>}
-                <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--gray)', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+                <div style={{ display: 'flex', gap: '6px 16px', flexWrap: 'wrap', fontSize: 12, color: 'var(--gray)', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
                   <span><strong style={{ color: 'var(--white)' }}>{s.published ?? 0}</strong> publicados</span>
                   <span><strong style={{ color: 'var(--white)' }}>{s.pending ?? 0}</strong> por revisar</span>
-                  <span style={{ marginLeft: 'auto', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.email}</span>
+                  <span style={{ marginLeft: 'auto', minWidth: 0, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.email}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn btn-sm" disabled={busy === s.id} onClick={() => verify(s)} style={{
@@ -233,9 +228,9 @@ function ProductReview({ p, busy, onReview }: { p: Product; busy: boolean; onRev
   const sug = p.ai_suggestion
 
   return (
-    <div style={{ ...card, display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+    <div style={{ ...card, display: 'flex', gap: 'clamp(14px, 3vw, 20px)', flexWrap: 'wrap' }}>
       {/* Medios: video IA primero, luego fotos y videos del vendedor. */}
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', maxWidth: '100%', flex: '1 1 320px', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', maxWidth: '100%', flex: '1 1 min(320px, 100%)', alignItems: 'flex-start', scrollSnapType: 'x mandatory' }}>
         {p.ai_video_path && (
           <div style={{ position: 'relative', flex: '0 0 auto' }}>
             <video src={mediaUrl(p.ai_video_path)} controls muted loop playsInline
@@ -255,7 +250,7 @@ function ProductReview({ p, busy, onReview }: { p: Product; busy: boolean; onRev
         ))}
       </div>
 
-      <div style={{ flex: '2 1 360px', display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
+      <div style={{ flex: '2 1 min(360px, 100%)', display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
           <div>
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 19, color: 'var(--white)', margin: 0 }}>{p.title ?? 'Sin nombre'}</h3>
@@ -290,7 +285,7 @@ function ProductReview({ p, busy, onReview }: { p: Product; busy: boolean; onRev
         )}
 
         {s && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--gray)', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px 8px', flexWrap: 'wrap', fontSize: 13, color: 'var(--gray)', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
             <Store size={14} />
             <span style={{ color: 'var(--white)', fontWeight: 600 }}>{s.business_name}</span>
             {s.verified && <BadgeCheck size={14} color="var(--orange)" />}

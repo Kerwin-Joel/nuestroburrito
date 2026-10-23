@@ -40,17 +40,18 @@ export default function AdminStatCard({ value, label, sub, subType = 'neutral', 
       background: 'var(--card2)',
       border: '1px solid var(--border)',
       borderRadius: '16px',
-      padding: '24px',
+      padding: 'clamp(14px, 3vw, 24px)',
+      minWidth: 0,
       display: 'flex',
       flexDirection: 'column',
       gap: '8px',
       position: 'relative',
       overflow: 'hidden'
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
         <p style={{ 
           fontFamily: 'var(--font-body)', 
-          fontSize: '14px', 
+          fontSize: 'clamp(12.5px, 2.5vw, 14px)', 
           color: 'var(--gray)', 
           margin: 0,
           fontWeight: 500
@@ -58,6 +59,7 @@ export default function AdminStatCard({ value, label, sub, subType = 'neutral', 
           {label}
         </p>
         <div style={{ 
+          flexShrink: 0,
           width: '36px', 
           height: '36px', 
           borderRadius: '10px', 
@@ -76,7 +78,7 @@ export default function AdminStatCard({ value, label, sub, subType = 'neutral', 
           ref={valueRef}
           style={{ 
             fontFamily: 'var(--font-display)', 
-            fontSize: '32px', 
+            fontSize: 'clamp(24px, 5vw, 32px)', 
             fontWeight: 800, 
             color: 'var(--white)',
             letterSpacing: '-1px'

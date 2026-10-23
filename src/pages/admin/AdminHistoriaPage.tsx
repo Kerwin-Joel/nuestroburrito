@@ -95,7 +95,7 @@ function HistoriaModal({ item, onClose, onSave }: {
     }
 
     const inputStyle: React.CSSProperties = {
-        width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+        width: '100%', background: 'var(--bg)', border: '1px solid var(--border)',
         borderRadius: '10px', color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: '13px',
         padding: '10px 12px', outline: 'none', boxSizing: 'border-box',
     }
@@ -106,12 +106,12 @@ function HistoriaModal({ item, onClose, onSave }: {
     }
 
     return createPortal(
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
+        <div className="adm-modal-wrap" style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}
             onClick={e => e.target === e.currentTarget && onClose()}>
-            <div style={{ background: '#0e0c09', border: '1px solid rgba(255,85,0,0.2)', borderRadius: '20px', width: '100%', maxWidth: '640px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div className="adm-modal" style={{ background: 'var(--card)', border: '1px solid rgba(255,85,0,0.2)', borderRadius: '20px', width: '100%', maxWidth: '640px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
                 {/* Header */}
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                     <div>
                         <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--orange)', letterSpacing: '2px', marginBottom: '2px' }}>
                             {isEdit ? 'EDITAR' : 'NUEVA'} ENTRADA
@@ -120,16 +120,16 @@ function HistoriaModal({ item, onClose, onSave }: {
                             {isEdit ? item!.titulo : 'Historia de Piura'}
                         </h2>
                     </div>
-                    <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
+                    <button onClick={onClose} style={{ background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
                         <X size={15} />
                     </button>
                 </div>
 
                 {/* Form */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: 'clamp(16px, 4vw, 20px) clamp(16px, 4vw, 24px)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                     {/* Fila: emoji + categoria + año */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 120px', gap: '12px' }}>
+                    <div className="adm-form-row" style={{ gridTemplateColumns: '80px 1fr 120px' }}>
                         <div>
                             <label style={labelStyle}>Emoji</label>
                             <input value={form.emoji} onChange={e => set('emoji', e.target.value)} style={inputStyle} placeholder="🏺" />
@@ -139,7 +139,7 @@ function HistoriaModal({ item, onClose, onSave }: {
                             <select value={form.cat} onChange={e => set('cat', e.target.value)}
                                 style={{ ...inputStyle, cursor: 'pointer' }}>
                                 {CATEGORIAS.filter(c => c.id !== 'all').map(c => (
-                                    <option key={c.id} value={c.id} style={{ background: '#0e0c09' }}>{c.emoji} {c.label}</option>
+                                    <option key={c.id} value={c.id} style={{ background: 'var(--card)' }}>{c.emoji} {c.label}</option>
                                 ))}
                             </select>
                         </div>
@@ -196,7 +196,7 @@ function HistoriaModal({ item, onClose, onSave }: {
                     </div>
 
                     {/* Info práctica */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px', gap: '12px' }}>
+                    <div className="adm-form-row" style={{ gridTemplateColumns: '1fr 1fr 80px' }}>
                         <div>
                             <label style={labelStyle}>Horario</label>
                             <input value={form.horario} onChange={e => set('horario', e.target.value)} style={inputStyle} placeholder="Mar-Dom 9am-5pm" />
@@ -219,7 +219,7 @@ function HistoriaModal({ item, onClose, onSave }: {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: '20px' }}>
                             <button type="button" onClick={() => set('activo', !form.activo)}
-                                style={{ width: '40px', height: '22px', borderRadius: '11px', border: 'none', cursor: 'pointer', background: form.activo ? 'var(--orange)' : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+                                style={{ width: '40px', height: '22px', borderRadius: '11px', border: 'none', cursor: 'pointer', background: form.activo ? 'var(--orange)' : 'var(--dim)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
                                 <div style={{ position: 'absolute', top: '3px', left: form.activo ? '21px' : '3px', width: '16px', height: '16px', borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
                             </button>
                             <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: form.activo ? 'var(--white)' : 'var(--muted)' }}>
@@ -230,9 +230,9 @@ function HistoriaModal({ item, onClose, onSave }: {
                 </div>
 
                 {/* Footer */}
-                <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: '10px', flexShrink: 0, background: '#0e0c09' }}>
+                <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)', display: 'flex', gap: '10px', flexShrink: 0, background: 'var(--card)' }}>
                     <button onClick={onClose}
-                        style={{ flex: 1, padding: '11px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--muted)', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                        style={{ flex: 1, padding: '11px', borderRadius: '10px', background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--muted)', fontFamily: 'var(--font-body)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
                         Cancelar
                     </button>
                     <button onClick={handleSave} disabled={saving || !form.titulo || !form.resumen}
@@ -297,15 +297,15 @@ export default function AdminHistoriaPage() {
     )
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="adm-page">
 
             {/* Header */}
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <header className="adm-page-header">
                 <div>
-                    <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 800, color: 'var(--white)', margin: 0 }}>
+                    <h1 className="adm-title">
                         Biblioteca del Churre
                     </h1>
-                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--gray)', margin: 0 }}>
+                    <p className="adm-subtitle">
                         {items.length} entradas · {items.filter(i => i.activo).length} visibles
                     </p>
                 </div>
@@ -321,7 +321,7 @@ export default function AdminHistoriaPage() {
                     <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar por título..."
                         style={{ width: '100%', height: '40px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '0 12px 0 36px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--white)', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <div className="adm-pills">
                     {CATEGORIAS.map(cat => (
                         <button key={cat.id} onClick={() => setCatActiva(cat.id)}
                             style={{ padding: '5px 12px', borderRadius: '20px', border: `1px solid ${catActiva === cat.id ? 'transparent' : 'var(--border)'}`, background: catActiva === cat.id ? 'var(--orange)' : 'var(--card)', color: catActiva === cat.id ? '#fff' : 'var(--muted)', fontFamily: 'var(--font-body)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
@@ -361,20 +361,20 @@ export default function AdminHistoriaPage() {
                                     exit={{ opacity: 0, scale: 0.97 }}
                                     style={{
                                         background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '14px',
-                                        padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px',
+                                        padding: 'clamp(12px, 3vw, 16px) clamp(14px, 3vw, 20px)', display: 'flex', alignItems: 'center', gap: '10px 16px', flexWrap: 'wrap',
                                         opacity: item.activo ? 1 : 0.5,
                                     }}>
                                     {/* Emoji */}
                                     <div style={{ fontSize: '28px', flexShrink: 0, width: '40px', textAlign: 'center' }}>{item.emoji}</div>
 
                                     {/* Info */}
-                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                             <span style={{ fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 800, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                 {item.titulo}
                                             </span>
                                         </div>
-                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', gap: '6px 8px', alignItems: 'center', flexWrap: 'wrap' }}>
                                             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--orange)', background: 'rgba(255,85,0,0.1)', padding: '2px 6px', borderRadius: '6px' }}>
                                                 {cat.emoji} {cat.label}
                                             </span>
@@ -392,7 +392,7 @@ export default function AdminHistoriaPage() {
                                     </div>
 
                                     {/* Acciones */}
-                                    <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                                    <div style={{ display: 'flex', gap: '6px', flexShrink: 0, marginLeft: 'auto' }}>
                                         <button onClick={() => handleToggle(item)} title={item.activo ? 'Ocultar' : 'Mostrar'}
                                             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.activo ? '#22c55e' : 'var(--muted)' }}>
                                             {item.activo ? <Eye size={14} /> : <EyeOff size={14} />}

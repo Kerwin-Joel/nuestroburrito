@@ -106,11 +106,11 @@ export default function AdminHoyEnPiuraPage() {
   const upcomingEntries = feed.filter(e => e.publishDate > today)
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="adm-page" style={{ gap: 'clamp(20px, 4vw, 32px)' }}>
+      <header className="adm-page-header">
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 800, color: 'var(--white)', margin: 0 }}>Hoy en Piura</h1>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--gray)', margin: 0 }}>Gestiona las alertas y eventos del feed diario para turistas</p>
+          <h1 className="adm-title">Hoy en Piura</h1>
+          <p className="adm-subtitle">Gestiona las alertas y eventos del feed diario para turistas</p>
         </div>
         <button className="btn btn-primary" onClick={handleOpenAdd}>
           <Plus size={18} /> Nueva entrada
@@ -120,13 +120,13 @@ export default function AdminHoyEnPiuraPage() {
       {/* Active Section */}
       <section>
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', color: 'var(--white)', marginBottom: '16px' }}>Publicados para hoy</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+        <div className="adm-cards">
           {todayEntries.map(entry => (
             <div key={entry.id} style={{
               background: 'var(--card2)',
               border: '1px solid var(--border)',
               borderRadius: '16px',
-              padding: '20px',
+              padding: 'clamp(16px, 3vw, 20px)',
               position: 'relative'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
@@ -156,17 +156,17 @@ export default function AdminHoyEnPiuraPage() {
       <section>
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', color: 'var(--white)', marginBottom: '16px' }}>Próximos / Programados</h3>
         {upcomingEntries.length === 0 ? (
-          <div style={{ background: 'var(--card2)', borderRadius: '20px', border: '1px solid var(--border)', padding: '40px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--card2)', borderRadius: '20px', border: '1px solid var(--border)', padding: 'clamp(24px, 6vw, 40px)', textAlign: 'center' }}>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--gray)', margin: 0 }}>No hay entradas programadas para fechas futuras.</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+          <div className="adm-cards">
             {upcomingEntries.map(entry => (
               <div key={entry.id} style={{
                 background: 'var(--card2)',
                 border: '1px solid var(--border)',
                 borderRadius: '16px',
-                padding: '20px',
+                padding: 'clamp(16px, 3vw, 20px)',
                 position: 'relative',
                 opacity: 0.8
               }}>
