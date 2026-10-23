@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { BookMarked, Check, QrCode, Search, X } from 'lucide-react'
+import { BookMarked, Check, ChevronRight, QrCode, Search, X } from 'lucide-react'
 import { smartSearch } from '../../lib/smartSearch'
 import { useSpots } from '../../hooks/useSpots'
 import { useAuthStore } from '../../stores/useAuthStore'
@@ -42,6 +42,11 @@ export default function PasaportePage() {
   const [celebrate, setCelebrate] = useState<Extract<CheckInResult, { ok: true }> | null>(null)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
+  // Modo búsqueda (como iOS/Spotify): al tocar la barra se oculta la cabecera y los
+  // resultados quedan justo debajo, visibles sobre el teclado.
+  const [focused, setFocused] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const topRef = useRef<HTMLDivElement>(null)
 
   const refresh = useCallback(() => {
     passportService.summary()
@@ -78,19 +83,37 @@ export default function PasaportePage() {
     })
   }, [stamps, summary, query, filter])
 
+  const searchMode = focused || searching
+  const cancelSearch = () => { setQuery(''); setFilter('all'); setFocused(false); inputRef.current?.blur() }
+  useEffect(() => {
+    // Al entrar al modo búsqueda, la barra sube al borde de arriba.
+    if (searchMode) topRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [searchMode])
+
   const count = stamps.filter(s => visits(s.id) > 0).length
   const level = [...LEVELS].reverse().find(l => count >= l.min)!
   const next = LEVELS.find(l => l.min > count)
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '110px' }}>
-      <PageHeader icon={<BookMarked size={16} color="var(--orange)" />} eyebrow="Tu pasaporte" title={<>Tu pasaporte<br /><span style={{ color: 'var(--orange)' }}>piurano</span></>} subtitle="Cada spot que visitas con QR o PIN es un sello nuevo." />
+    <div ref={topRef} style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '110px' }}>
+      <AnimatePresence initial={false}>
+        {!searchMode && (
+          <motion.div key="head" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 34 }} style={{ overflow: 'hidden' }}>
+            <PageHeader icon={<BookMarked size={16} color="var(--orange)" />} eyebrow="Tu pasaporte" title={<>Tu pasaporte<br /><span style={{ color: 'var(--orange)' }}>piurano</span></>} subtitle="Cada spot que visitas con QR o PIN es un sello nuevo." />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="page-container">
+      <div className="page-container" style={{ paddingTop: searchMode ? 14 : 0, transition: 'padding .25s' }}>
         {summary === null ? (
           <div className="skeleton" style={{ height: '300px', borderRadius: '18px' }} />
         ) : (
           <>
+            <AnimatePresence initial={false}>
+            {!searchMode && (
+            <motion.div key="intro" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 34 }} style={{ overflow: 'hidden' }}>
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card" style={{ padding: '18px', marginBottom: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(255,85,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', flexShrink: 0 }}>{level.emoji}</div>
@@ -118,12 +141,21 @@ export default function PasaportePage() {
                 <span style={{ display: 'block', font: '12.5px var(--font-body)', opacity: 0.9 }}>Escanea el QR del local y suma tu sello</span>
               </span>
             </motion.button>
+            </motion.div>
+            )}
+            </AnimatePresence>
 
             {/* ── Buscador ── */}
             <div style={{ position: 'sticky', top: 0, zIndex: 5, background: 'var(--bg)', padding: '6px 0 10px', margin: '-6px 0 14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 48, padding: '0 14px', borderRadius: 16, background: 'var(--card2)', border: '1px solid var(--border)' }}>
-                <Search size={19} color="var(--muted)" />
-                <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Busca un spot, comida, playa, premio…"
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                flex: 1, display: 'flex', alignItems: 'center', gap: 10, height: 48, padding: '0 14px', borderRadius: 16, background: 'var(--card2)',
+                border: `1.5px solid ${searchMode ? 'var(--orange)' : 'var(--border)'}`, transition: 'border-color .2s',
+              }}>
+                <Search size={19} color={searchMode ? 'var(--orange)' : 'var(--muted)'} />
+                <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder="Busca un spot, comida, playa, premio…"
+                  onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} enterKeyHint="search"
+                  onKeyDown={e => { if (e.key === 'Enter') inputRef.current?.blur() }}
                   style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: 'var(--white)', font: '14.5px var(--font-body)' }} />
                 <AnimatePresence>
                   {query && (
@@ -134,14 +166,24 @@ export default function PasaportePage() {
                   )}
                 </AnimatePresence>
               </div>
+              <AnimatePresence initial={false}>
+                {searchMode && (
+                  <motion.button key="cancel" initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
+                    onMouseDown={e => e.preventDefault()} onClick={cancelSearch}
+                    style={{ background: 'none', border: 'none', color: 'var(--orange)', font: '700 14.5px var(--font-body)', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', padding: '8px 2px' }}>
+                    Cancelar
+                  </motion.button>
+                )}
+              </AnimatePresence>
+              </div>
               <div className="scroll-row" style={{ gap: 8, marginTop: 10, paddingBottom: 0 }}>
                 {FILTERS.map(f => (
-                  <button key={f.id} onClick={() => setFilter(f.id)} className={`chip ${filter === f.id ? 'selected' : ''}`}>{f.label}</button>
+                  <button key={f.id} onMouseDown={e => e.preventDefault()} onClick={() => setFilter(f.id)} className={`chip ${filter === f.id ? 'selected' : ''}`}>{f.label}</button>
                 ))}
               </div>
             </div>
 
-            {searching ? (
+            {searchMode ? (
               <>
                 <motion.p key={`${query}|${filter}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="section-label" style={{ marginBottom: 14 }}>
                   {results.length === 0 ? 'Sin resultados' : results.length === 1 ? '1 spot' : `${results.length} spots`}
@@ -154,13 +196,13 @@ export default function PasaportePage() {
                     </p>
                   </div>
                 ) : (
-                  <motion.div layout style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))', gap: '18px 12px' }}>
-                    <AnimatePresence>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <AnimatePresence initial={false}>
                       {results.map((spot, i) => (
-                        <StampTile key={spot.id} spot={spot} p={summary.get(spot.id)} index={i} onOpen={() => navigate(`/app/pasaporte/${spot.id}`)} />
+                        <ResultRow key={spot.id} spot={spot} p={summary.get(spot.id)} index={i} onOpen={() => navigate(`/app/pasaporte/${spot.id}`)} />
                       ))}
                     </AnimatePresence>
-                  </motion.div>
+                  </div>
                 )}
               </>
             ) : (
@@ -262,5 +304,41 @@ function StampTile({ spot, p, index, onOpen }: { spot: Spot; p: SpotPassport | u
       <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: earned ? 700 : 400, color: earned ? 'var(--white)' : 'var(--muted)', textAlign: 'center', lineHeight: 1.3 }}>{spot.name.trim()}</span>
       {earned && <span style={{ fontFamily: 'var(--font-body)', fontSize: '10.5px', color: 'var(--muted)', marginTop: -4 }}>{visits === 1 ? '1 visita' : `${visits} visitas`}</span>}
     </motion.div>
+  )
+}
+
+/** Resultado como fila: foto, nombre, categoría y visitas/avance (más fácil de leer sobre el teclado). */
+function ResultRow({ spot, p, index, onOpen }: { spot: Spot; p: SpotPassport | undefined; index: number; onOpen: () => void }) {
+  const loyalty = p?.loyalty ?? null
+  const visits = p?.visits ?? 0
+  const ready = !!p?.rewards.some(r => !r.redeemed_at)
+  const img = <img src={spot.photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+  return (
+    <motion.button
+      layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
+      transition={{ delay: Math.min(index, 10) * 0.03, type: 'spring', stiffness: 320, damping: 30 }}
+      whileTap={loyalty ? { scale: 0.98 } : undefined} onMouseDown={e => e.preventDefault()} onClick={loyalty ? onOpen : undefined}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '10px 2px', background: 'none', border: 'none',
+        borderBottom: '1px solid var(--border)', cursor: loyalty ? 'pointer' : 'default', textAlign: 'left',
+      }}>
+      {loyalty ? (
+        <ProgressRing size={56} value={p!.progress / loyalty.visits_required}>{img}</ProgressRing>
+      ) : (
+        <div style={{ width: 56, height: 56, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: visits > 0 ? '2.5px solid var(--orange)' : '1px solid var(--border)' }}>{img}</div>
+      )}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ font: '700 15px var(--font-body)', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{spot.name.trim()}</div>
+        <div style={{ font: '12.5px var(--font-body)', color: 'var(--muted)' }}>
+          {spot.category.charAt(0).toUpperCase() + spot.category.slice(1)} · {visits > 0 ? (visits === 1 ? '1 visita' : `${visits} visitas`) : 'Sin visitar'}
+        </div>
+        {loyalty && (
+          <div style={{ font: '700 12px var(--font-body)', color: ready ? '#2E9E5B' : 'var(--orange)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {ready ? '✨ ¡Premio listo para canjear!' : `${loyalty.reward_emoji} ${p!.progress}/${loyalty.visits_required} · ${loyalty.reward_title ?? ''}`}
+          </div>
+        )}
+      </div>
+      {loyalty && <ChevronRight size={20} color="var(--muted)" />}
+    </motion.button>
   )
 }
