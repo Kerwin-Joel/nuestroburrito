@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { AnimatePresence, animate, motion } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
-import { Check, Maximize2, Minimize2, Store } from 'lucide-react'
+import { Check, Gift, KeyRound, Maximize2, Minimize2, QrCode, Route, Search, Store } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import './local-panel.css'
 
@@ -30,7 +30,28 @@ interface Panel {
   reward_emoji: string
   visits_today: number
   rewards_redeemed_today: number
+  visits_total: number
+  customers_total: number
+  customers_returning: number
+  customers: Customer[]
+  recent: Activity[]
 }
+
+interface Customer {
+  name: string
+  avatar_url: string | null
+  visits: number
+  visits_today: number
+  first_visit: string
+  last_visit: string
+  progress: number
+  rewards_ready: number
+  rewards_redeemed: number
+}
+
+type Activity =
+  | { kind: 'visit'; at: string; method: 'qr' | 'pin'; source: 'passport' | 'itinerary'; name: string; avatar_url: string | null }
+  | { kind: 'redeem'; at: string; title: string; emoji: string; name: string; avatar_url: string | null }
 
 type WakeLock = { release: () => Promise<void> }
 
@@ -46,6 +67,8 @@ export default function LocalPanelPage() {
   const [missing, setMissing] = useState(false)
   const [usedAt, setUsedAt] = useState(0)
   const [counter, setCounter] = useState(false)
+  // Hora de la última actualización: para los "hace X min" (se renueva con cada consulta).
+  const [now, setNow] = useState(0)
   const lastPin = useRef<string | null>(null)
   const wake = useRef<WakeLock | null>(null)
 
@@ -61,6 +84,7 @@ export default function LocalPanelPage() {
       lastPin.current = p.pin
       setMissing(false)
       setPanel(p)
+      setNow(Date.now())
     }
     load()
     const id = setInterval(load, 4000)
@@ -199,7 +223,11 @@ export default function LocalPanelPage() {
               <Stat value={panel.rewards_redeemed_today} label="Premios canjeados" emoji={panel.reward_emoji} />
             </motion.section>
 
-            <motion.section {...stagger(5)} className="lp-steps">
+            <motion.div {...stagger(5)}>
+              <Customers panel={panel} now={now} />
+            </motion.div>
+
+            <motion.section {...stagger(6)} className="lp-steps">
               {[
                 ['1', 'El cliente abre Burrito', 'Pasaporte → tu local → Registrar visita'],
                 ['2', 'Le das el PIN o el QR', 'Suma su sello al instante'],
@@ -212,7 +240,7 @@ export default function LocalPanelPage() {
               ))}
             </motion.section>
 
-            <motion.footer {...stagger(6)} className="lp-footer">
+            <motion.footer {...stagger(7)} className="lp-footer">
               <div className="lp-brand small">
                 <img src="/isotipo_burrito.png" alt="" />
                 <span>burri<b>to</b></span>
@@ -245,5 +273,130 @@ function Stat({ value, label, emoji }: { value: number; label: string; emoji: st
       <span ref={ref} className="lp-stat-value">0</span>
       <span className="lp-stat-label">{label}</span>
     </div>
+  )
+}
+
+// ── Clientes ──────────────────────────────────────────────────────────────────
+
+function ago(iso: string, now: number): string {
+  const min = Math.floor((now - new Date(iso).getTime()) / 60_000)
+  if (min < 1) return 'ahora'
+  if (min < 60) return `hace ${min} min`
+  if (min < 1440) return `hace ${Math.floor(min / 60)} h`
+  const d = Math.floor(min / 1440)
+  if (d === 1) return 'ayer'
+  if (d < 7) return `hace ${d} días`
+  return new Date(iso).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })
+}
+
+function Avatar({ name, url, size = 42 }: { name: string; url: string | null; size?: number }) {
+  return url ? (
+    <img src={url} alt="" className="lp-avatar" style={{ width: size, height: size }} />
+  ) : (
+    <span className="lp-avatar lp-avatar-initial" style={{ width: size, height: size, fontSize: size * 0.42 }}>{name.charAt(0).toUpperCase()}</span>
+  )
+}
+
+/** Quién vino y cuántas veces: lista de clientes y la actividad reciente. */
+function Customers({ panel, now }: { panel: Panel; now: number }) {
+  const [tab, setTab] = useState<'clientes' | 'actividad'>('clientes')
+  const [query, setQuery] = useState('')
+  const list = panel.customers.filter(c => !query || c.name.toLowerCase().includes(query.toLowerCase()))
+  const req = panel.visits_required
+
+  return (
+    <section className="lp-customers">
+      <span className="lp-eyebrow">Tus clientes Burrito</span>
+      <h2 className="lp-h2" style={{ marginTop: 4 }}>{panel.customers_total === 1 ? '1 persona te visitó' : `${panel.customers_total} personas te visitaron`}</h2>
+      <div className="lp-kpis">
+        <span><b>{panel.visits_total}</b> visitas</span>
+        <span><b>{panel.customers_returning}</b> volvieron</span>
+        {panel.customers_total > 0 && <span><b>{Math.round((panel.customers_returning / panel.customers_total) * 100)}%</b> regresan</span>}
+      </div>
+
+      <div className="lp-seg">
+        {(['clientes', 'actividad'] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)} className={tab === t ? 'on' : ''}>
+            {tab === t && <motion.span layoutId="lp-seg" className="lp-seg-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+            <span style={{ position: 'relative' }}>{t === 'clientes' ? 'Clientes' : 'Actividad'}</span>
+          </button>
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait" initial={false}>
+        {tab === 'clientes' ? (
+          <motion.div key="c" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
+            {panel.customers.length > 6 && (
+              <div className="lp-search">
+                <Search size={16} />
+                <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar cliente…" />
+              </div>
+            )}
+            {panel.customers.length === 0 ? (
+              <p className="lp-empty">Cuando un cliente registre su visita con tu PIN o QR, aparecerá aquí.</p>
+            ) : (
+              <div className="lp-list">
+                {list.map((c, i) => {
+                  const frequent = c.visits >= 3
+                  const isNew = c.visits === 1 && now - new Date(c.first_visit).getTime() < 86_400_000
+                  return (
+                    <motion.div key={`${c.name}-${c.first_visit}`} layout className="lp-row"
+                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 12) * 0.035 }}>
+                      <Avatar name={c.name} url={c.avatar_url} />
+                      <div className="lp-row-main">
+                        <div className="lp-row-top">
+                          <b>{c.name}</b>
+                          {frequent && <span className="lp-tag gold">⭐ Frecuente</span>}
+                          {isNew && <span className="lp-tag">Nuevo</span>}
+                        </div>
+                        <small>{c.visits === 1 ? '1 visita' : `${c.visits} visitas`} · última {ago(c.last_visit, now)}</small>
+                        {panel.enabled && (
+                          <div className="lp-mini">
+                            {Array.from({ length: req }, (_, k) => <i key={k} className={k < c.progress ? 'on' : ''} />)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="lp-row-side">
+                        <span className="lp-count">{c.visits}</span>
+                        {c.rewards_ready > 0 && <span className="lp-tag green"><Gift size={11} /> Premio listo</span>}
+                        {c.rewards_redeemed > 0 && <span className="lp-tag muted">{c.rewards_redeemed} canjeado{c.rewards_redeemed === 1 ? '' : 's'}</span>}
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div key="a" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>
+            {panel.recent.length === 0 ? (
+              <p className="lp-empty">Todavía no hay visitas.</p>
+            ) : (
+              <div className="lp-feed">
+                <AnimatePresence initial={false}>
+                  {panel.recent.map(a => (
+                    <motion.div key={`${a.kind}-${a.at}`} layout className="lp-feed-row"
+                      initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
+                      <span className={`lp-feed-icon ${a.kind}`}>
+                        {a.kind === 'redeem' ? <Gift size={15} /> : a.method === 'pin' ? <KeyRound size={15} /> : <QrCode size={15} />}
+                      </span>
+                      <div className="lp-row-main">
+                        <b>{a.name}</b>
+                        <small>
+                          {a.kind === 'redeem' ? `canjeó ${a.emoji} ${a.title}` : `registró su visita con ${a.method === 'pin' ? 'PIN' : 'QR'}`}
+                          {a.kind === 'visit' && a.source === 'itinerary' && <> · <Route size={11} style={{ verticalAlign: -1 }} /> itinerario</>}
+                        </small>
+                      </div>
+                      <small className="lp-feed-time">{ago(a.at, now)}</small>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <p className="lp-privacy">Por privacidad solo ves el nombre y la inicial del apellido de cada cliente.</p>
+    </section>
   )
 }

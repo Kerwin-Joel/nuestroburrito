@@ -94,6 +94,9 @@ export default function PasaporteSpotPage() {
               {l?.validation === 'pin' ? 'Este local valida con un PIN que te dicta el personal.' : 'Escanea el QR del local al llegar.'}
               {l && l.cooldown_hours > 0 ? ` Suma un sello cada ${l.cooldown_hours} h como máximo.` : ''}
             </p>
+            <p style={{ margin: '4px 0 0', font: '11.5px var(--font-body)', color: 'var(--muted)', textAlign: 'center', opacity: 0.8 }}>
+              El local ve tu nombre con la inicial del apellido y cuántas veces lo visitaste.
+            </p>
 
             {/* ── Premios ── */}
             <AnimatePresence>
